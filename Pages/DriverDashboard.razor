@@ -1,0 +1,470 @@
+@page "/driver"
+@using FleetManagement.Models
+@inject Supabase.Client Supabase
+
+<div class="container p-3">
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+        </div>
+    }
+
+    <!-- Vehicle Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body text-center">
+            <h5 class="text-muted">Assigned Vehicle</h5>
+            @if (hasVehicle)
+            {
+                <h2 class="display-6">@currentVehicle.Registration</h2>
+                <p>@currentVehicle.Make @currentVehicle.Model</p>
+                <span class="badge bg-info">@currentVehicle.Status</span>
+            }
+            else
+            {
+                <h4 class="text-muted">No vehicle assigned</h4>
+            }
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row g-3">
+        <div class="col-6">
+            <button class="btn btn-primary w-100 py-2" @onclick="() => showBookService = true" disabled="@(!hasVehicle)">
+                <i class="bi bi-tools me-1"></i> Book Service
+            </button>
+        </div>
+        <div class="col-6">
+            <button class="btn btn-danger w-100 py-2" @onclick="() => showReportFault = true" disabled="@(!hasVehicle)">
+                <i class="bi bi-exclamation-triangle me-1"></i> Report Fault
+            </button>
+        </div>
+        <div class="col-12">
+            @if (hasVehicle)
+            {
+                <button class="btn btn-dark w-100 py-2" @onclick="() => showReturnVehicle = true">
+                    <i class="bi bi-car-front me-1"></i> Return Vehicle
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-success w-100 py-2" @onclick="OpenRequestVehicle">
+                    <i class="bi bi-key me-1"></i> Request Vehicle
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Book Service Modal -->
+    @if (showBookService)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="card shadow p-4 modal-card">
+                <h5 class="mb-3"><i class="bi bi-tools me-2"></i>Book Service</h5>
+                <div class="mb-3">
+                    <label class="form-label">Service Station</label>
+                    <input class="form-control" @bind="serviceStation" placeholder="e.g. AutoZone Sandton" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Mileage (km)</label>
+                    <input type="number" class="form-control" @bind="serviceMileage" placeholder="e.g. 45000" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Vehicle</label>
+                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-secondary" @onclick="() => showBookService = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="SubmitBookService">Submit</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Report Fault Modal -->
+    @if (showReportFault)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="card shadow p-4 modal-card">
+                <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Report Fault</h5>
+                <div class="mb-3">
+                    <label class="form-label">Fault Type</label>
+                    <select class="form-select" @bind="faultType">
+                        <option value="">-- Select type --</option>
+                        <option>Mechanical</option>
+                        <option>Accident</option>
+                        <option>Electrical</option>
+                        <option>Tyre</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="3" @bind="faultDescription" placeholder="Describe the fault..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Photo (optional)</label>
+                    <InputFile OnChange="OnFaultPhotoSelected" accept="image/*" class="form-control" />
+                    @if (faultPhotoName != null)
+                    {
+                        <small class="text-muted">Selected: @faultPhotoName</small>
+                    }
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-secondary" @onclick="() => showReportFault = false">Cancel</button>
+                    <button class="btn btn-danger" @onclick="SubmitFaultReport">Submit</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Return Vehicle Modal -->
+    @if (showReturnVehicle)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="card shadow p-4 modal-card">
+                <h5 class="mb-3"><i class="bi bi-car-front me-2"></i>Return Vehicle</h5>
+                <div class="mb-3">
+                    <label class="form-label">Vehicle</label>
+                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Updated Mileage (km)</label>
+                    <input type="number" class="form-control" @bind="returnMileage" placeholder="e.g. 46500" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Vehicle Condition</label>
+                    <select class="form-select" @bind="returnCondition">
+                        <option value="">-- Select condition --</option>
+                        <option>Clean</option>
+                        <option>Dirty</option>
+                        <option>Good</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-secondary" @onclick="() => showReturnVehicle = false">Cancel</button>
+                    <button class="btn btn-dark" @onclick="SubmitReturnVehicle">Confirm Return</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Request Vehicle Modal -->
+    @if (showRequestVehicle)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="card shadow p-4 modal-card">
+                <h5 class="mb-3"><i class="bi bi-key me-2"></i>Request Vehicle</h5>
+                <div class="mb-3">
+                    <label class="form-label">Available Vehicles</label>
+                    @if (availableVehicles.Any())
+                    {
+                        <select class="form-select" @bind="requestedVehicleId">
+                            <option value="">-- Select vehicle --</option>
+                            @foreach (var v in availableVehicles)
+                            {
+                                <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning py-2">No vehicles currently available.</div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Mileage (km)</label>
+                    <input type="number" class="form-control" @bind="requestMileage" placeholder="e.g. 45000" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Approver</label>
+                    <input class="form-control" @bind="requestApprover" placeholder="Manager name or email" />
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-secondary" @onclick="() => showRequestVehicle = false">Cancel</button>
+                    <button class="btn btn-success" @onclick="SubmitVehicleRequest"
+                            disabled="@(string.IsNullOrEmpty(requestedVehicleId) || !availableVehicles.Any())">
+                        Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .modal-backdrop-custom {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+    }
+    .modal-card {
+        width: 100%;
+        max-width: 480px;
+        border-radius: 12px;
+    }
+</style>
+
+@code {
+    private Vehicle currentVehicle = new();
+    private List<Vehicle> availableVehicles = new();
+    private bool hasVehicle = false;
+    private string currentUserEmail = string.Empty;
+
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+
+    // Book Service
+    private bool showBookService = false;
+    private string serviceStation = string.Empty;
+    private int serviceMileage;
+
+    // Report Fault
+    private bool showReportFault = false;
+    private string faultType = string.Empty;
+    private string faultDescription = string.Empty;
+    private string? faultPhotoName;
+    private IBrowserFile? faultPhoto;
+
+    // Return Vehicle
+    private bool showReturnVehicle = false;
+    private int returnMileage;
+    private string returnCondition = string.Empty;
+
+    // Request Vehicle
+    private bool showRequestVehicle = false;
+    private string requestedVehicleId = string.Empty;
+    private int requestMileage;
+    private string requestApprover = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Try immediately
+        var session = Supabase.Auth.CurrentSession;
+        if (session?.User?.Email != null)
+        {
+            currentUserEmail = session.User.Email;
+            await LoadData();
+            return;
+        }
+
+        // Fallback poll — session may arrive slightly after init
+        for (int i = 0; i < 20; i++)
+        {
+            await Task.Delay(250);
+            session = Supabase.Auth.CurrentSession;
+            if (session?.User?.Email != null)
+            {
+                currentUserEmail = session.User.Email;
+                await LoadData();
+                return;
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        if (!string.IsNullOrEmpty(currentUserEmail))
+        {
+            // Look up driver's name since last_driver stores the full name
+            string driverName = currentUserEmail;
+            try
+            {
+                var driverRecord = await Supabase.From<Driver>()
+                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                    .Single();
+                if (driverRecord != null)
+                    driverName = driverRecord.Name;
+            }
+            catch { }
+
+            var assigned = await Supabase.From<Vehicle>()
+                .Filter("last_driver", Postgrest.Constants.Operator.Equals, driverName)
+                .Get();
+
+            if (assigned.Models.Any())
+            {
+                currentVehicle = assigned.Models.First();
+                hasVehicle = true;
+            }
+            else
+            {
+                currentVehicle = new();
+                hasVehicle = false;
+            }
+        }
+
+        var available = await Supabase.From<Vehicle>()
+            .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
+            .Get();
+        availableVehicles = available.Models;
+    }
+
+    private async Task OpenRequestVehicle()
+    {
+        var available = await Supabase.From<Vehicle>()
+            .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
+            .Get();
+        availableVehicles = available.Models;
+        showRequestVehicle = true;
+    }
+
+    private void OnFaultPhotoSelected(InputFileChangeEventArgs e)
+    {
+        faultPhoto = e.File;
+        faultPhotoName = e.File.Name;
+    }
+
+    private async Task SubmitBookService()
+    {
+        if (string.IsNullOrWhiteSpace(serviceStation) || serviceMileage <= 0)
+        {
+            errorMessage = "Please fill in all fields.";
+            return;
+        }
+
+        try
+        {
+            currentVehicle.Status = "In Service";
+            currentVehicle.Mileage = serviceMileage;
+            await Supabase.From<Vehicle>().Update(currentVehicle);
+
+            await LoadData();
+            showBookService = false;
+            successMessage = $"Service booked at {serviceStation} for {currentVehicle.Registration}.";
+            serviceStation = string.Empty;
+            serviceMileage = 0;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to book service: {ex.Message}";
+        }
+    }
+
+    private async Task SubmitFaultReport()
+    {
+        if (string.IsNullOrWhiteSpace(faultType) || string.IsNullOrWhiteSpace(faultDescription))
+        {
+            errorMessage = "Please select a fault type and add a description.";
+            return;
+        }
+
+        try
+        {
+            var fault = new Fault
+            {
+                VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration,
+                DriverEmail = currentUserEmail,
+                FaultType = faultType,
+                Description = faultDescription,
+                Status = "Open",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await Supabase.From<Fault>().Insert(fault);
+
+            showReportFault = false;
+            successMessage = "Fault report submitted successfully.";
+            faultType = string.Empty;
+            faultDescription = string.Empty;
+            faultPhoto = null;
+            faultPhotoName = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to submit fault report: {ex.Message}";
+        }
+    }
+
+    private async Task SubmitReturnVehicle()
+    {
+        if (returnMileage <= 0 || string.IsNullOrWhiteSpace(returnCondition))
+        {
+            errorMessage = "Please enter mileage and condition.";
+            return;
+        }
+
+        try
+        {
+            currentVehicle.Status = "Available";
+            currentVehicle.Mileage = returnMileage;
+            currentVehicle.LastDriver = string.Empty;
+            await Supabase.From<Vehicle>().Update(currentVehicle);
+
+            await LoadData();
+            showReturnVehicle = false;
+            successMessage = "Vehicle returned successfully.";
+            returnMileage = 0;
+            returnCondition = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to return vehicle: {ex.Message}";
+        }
+    }
+
+    private async Task SubmitVehicleRequest()
+    {
+        if (string.IsNullOrWhiteSpace(requestedVehicleId) || requestMileage <= 0 || string.IsNullOrWhiteSpace(requestApprover))
+        {
+            errorMessage = "Please fill in all fields.";
+            return;
+        }
+
+        try
+        {
+            var vehicleResponse = await Supabase.From<Vehicle>()
+                .Filter("id", Postgrest.Constants.Operator.Equals, requestedVehicleId)
+                .Single();
+
+            if (vehicleResponse == null)
+            {
+                errorMessage = "Vehicle not found.";
+                return;
+            }
+
+            // Look up driver's full name to display in admin dashboard
+            string driverDisplayName = currentUserEmail;
+            try
+            {
+                var driverRecord = await Supabase.From<Driver>()
+                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                    .Single();
+                if (driverRecord != null)
+                    driverDisplayName = driverRecord.Name;
+            }
+            catch { }
+
+            vehicleResponse.Status = "Active";
+            vehicleResponse.Mileage = requestMileage;
+            vehicleResponse.LastDriver = driverDisplayName;
+            await Supabase.From<Vehicle>().Update(vehicleResponse);
+
+            await LoadData();
+            showRequestVehicle = false;
+            successMessage = $"Vehicle assigned successfully to {driverDisplayName}.";
+            requestedVehicleId = string.Empty;
+            requestMileage = 0;
+            requestApprover = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to request vehicle: {ex.Message}";
+        }
+    }
+}

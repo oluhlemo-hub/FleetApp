@@ -1,0 +1,130 @@
+@page "/admin/settings"
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">App Settings</h2>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">General</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold small">Company / Tenant Name</label>
+                    <input class="form-control" @bind="CompanyName" placeholder="e.g. Acme Fleet Co." />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold small">Support Email</label>
+                    <input type="email" class="form-control" @bind="SupportEmail" placeholder="support@company.com" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold small">Service Interval (km)</label>
+                    <input type="number" class="form-control" @bind="ServiceIntervalKm" placeholder="e.g. 1000" />
+                    <small class="text-muted">How many km between services</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold small">Default Vehicle Status</label>
+                    <select class="form-select" @bind="DefaultStatus">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="In Service">In Service</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Branding</h5>
+            <div class="row align-items-center">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold small">Main Accent Color</label>
+                    <div class="d-flex gap-2 mt-2">
+                        @foreach (var color in ThemeColors)
+                        {
+                            <div @onclick="() => SelectColor(color)"
+                                 style="background-color: @color; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: @(SelectedColor == color ? "3px solid #000" : "2px solid transparent")">
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold small">Custom Color Hex</label>
+                    <input type="text" class="form-control" @bind="SelectedColor" placeholder="#000000" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold small">Preview</label>
+                    <div style="background-color: @SelectedColor; height: 40px; border-radius: 10px;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Company Logo URL</label>
+                <input type="text" class="form-control" @bind="LogoUrl" placeholder="https://yourcompany.com/logo.png" />
+                @if (!string.IsNullOrEmpty(LogoUrl))
+                {
+                    <img src="@LogoUrl" alt="Logo preview" style="height: 50px; margin-top: 10px;" />
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Notifications</h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" @bind="NotifyOnServiceDue" />
+                <label class="form-check-label">Notify admin when service is due</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" @bind="NotifyOnDriverAssigned" />
+                <label class="form-check-label">Notify admin when a driver takes a vehicle</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" @bind="NotifyDriverOnServiceDue" />
+                <label class="form-check-label">Notify driver when their vehicle service is due</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-danger mb-4" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-danger mb-3">Danger Zone</h5>
+            <p class="text-muted small">These actions are irreversible. Please be certain.</p>
+            <button class="btn btn-outline-danger btn-sm">Delete All Vehicles</button>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary px-5 py-2 shadow-sm" @onclick="ApplySettings">Apply Changes</button>
+    </div>
+</div>
+
+@code {
+    private string CompanyName { get; set; } = "My Fleet Company";
+    private string SupportEmail { get; set; } = "";
+    private int ServiceIntervalKm { get; set; } = 1000;
+    private string DefaultStatus { get; set; } = "Active";
+    private string SelectedColor { get; set; } = "#0d6efd";
+    private string LogoUrl { get; set; } = "";
+    private bool NotifyOnServiceDue { get; set; } = true;
+    private bool NotifyOnDriverAssigned { get; set; } = false;
+    private bool NotifyDriverOnServiceDue { get; set; } = false;
+    private string successMessage { get; set; } = "";
+
+    private List<string> ThemeColors = new List<string>
+    {
+        "#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#212529"
+    };
+
+    private void SelectColor(string color) => SelectedColor = color;
+
+    private void ApplySettings()
+    {
+        successMessage = $"Settings saved! Company: {CompanyName}, Accent: {SelectedColor}";
+        StateHasChanged();
+    }
+}

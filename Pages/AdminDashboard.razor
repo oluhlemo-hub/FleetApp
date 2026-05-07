@@ -1,0 +1,1010 @@
+@page "/admin"
+@using FleetManagement.Models
+@inject Supabase.Client Supabase
+
+<div class="container-fluid">
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible mt-2">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+
+    <!-- Fault Alerts Banner -->
+    @foreach (var fault in openFaults)
+    {
+        <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2 mt-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div>
+                <strong>Fault Reported:</strong>
+                @fault.FaultType on <strong>@fault.VehicleRegistration</strong>
+                by @fault.DriverEmail —
+                <a href="#" class="alert-link" @onclick="() => OpenFaultDetail(fault)" @onclick:preventDefault>
+                    View Report
+                </a>
+            </div>
+            <button type="button" class="btn-close ms-auto"
+                    @onclick="() => DismissFaultAlert(fault)"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+        <h3 class="mb-0">Fleet Overview</h3>
+        <div class="d-flex gap-2 align-items-center">
+
+            <!-- Notifications Bell -->
+            <div class="position-relative">
+                <button class="btn btn-outline-secondary position-relative" @onclick="ToggleNotifications">
+                    <i class="bi bi-bell fs-5"></i>
+                    @if (allFaults.Count(f => f.Status == "Open") > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @allFaults.Count(f => f.Status == "Open")
+                        </span>
+                    }
+                </button>
+
+                <!-- Notifications Panel -->
+                @if (showNotifications)
+                {
+                    <div class="notifications-panel card shadow">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <strong><i class="bi bi-bell me-2"></i>Notifications</strong>
+                            <button class="btn btn-sm btn-link text-muted p-0" @onclick="ToggleNotifications">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                            @if (!allFaults.Any())
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-check-circle fs-3"></i>
+                                    <p class="mt-2 mb-0">No fault reports</p>
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var fault in allFaults.OrderByDescending(f => f.CreatedAt))
+                                {
+                                    <div class="notification-item p-3 border-bottom @(fault.Status == "Open" ? "bg-danger-subtle" : "")"
+                                         style="cursor:pointer"
+                                         @onclick="() => OpenFaultDetail(fault)">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span class="badge @(fault.Status == "Open" ? "bg-danger" : "bg-success") me-1">
+                                                    @fault.Status
+                                                </span>
+                                                <strong>@fault.FaultType</strong>
+                                            </div>
+                                            <small class="text-muted">@fault.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")</small>
+                                        </div>
+                                        <div class="mt-1 small text-muted">
+                                            <i class="bi bi-car-front me-1"></i>@fault.VehicleRegistration
+                                            &nbsp;·&nbsp;
+                                            <i class="bi bi-person me-1"></i>@fault.DriverEmail
+                                        </div>
+                                        <div class="mt-1 small text-truncate">@fault.Description</div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        @if (allFaults.Any(f => f.Status == "Open"))
+                        {
+                            <div class="card-footer text-center py-2">
+                                <button class="btn btn-sm btn-outline-primary" @onclick='() => { activeTab = "faults"; showNotifications = false; }'>
+                                    View All in Faults Tab
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <button class="btn btn-outline-secondary" @onclick="ToggleSettings">
+                <i class="bi bi-gear me-1"></i> Settings
+            </button>
+            <button class="btn btn-primary"
+                    @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; }">
+                <i class="bi bi-plus-circle me-1"></i> Add Vehicle
+            </button>
+            <button class="btn btn-secondary"
+                    @onclick="() => { isDriverModalVisible = true; modalError = string.Empty; }">
+                <i class="bi bi-person-plus me-1"></i> Add Driver
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "vehicles" ? "active" : "")"
+                    @onclick='() => activeTab = "vehicles"'>
+                <i class="bi bi-truck me-1"></i> Vehicles (@vehicles.Count)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "drivers" ? "active" : "")"
+                    @onclick='() => activeTab = "drivers"'>
+                <i class="bi bi-people me-1"></i> Drivers (@drivers.Count)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "faults" ? "active" : "") position-relative"
+                    @onclick='() => activeTab = "faults"'>
+                <i class="bi bi-exclamation-triangle me-1"></i> Faults
+                @if (allFaults.Count(f => f.Status == "Open") > 0)
+                {
+                    <span class="badge bg-danger ms-1">@allFaults.Count(f => f.Status == "Open")</span>
+                }
+            </button>
+        </li>
+        @if (activeTab == "settings")
+        {
+            <li class="nav-item">
+                <button class="nav-link active">
+                    <i class="bi bi-gear me-1"></i> Settings
+                </button>
+            </li>
+        }
+    </ul>
+
+    <!-- Vehicles Tab -->
+    @if (activeTab == "vehicles")
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Registration</th>
+                            <th>Status</th>
+                            <th>Mileage</th>
+                            <th>Service Due</th>
+                            <th>Driver</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (vehicles.Any())
+                        {
+                            @foreach (var car in vehicles)
+                            {
+                                <tr>
+                                    <td>@car.Make @car.Model</td>
+                                    <td><strong>@car.Registration</strong></td>
+                                    <td>
+                                        <span class="badge @GetStatusBadge(car.Status)">@car.Status</span>
+                                    </td>
+                                    <td>@car.Mileage km</td>
+                                    <td>
+                                        @if (car.Mileage >= car.ServiceDueKm)
+                                        {
+                                            <span class="text-danger fw-bold">@car.ServiceDueKm km ⚠️</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@car.ServiceDueKm km</span>
+                                        }
+                                    </td>
+                                    <td>@(car.LastDriver ?? "Unassigned")</td>
+                                    <td class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => SelectVehicle(car)">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => ConfirmDeleteVehicle(car)">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No vehicles found. Click "Add Vehicle" to get started.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Drivers Tab -->
+    @if (activeTab == "drivers")
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (drivers.Any())
+                        {
+                            @foreach (var driver in drivers)
+                            {
+                                <tr class="@(!driver.IsActive ? "table-secondary text-muted" : "")">
+                                    <td>
+                                        <i class="bi bi-person-circle me-2 text-secondary"></i>
+                                        @driver.Name
+                                    </td>
+                                    <td>@driver.Email</td>
+                                    <td>@(string.IsNullOrEmpty(driver.Phone) ? "—" : driver.Phone)</td>
+                                    <td>
+                                        <span class="badge @(driver.Role == "Admin" ? "bg-warning text-dark" : "bg-info text-dark")">
+                                            @driver.Role
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(driver.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(driver.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => SelectDriver(driver)">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        @if (driver.IsActive)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    @onclick="() => ConfirmDeactivateDriver(driver)">
+                                                <i class="bi bi-person-x"></i> Deactivate
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-success"
+                                                    @onclick="() => ReactivateDriver(driver)">
+                                                <i class="bi bi-person-check"></i> Reactivate
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No drivers found. Click "Add Driver" to get started.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Faults Tab -->
+    @if (activeTab == "faults")
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th>Driver</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (allFaults.Any())
+                        {
+                            @foreach (var fault in allFaults.OrderByDescending(f => f.CreatedAt))
+                            {
+                                <tr>
+                                    <td>@fault.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td><strong>@fault.VehicleRegistration</strong></td>
+                                    <td>@fault.DriverEmail</td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">@fault.FaultType</span>
+                                    </td>
+                                    <td class="text-truncate" style="max-width:200px">@fault.Description</td>
+                                    <td>
+                                        <span class="badge @(fault.Status == "Open" ? "bg-danger" : "bg-success")">
+                                            @fault.Status
+                                        </span>
+                                    </td>
+                                    <td class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => OpenFaultDetail(fault)">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                        @if (fault.Status == "Open")
+                                        {
+                                            <button class="btn btn-sm btn-outline-success"
+                                                    @onclick="() => ResolveFault(fault)">
+                                                <i class="bi bi-check-lg"></i> Resolve
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No fault reports found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Settings Tab -->
+    @if (activeTab == "settings")
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-gear me-2"></i>Settings</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-palette me-2"></i>Theme
+                                </h6>
+                                <p class="text-muted small">Customise the app appearance.</p>
+                                <select class="form-select" @bind="appSettings.Theme">
+                                    <option value="Default (Blue)">Default (Blue)</option>
+                                    <option value="Dark">Dark</option>
+                                    <option value="Green">Green</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-bell me-2"></i>Notifications
+                                </h6>
+                                <p class="text-muted small">Service due alerts and fault reports.</p>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox"
+                                           checked="@appSettings.EmailAlerts"
+                                           @onchange="e => appSettings.EmailAlerts = (bool)e.Value!" />
+                                    <label class="form-check-label">Email alerts</label>
+                                </div>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox"
+                                           checked="@appSettings.SmsAlerts"
+                                           @onchange="e => appSettings.SmsAlerts = (bool)e.Value!" />
+                                    <label class="form-check-label">SMS alerts</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" @onclick="SaveSettings">
+                        <i class="bi bi-save me-1"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Click outside to close notifications -->
+@if (showNotifications)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100"
+         style="z-index: 999;"
+         @onclick="ToggleNotifications">
+    </div>
+}
+
+<!-- Fault Detail Modal -->
+@if (selectedFault != null)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2 text-danger"></i> Fault Report
+                    </h5>
+                    <button type="button" class="btn-close"
+                            @onclick="() => selectedFault = null"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-car-front me-2"></i>Vehicle</span>
+                            <span class="fw-semibold">@selectedFault.VehicleRegistration</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-person me-2"></i>Reported By</span>
+                            <span class="fw-semibold">@selectedFault.DriverEmail</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-tag me-2"></i>Fault Type</span>
+                            <span class="badge bg-warning text-dark">@selectedFault.FaultType</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-calendar me-2"></i>Date</span>
+                            <span class="fw-semibold">@selectedFault.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-flag me-2"></i>Status</span>
+                            <span class="badge @(selectedFault.Status == "Open" ? "bg-danger" : "bg-success")">
+                                @selectedFault.Status
+                            </span>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="text-muted d-block mb-1"><i class="bi bi-chat-text me-2"></i>Description</span>
+                            <p class="mb-0">@selectedFault.Description</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (selectedFault.Status == "Open")
+                    {
+                        <button class="btn btn-success" @onclick="() => ResolveFault(selectedFault)">
+                            <i class="bi bi-check-lg me-1"></i> Mark as Resolved
+                        </button>
+                    }
+                    <button class="btn btn-secondary" @onclick="() => selectedFault = null">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Confirm Delete/Deactivate Modal -->
+@if (showConfirmModal)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>@confirmTitle
+                    </h5>
+                    <button type="button" class="btn-close"
+                            @onclick="() => showConfirmModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@confirmMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showConfirmModal = false">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" @onclick="ExecuteConfirmAction">
+                        <i class="bi bi-check-lg me-1"></i> Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- ADD VEHICLE MODAL --- *@
+@if (isVehicleModalVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        @(selectedVehicle != null ? "Edit Vehicle" : "Add Vehicle")
+                    </h5>
+                    <button type="button" class="btn-close"
+                            @onclick="() => { isVehicleModalVisible = false; selectedVehicle = null; }">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(modalError))
+                    {
+                        <div class="alert alert-danger py-2">@modalError</div>
+                    }
+                    <EditForm Model="@newVehicle" OnValidSubmit="HandleSaveVehicle">
+                        <div class="mb-3">
+                            <label class="form-label">Make</label>
+                            <InputText @bind-Value="newVehicle.Make" class="form-control"
+                                       placeholder="e.g. Toyota" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Model</label>
+                            <InputText @bind-Value="newVehicle.Model" class="form-control"
+                                       placeholder="e.g. Hilux" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Registration</label>
+                            <InputText @bind-Value="newVehicle.Registration" class="form-control"
+                                       placeholder="e.g. GP 123-456" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Current Mileage (km)</label>
+                            <InputNumber @bind-Value="newVehicle.Mileage" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Service Due At (km)</label>
+                            <InputNumber @bind-Value="newVehicle.ServiceDueKm" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <InputSelect @bind-Value="newVehicle.Status" class="form-select">
+                                <option value="Available">Available</option>
+                                <option value="Active">Active</option>
+                                <option value="In Service">In Service</option>
+                                <option value="Inactive">Inactive</option>
+                            </InputSelect>
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary"
+                                    @onclick="() => { isVehicleModalVisible = false; selectedVehicle = null; }">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Save Vehicle
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- ADD / EDIT DRIVER MODAL --- *@
+@if (isDriverModalVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus me-2"></i>
+                        @(selectedDriver != null ? "Edit Driver" : "Register New Driver")
+                    </h5>
+                    <button type="button" class="btn-close"
+                            @onclick="CloseDriverModal">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(modalError))
+                    {
+                        <div class="alert alert-danger py-2">@modalError</div>
+                    }
+                    <EditForm Model="@driverForm" OnValidSubmit="HandleSaveDriver">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <InputText @bind-Value="driverForm.Name" class="form-control"
+                                       placeholder="e.g. John Smith" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText @bind-Value="driverForm.Email" class="form-control"
+                                       placeholder="e.g. john@company.com"
+                                       disabled="@(selectedDriver != null)" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <InputText @bind-Value="driverForm.Phone" class="form-control"
+                                       placeholder="e.g. 071 234 5678" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <InputSelect @bind-Value="driverForm.Role" class="form-select">
+                                <option value="Driver">Driver</option>
+                                <option value="Admin">Admin</option>
+                            </InputSelect>
+                        </div>
+                        @if (selectedDriver == null)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Temporary Password</label>
+                                <InputText @bind-Value="tempPassword" class="form-control"
+                                           type="password" placeholder="Min 6 characters" />
+                            </div>
+                        }
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary"
+                                    @onclick="CloseDriverModal">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-check me-1"></i>
+                                @(selectedDriver != null ? "Save Changes" : "Create Account")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .notifications-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 360px;
+        border-radius: 12px;
+        z-index: 1000;
+    }
+    .notification-item:hover {
+        background-color: rgba(0,0,0,0.04);
+    }
+</style>
+
+@code {
+    private List<Vehicle> vehicles = new();
+    private List<Driver> drivers = new();
+    private List<Fault> allFaults = new();
+    private List<Fault> openFaults = new();
+    private AppSettings appSettings = new();
+
+    private Vehicle newVehicle = new() { Status = "Available" };
+    private Vehicle? selectedVehicle = null;
+    private Driver? selectedDriver = null;
+    private Fault? selectedFault = null;
+
+    // Confirm modal state
+    private bool showConfirmModal = false;
+    private string confirmTitle = "";
+    private string confirmMessage = "";
+    private Func<Task>? confirmAction = null;
+
+    private DriverFormModel driverForm = new();
+    private string tempPassword = "";
+    private bool isVehicleModalVisible = false;
+    private bool isDriverModalVisible = false;
+    private bool showNotifications = false;
+    private string modalError = "";
+    private string successMessage = "";
+    private string activeTab = "vehicles";
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        var vehicleResponse = await Supabase.From<Vehicle>().Get();
+        vehicles = vehicleResponse.Models;
+
+        var driverResponse = await Supabase.From<Driver>().Get();
+        drivers = driverResponse.Models;
+
+        var faultResponse = await Supabase.From<Fault>().Get();
+        allFaults = faultResponse.Models;
+        openFaults = allFaults.Where(f => f.Status == "Open").ToList();
+
+        var settingsResponse = await Supabase.From<AppSettings>().Get();
+        appSettings = settingsResponse.Models.FirstOrDefault() ?? new AppSettings();
+    }
+
+    // ── Confirm modal helpers ─────────────────────────────────────────────────
+
+    private void ConfirmDeleteVehicle(Vehicle car)
+    {
+        confirmTitle = "Remove Vehicle";
+        confirmMessage = $"Are you sure you want to permanently remove {car.Make} {car.Model} ({car.Registration})? This cannot be undone.";
+        confirmAction = () => DeleteVehicle(car);
+        showConfirmModal = true;
+    }
+
+    private void ConfirmDeactivateDriver(Driver driver)
+    {
+        confirmTitle = "Deactivate Driver";
+        confirmMessage = $"Are you sure you want to deactivate {driver.Name}? They will no longer be able to log in.";
+        confirmAction = () => DeactivateDriver(driver);
+        showConfirmModal = true;
+    }
+
+    private async Task ExecuteConfirmAction()
+    {
+        showConfirmModal = false;
+        if (confirmAction != null)
+            await confirmAction();
+    }
+
+    // ── Vehicle actions ───────────────────────────────────────────────────────
+
+    private async Task DeleteVehicle(Vehicle car)
+    {
+        try
+        {
+            await Supabase.From<Vehicle>()
+                .Where(v => v.Id == car.Id)
+                .Delete();
+            successMessage = $"{car.Registration} removed successfully.";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error removing vehicle: {ex.Message}";
+        }
+    }
+
+    // ── Driver actions ────────────────────────────────────────────────────────
+
+    private async Task DeactivateDriver(Driver driver)
+    {
+        try
+        {
+            await Supabase.From<Driver>()
+                .Where(d => d.Id == driver.Id)
+                .Set(d => d.IsActive, false)
+                .Update();
+            successMessage = $"{driver.Name} has been deactivated.";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error deactivating driver: {ex.Message}";
+        }
+    }
+
+    private async Task ReactivateDriver(Driver driver)
+    {
+        try
+        {
+            await Supabase.From<Driver>()
+                .Where(d => d.Id == driver.Id)
+                .Set(d => d.IsActive, true)
+                .Update();
+            successMessage = $"{driver.Name} has been reactivated.";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error reactivating driver: {ex.Message}";
+        }
+    }
+
+    // ── Settings ──────────────────────────────────────────────────────────────
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            appSettings.UpdatedAt = DateTime.UtcNow;
+            await Supabase.From<AppSettings>()
+                .Where(s => s.Id == appSettings.Id)
+                .Set(s => s.Theme, appSettings.Theme)
+                .Set(s => s.EmailAlerts, appSettings.EmailAlerts)
+                .Set(s => s.SmsAlerts, appSettings.SmsAlerts)
+                .Set(s => s.UpdatedAt, appSettings.UpdatedAt)
+                .Update();
+            successMessage = "Settings saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error saving settings: {ex.Message}";
+        }
+    }
+
+    private void ToggleSettings()
+    {
+        activeTab = activeTab == "settings" ? "vehicles" : "settings";
+    }
+
+    private void ToggleNotifications() => showNotifications = !showNotifications;
+
+    private void OpenFaultDetail(Fault fault)
+    {
+        selectedFault = fault;
+        showNotifications = false;
+    }
+
+    private void DismissFaultAlert(Fault fault)
+    {
+        openFaults.Remove(fault);
+    }
+
+    private async Task ResolveFault(Fault fault)
+    {
+        try
+        {
+            fault.Status = "Resolved";
+            await Supabase.From<Fault>().Update(fault);
+            await LoadData();
+            selectedFault = null;
+            successMessage = $"Fault for {fault.VehicleRegistration} marked as resolved.";
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private void SelectVehicle(Vehicle car)
+    {
+        selectedVehicle = car;
+        newVehicle = new Vehicle
+        {
+            Id = car.Id,
+            Make = car.Make,
+            Model = car.Model,
+            Registration = car.Registration,
+            Mileage = car.Mileage,
+            ServiceDueKm = car.ServiceDueKm,
+            Status = car.Status,
+            LastDriver = car.LastDriver
+        };
+        isVehicleModalVisible = true;
+        modalError = string.Empty;
+    }
+
+    private void SelectDriver(Driver driver)
+    {
+        selectedDriver = driver;
+        driverForm = new DriverFormModel
+        {
+            Name = driver.Name,
+            Email = driver.Email,
+            Phone = driver.Phone ?? "",
+            Role = driver.Role
+        };
+        isDriverModalVisible = true;
+        modalError = string.Empty;
+    }
+
+    private void CloseDriverModal()
+    {
+        isDriverModalVisible = false;
+        selectedDriver = null;
+        driverForm = new DriverFormModel();
+        modalError = string.Empty;
+        tempPassword = "";
+    }
+
+    private async Task HandleSaveVehicle()
+    {
+        modalError = "";
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newVehicle.Make) ||
+                string.IsNullOrWhiteSpace(newVehicle.Model) ||
+                string.IsNullOrWhiteSpace(newVehicle.Registration))
+            {
+                modalError = "Please fill in Make, Model and Registration.";
+                return;
+            }
+
+            if (selectedVehicle != null)
+            {
+                await Supabase.From<Vehicle>()
+                    .Where(v => v.Id == newVehicle.Id)
+                    .Set(v => v.Make, newVehicle.Make)
+                    .Set(v => v.Model, newVehicle.Model)
+                    .Set(v => v.Registration, newVehicle.Registration)
+                    .Set(v => v.Mileage, newVehicle.Mileage)
+                    .Set(v => v.ServiceDueKm, newVehicle.ServiceDueKm)
+                    .Set(v => v.Status, newVehicle.Status)
+                    .Update();
+                successMessage = $"{newVehicle.Registration} updated successfully.";
+            }
+            else
+            {
+                await Supabase.From<Vehicle>().Insert(newVehicle);
+                successMessage = $"{newVehicle.Registration} added successfully.";
+            }
+
+            await LoadData();
+            isVehicleModalVisible = false;
+            selectedVehicle = null;
+            newVehicle = new Vehicle { Status = "Available" };
+        }
+        catch (Exception ex)
+        {
+            modalError = $"Error saving vehicle: {ex.Message}";
+        }
+    }
+
+    private async Task HandleSaveDriver()
+    {
+        modalError = "";
+        try
+        {
+            if (string.IsNullOrWhiteSpace(driverForm.Name) ||
+                string.IsNullOrWhiteSpace(driverForm.Email))
+            {
+                modalError = "Please fill in Name and Email.";
+                return;
+            }
+
+            if (selectedDriver != null)
+            {
+               await Supabase.From<Driver>()
+    .Where(d => d.Id == selectedDriver.Id)
+    .Set(d => d.Name, driverForm.Name)
+#pragma warning disable CS8603
+    .Set(d => d.Phone, driverForm.Phone ?? "")
+#pragma warning restore CS8603
+    .Set(d => d.Role, driverForm.Role)
+    .Update();
+                successMessage = $"{driverForm.Name} updated successfully.";
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(tempPassword) || tempPassword.Length < 6)
+                {
+                    modalError = "Password must be at least 6 characters.";
+                    return;
+                }
+
+                var authResponse = await Supabase.Auth.SignUp(driverForm.Email, tempPassword);
+                if (authResponse?.User != null)
+                {
+                    var driverRecord = new Driver
+                    {
+                        AuthId = authResponse.User.Id ?? "",
+                        Name = driverForm.Name,
+                        Email = driverForm.Email,
+                        Phone = driverForm.Phone,
+                        Role = driverForm.Role,
+                        IsActive = true
+                    };
+                    await Supabase.From<Driver>().Insert(driverRecord);
+                    successMessage = $"Account created for {driverForm.Name}.";
+                }
+            }
+
+            await LoadData();
+            CloseDriverModal();
+        }
+        catch (Supabase.Gotrue.Exceptions.GotrueException ex)
+            when (ex.Message.Contains("user_already_exists"))
+        {
+            modalError = "A user with this email already exists.";
+        }
+        catch (Exception ex)
+        {
+            modalError = $"Error: {ex.Message}";
+        }
+    }
+
+    private string GetStatusBadge(string status) => status switch
+    {
+        "Active"     => "bg-success",
+        "Available"  => "bg-primary",
+        "In Service" => "bg-warning text-dark",
+        "Inactive"   => "bg-secondary",
+        _            => "bg-light text-dark"
+    };
+
+    public class DriverFormModel
+    {
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Role { get; set; } = "Driver";
+    }
+}
