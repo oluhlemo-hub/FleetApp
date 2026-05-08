@@ -9,34 +9,64 @@
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? RequiredRole { get; set; }
 
     private bool isAuthenticated = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Check immediately
-        var session = Supabase.Auth.CurrentSession;
-        if (session?.User != null)
+        // Wait longer for session to restore after navigation
+        for (int i = 0; i < 20; i++)
+        {
+            var session = Supabase.Auth.CurrentSession;
+            if (session?.User != null)
+            {
+                await ValidateAndRedirect(session.User.Email!);
+                return;
+            }
+            await Task.Delay(300);
+        }
+
+        // No session found after waiting — redirect to login
+        Nav.NavigateTo("/", forceLoad: false);
+    }
+
+    private async Task ValidateAndRedirect(string email)
+    {
+        if (string.IsNullOrEmpty(RequiredRole))
         {
             isAuthenticated = true;
+            StateHasChanged();
             return;
         }
 
-        // Poll briefly for session restore
-        for (int i = 0; i < 10; i++)
+        try
         {
-            await Task.Delay(200);
-            session = Supabase.Auth.CurrentSession;
-            if (session?.User != null)
+            var driver = await Supabase
+                .From<FleetManagement.Models.Driver>()
+                .Filter("email", Postgrest.Constants.Operator.Equals, email)
+                .Single();
+
+            if (driver == null || !driver.IsActive)
             {
-                isAuthenticated = true;
-                StateHasChanged();
+                await Supabase.Auth.SignOut();
+                Nav.NavigateTo("/", forceLoad: false);
                 return;
             }
-        }
 
-        // Not authenticated — redirect to login
-        Nav.NavigateTo("/", forceLoad: false);
+            if (driver.Role != RequiredRole)
+            {
+                Nav.NavigateTo(driver.Role == "Admin" ? "/admin" : "/driver", forceLoad: false);
+                return;
+            }
+
+            isAuthenticated = true;
+            StateHasChanged();
+        }
+        catch
+        {
+            Nav.NavigateTo("/", forceLoad: false);
+        }
     }
 
     public void Dispose() { }

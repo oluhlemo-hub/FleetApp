@@ -24,7 +24,13 @@ namespace FleetManagement.Services
                     .Filter("email", Postgrest.Constants.Operator.Equals, email)
                     .Single();
 
-                return result?.Role;
+                if (result == null) return null;
+
+                // Block inactive drivers
+                if (!result.IsActive)
+                    return "Inactive";
+
+                return result.Role;
             }
             catch (Exception)
             {

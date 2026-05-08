@@ -71,11 +71,15 @@
             var role = await FleetService.LoginAsync(UserEmail, Password);
             if (role == "Admin")
             {
-                Nav.NavigateTo("/admin", forceLoad: true);
+                Nav.NavigateTo("/admin");
             }
             else if (role == "Driver")
             {
-                Nav.NavigateTo("/driver", forceLoad: true);
+                Nav.NavigateTo("/driver");
+            }
+            else if (role == "Inactive")
+            {
+                ErrorMessage = "Your account has been deactivated. Contact your administrator.";
             }
             else
             {
