@@ -7,9 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// Add Supabase
-var supabaseUrl = builder.Configuration["Supabase:Url"]!;
-var supabaseKey = builder.Configuration["Supabase:Key"]!;
+// Add Supabase — checks Railway env vars first, falls back to appsettings.json
+var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL") 
+                  ?? builder.Configuration["Supabase:Url"]!;
+var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_KEY") 
+                  ?? builder.Configuration["Supabase:Key"]!;
 
 builder.Services.AddScoped<Supabase.Client>(_ =>
     new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
