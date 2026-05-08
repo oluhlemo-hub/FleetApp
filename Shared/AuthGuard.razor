@@ -1,0 +1,43 @@
+@inject Supabase.Client Supabase
+@inject NavigationManager Nav
+@implements IDisposable
+
+@if (isAuthenticated)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check immediately
+        var session = Supabase.Auth.CurrentSession;
+        if (session?.User != null)
+        {
+            isAuthenticated = true;
+            return;
+        }
+
+        // Poll briefly for session restore
+        for (int i = 0; i < 10; i++)
+        {
+            await Task.Delay(200);
+            session = Supabase.Auth.CurrentSession;
+            if (session?.User != null)
+            {
+                isAuthenticated = true;
+                StateHasChanged();
+                return;
+            }
+        }
+
+        // Not authenticated — redirect to login
+        Nav.NavigateTo("/", forceLoad: false);
+    }
+
+    public void Dispose() { }
+}

@@ -2,6 +2,7 @@
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
 
+<AuthGuard RequiredRole="Driver">
 <div class="container-fluid px-3 py-3">
 
     @if (!string.IsNullOrEmpty(successMessage))
@@ -259,6 +260,7 @@
         }
     }
 </style>
+</AuthGuard>
 
 @code {
     private Vehicle currentVehicle = new();
