@@ -1,4 +1,5 @@
 @page "/"
+@layout EmptyLayout
 @using FleetManagement.Services
 @inject FleetService FleetService
 @inject NavigationManager Nav
@@ -58,27 +59,23 @@
     private async Task HandleLogin()
     {
         ErrorMessage = "";
-
         if (string.IsNullOrWhiteSpace(UserEmail) || string.IsNullOrWhiteSpace(Password))
         {
             ErrorMessage = "Please enter your email and password.";
             return;
         }
-
         isLoading = true;
         StateHasChanged();
-
         try
         {
             var role = await FleetService.LoginAsync(UserEmail, Password);
-
             if (role == "Admin")
             {
-                Nav.NavigateTo("/admin");
+                Nav.NavigateTo("/admin", forceLoad: true);
             }
             else if (role == "Driver")
             {
-                Nav.NavigateTo("/driver");
+                Nav.NavigateTo("/driver", forceLoad: true);
             }
             else
             {
