@@ -1,15 +1,9 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 8080
-
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY ["FleetManagement.csproj", "."]
-RUN dotnet restore "FleetManagement.csproj"
+WORKDIR /app
 COPY . .
-RUN dotnet publish "FleetManagement.csproj" -c Release -o /app/publish
+RUN dotnet publish FleetManagement.csproj -c Release -o /app/publish --no-self-contained
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
