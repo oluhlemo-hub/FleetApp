@@ -2,7 +2,7 @@
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
 
-<div class="container p-3">
+<div class="container-fluid px-3 py-3">
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
@@ -21,17 +21,28 @@
 
     <!-- Vehicle Card -->
     <div class="card shadow-sm mb-4">
-        <div class="card-body text-center">
-            <h5 class="text-muted">Assigned Vehicle</h5>
+        <div class="card-body text-center py-4">
+            <div class="mb-2">
+                <i class="bi bi-truck display-4 text-primary opacity-75"></i>
+            </div>
+            <h6 class="text-muted text-uppercase small fw-semibold mb-2">Assigned Vehicle</h6>
             @if (hasVehicle)
             {
-                <h2 class="display-6">@currentVehicle.Registration</h2>
-                <p>@currentVehicle.Make @currentVehicle.Model</p>
-                <span class="badge bg-info">@currentVehicle.Status</span>
+                <h2 class="display-6 fw-bold mb-1">@currentVehicle.Registration</h2>
+                <p class="text-muted mb-2">@currentVehicle.Make @currentVehicle.Model</p>
+                <span class="badge bg-info fs-6 px-3 py-2">@currentVehicle.Status</span>
+                @if (currentVehicle.Mileage >= currentVehicle.ServiceDueKm)
+                {
+                    <div class="alert alert-warning mt-3 py-2 mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Service overdue at <strong>@currentVehicle.ServiceDueKm km</strong>
+                    </div>
+                }
             }
             else
             {
                 <h4 class="text-muted">No vehicle assigned</h4>
+                <p class="text-muted small">Request a vehicle below to get started.</p>
             }
         </div>
     </div>
@@ -39,26 +50,36 @@
     <!-- Action Buttons -->
     <div class="row g-3">
         <div class="col-6">
-            <button class="btn btn-primary w-100 py-2" @onclick="() => showBookService = true" disabled="@(!hasVehicle)">
-                <i class="bi bi-tools me-1"></i> Book Service
+            <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
+                    @onclick="() => showBookService = true"
+                    disabled="@(!hasVehicle)">
+                <i class="bi bi-tools fs-4"></i>
+                <span class="small">Book Service</span>
             </button>
         </div>
         <div class="col-6">
-            <button class="btn btn-danger w-100 py-2" @onclick="() => showReportFault = true" disabled="@(!hasVehicle)">
-                <i class="bi bi-exclamation-triangle me-1"></i> Report Fault
+            <button class="btn btn-danger w-100 py-3 d-flex flex-column align-items-center gap-1"
+                    @onclick="() => showReportFault = true"
+                    disabled="@(!hasVehicle)">
+                <i class="bi bi-exclamation-triangle fs-4"></i>
+                <span class="small">Report Fault</span>
             </button>
         </div>
         <div class="col-12">
             @if (hasVehicle)
             {
-                <button class="btn btn-dark w-100 py-2" @onclick="() => showReturnVehicle = true">
-                    <i class="bi bi-car-front me-1"></i> Return Vehicle
+                <button class="btn btn-dark w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                        @onclick="() => showReturnVehicle = true">
+                    <i class="bi bi-car-front fs-5"></i>
+                    <span>Return Vehicle</span>
                 </button>
             }
             else
             {
-                <button class="btn btn-success w-100 py-2" @onclick="OpenRequestVehicle">
-                    <i class="bi bi-key me-1"></i> Request Vehicle
+                <button class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                        @onclick="OpenRequestVehicle">
+                    <i class="bi bi-key fs-5"></i>
+                    <span>Request Vehicle</span>
                 </button>
             }
         </div>
@@ -68,23 +89,23 @@
     @if (showBookService)
     {
         <div class="modal-backdrop-custom">
-            <div class="card shadow p-4 modal-card">
+            <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-tools me-2"></i>Book Service</h5>
                 <div class="mb-3">
                     <label class="form-label">Service Station</label>
-                    <input class="form-control" @bind="serviceStation" placeholder="e.g. AutoZone Sandton" />
+                    <input class="form-control form-control-lg" @bind="serviceStation" placeholder="e.g. AutoZone Sandton" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Current Mileage (km)</label>
-                    <input type="number" class="form-control" @bind="serviceMileage" placeholder="e.g. 45000" />
+                    <input type="number" class="form-control form-control-lg" @bind="serviceMileage" placeholder="e.g. 45000" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">Vehicle</label>
                     <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
                 </div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-secondary" @onclick="() => showBookService = false">Cancel</button>
-                    <button class="btn btn-primary" @onclick="SubmitBookService">Submit</button>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitBookService">Submit</button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => showBookService = false">Cancel</button>
                 </div>
             </div>
         </div>
@@ -94,11 +115,11 @@
     @if (showReportFault)
     {
         <div class="modal-backdrop-custom">
-            <div class="card shadow p-4 modal-card">
+            <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Report Fault</h5>
                 <div class="mb-3">
                     <label class="form-label">Fault Type</label>
-                    <select class="form-select" @bind="faultType">
+                    <select class="form-select form-select-lg" @bind="faultType">
                         <option value="">-- Select type --</option>
                         <option>Mechanical</option>
                         <option>Accident</option>
@@ -109,19 +130,20 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Description</label>
-                    <textarea class="form-control" rows="3" @bind="faultDescription" placeholder="Describe the fault..."></textarea>
+                    <textarea class="form-control" rows="4" @bind="faultDescription"
+                              placeholder="Describe the fault in detail..."></textarea>
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">Photo (optional)</label>
                     <InputFile OnChange="OnFaultPhotoSelected" accept="image/*" class="form-control" />
                     @if (faultPhotoName != null)
                     {
-                        <small class="text-muted">Selected: @faultPhotoName</small>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-image me-1"></i>@faultPhotoName</small>
                     }
                 </div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-secondary" @onclick="() => showReportFault = false">Cancel</button>
-                    <button class="btn btn-danger" @onclick="SubmitFaultReport">Submit</button>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-danger btn-lg w-100" @onclick="SubmitFaultReport">Submit Report</button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => showReportFault = false">Cancel</button>
                 </div>
             </div>
         </div>
@@ -131,7 +153,7 @@
     @if (showReturnVehicle)
     {
         <div class="modal-backdrop-custom">
-            <div class="card shadow p-4 modal-card">
+            <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-car-front me-2"></i>Return Vehicle</h5>
                 <div class="mb-3">
                     <label class="form-label">Vehicle</label>
@@ -139,20 +161,20 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Updated Mileage (km)</label>
-                    <input type="number" class="form-control" @bind="returnMileage" placeholder="e.g. 46500" />
+                    <input type="number" class="form-control form-control-lg" @bind="returnMileage" placeholder="e.g. 46500" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">Vehicle Condition</label>
-                    <select class="form-select" @bind="returnCondition">
+                    <select class="form-select form-select-lg" @bind="returnCondition">
                         <option value="">-- Select condition --</option>
                         <option>Clean</option>
                         <option>Dirty</option>
                         <option>Good</option>
                     </select>
                 </div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-secondary" @onclick="() => showReturnVehicle = false">Cancel</button>
-                    <button class="btn btn-dark" @onclick="SubmitReturnVehicle">Confirm Return</button>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-dark btn-lg w-100" @onclick="SubmitReturnVehicle">Confirm Return</button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => showReturnVehicle = false">Cancel</button>
                 </div>
             </div>
         </div>
@@ -162,13 +184,13 @@
     @if (showRequestVehicle)
     {
         <div class="modal-backdrop-custom">
-            <div class="card shadow p-4 modal-card">
+            <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-key me-2"></i>Request Vehicle</h5>
                 <div class="mb-3">
                     <label class="form-label">Available Vehicles</label>
                     @if (availableVehicles.Any())
                     {
-                        <select class="form-select" @bind="requestedVehicleId">
+                        <select class="form-select form-select-lg" @bind="requestedVehicleId">
                             <option value="">-- Select vehicle --</option>
                             @foreach (var v in availableVehicles)
                             {
@@ -178,23 +200,25 @@
                     }
                     else
                     {
-                        <div class="alert alert-warning py-2">No vehicles currently available.</div>
+                        <div class="alert alert-warning py-2">
+                            <i class="bi bi-info-circle me-1"></i> No vehicles currently available.
+                        </div>
                     }
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Current Mileage (km)</label>
-                    <input type="number" class="form-control" @bind="requestMileage" placeholder="e.g. 45000" />
+                    <input type="number" class="form-control form-control-lg" @bind="requestMileage" placeholder="e.g. 45000" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">Approver</label>
-                    <input class="form-control" @bind="requestApprover" placeholder="Manager name or email" />
+                    <input class="form-control form-control-lg" @bind="requestApprover" placeholder="Manager name or email" />
                 </div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-secondary" @onclick="() => showRequestVehicle = false">Cancel</button>
-                    <button class="btn btn-success" @onclick="SubmitVehicleRequest"
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-success btn-lg w-100" @onclick="SubmitVehicleRequest"
                             disabled="@(string.IsNullOrEmpty(requestedVehicleId) || !availableVehicles.Any())">
                         Submit Request
                     </button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => showRequestVehicle = false">Cancel</button>
                 </div>
             </div>
         </div>
@@ -206,16 +230,33 @@
         position: fixed;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.55);
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
         z-index: 1050;
+        padding: 0;
     }
+
     .modal-card {
         width: 100%;
-        max-width: 480px;
-        border-radius: 12px;
+        max-width: 520px;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    @@media (min-width: 576px) {
+        .modal-backdrop-custom {
+            align-items: center;
+            padding: 1rem;
+        }
+        .modal-card {
+            border-radius: 16px;
+            max-height: 90vh;
+        }
     }
 </style>
 
@@ -228,24 +269,20 @@
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
 
-    // Book Service
     private bool showBookService = false;
     private string serviceStation = string.Empty;
     private int serviceMileage;
 
-    // Report Fault
     private bool showReportFault = false;
     private string faultType = string.Empty;
     private string faultDescription = string.Empty;
     private string? faultPhotoName;
     private IBrowserFile? faultPhoto;
 
-    // Return Vehicle
     private bool showReturnVehicle = false;
     private int returnMileage;
     private string returnCondition = string.Empty;
 
-    // Request Vehicle
     private bool showRequestVehicle = false;
     private string requestedVehicleId = string.Empty;
     private int requestMileage;
@@ -253,7 +290,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Try immediately
         var session = Supabase.Auth.CurrentSession;
         if (session?.User?.Email != null)
         {
@@ -262,7 +298,6 @@
             return;
         }
 
-        // Fallback poll — session may arrive slightly after init
         for (int i = 0; i < 20; i++)
         {
             await Task.Delay(250);
@@ -280,7 +315,6 @@
     {
         if (!string.IsNullOrEmpty(currentUserEmail))
         {
-            // Look up driver's name since last_driver stores the full name
             string driverName = currentUserEmail;
             try
             {
@@ -336,23 +370,18 @@
             errorMessage = "Please fill in all fields.";
             return;
         }
-
         try
         {
             currentVehicle.Status = "In Service";
             currentVehicle.Mileage = serviceMileage;
             await Supabase.From<Vehicle>().Update(currentVehicle);
-
             await LoadData();
             showBookService = false;
             successMessage = $"Service booked at {serviceStation} for {currentVehicle.Registration}.";
             serviceStation = string.Empty;
             serviceMileage = 0;
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to book service: {ex.Message}";
-        }
+        catch (Exception ex) { errorMessage = $"Failed to book service: {ex.Message}"; }
     }
 
     private async Task SubmitFaultReport()
@@ -362,7 +391,6 @@
             errorMessage = "Please select a fault type and add a description.";
             return;
         }
-
         try
         {
             var fault = new Fault
@@ -375,9 +403,7 @@
                 Status = "Open",
                 CreatedAt = DateTime.UtcNow
             };
-
             await Supabase.From<Fault>().Insert(fault);
-
             showReportFault = false;
             successMessage = "Fault report submitted successfully.";
             faultType = string.Empty;
@@ -385,10 +411,7 @@
             faultPhoto = null;
             faultPhotoName = null;
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to submit fault report: {ex.Message}";
-        }
+        catch (Exception ex) { errorMessage = $"Failed to submit fault report: {ex.Message}"; }
     }
 
     private async Task SubmitReturnVehicle()
@@ -398,24 +421,19 @@
             errorMessage = "Please enter mileage and condition.";
             return;
         }
-
         try
         {
             currentVehicle.Status = "Available";
             currentVehicle.Mileage = returnMileage;
             currentVehicle.LastDriver = string.Empty;
             await Supabase.From<Vehicle>().Update(currentVehicle);
-
             await LoadData();
             showReturnVehicle = false;
             successMessage = "Vehicle returned successfully.";
             returnMileage = 0;
             returnCondition = string.Empty;
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to return vehicle: {ex.Message}";
-        }
+        catch (Exception ex) { errorMessage = $"Failed to return vehicle: {ex.Message}"; }
     }
 
     private async Task SubmitVehicleRequest()
@@ -425,20 +443,14 @@
             errorMessage = "Please fill in all fields.";
             return;
         }
-
         try
         {
             var vehicleResponse = await Supabase.From<Vehicle>()
                 .Filter("id", Postgrest.Constants.Operator.Equals, requestedVehicleId)
                 .Single();
 
-            if (vehicleResponse == null)
-            {
-                errorMessage = "Vehicle not found.";
-                return;
-            }
+            if (vehicleResponse == null) { errorMessage = "Vehicle not found."; return; }
 
-            // Look up driver's full name to display in admin dashboard
             string driverDisplayName = currentUserEmail;
             try
             {
@@ -462,9 +474,6 @@
             requestMileage = 0;
             requestApprover = string.Empty;
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to request vehicle: {ex.Message}";
-        }
+        catch (Exception ex) { errorMessage = $"Failed to request vehicle: {ex.Message}"; }
     }
 }
