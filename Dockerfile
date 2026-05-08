@@ -8,5 +8,7 @@ RUN dotnet publish FleetManagement.csproj -c Release --no-build -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app .
+RUN mkdir -p /app/wwwroot
 ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENTRYPOINT ["dotnet", "FleetManagement.dll"]
