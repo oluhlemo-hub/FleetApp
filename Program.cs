@@ -4,7 +4,13 @@ using Supabase;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+
+// Configure SignalR properly for proxied environments like Railway
+builder.Services.AddServerSideBlazor().AddHubOptions(options =>
+{
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(30);
+});
 
 var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
                   ?? builder.Configuration["Supabase:Url"]!;
@@ -22,7 +28,6 @@ builder.Services.AddScoped<FleetService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Allow SignalR from any origin (needed for Railway)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
