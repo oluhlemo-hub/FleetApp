@@ -1,0 +1,53 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/android-chrome-192x192.png",
+      "PackagePath": "staticwebassets/android-chrome-192x192.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/android-chrome-512x512.png",
+      "PackagePath": "staticwebassets/android-chrome-512x512.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/apple-touch-icon.png",
+      "PackagePath": "staticwebassets/apple-touch-icon.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/favicon-16x16.png",
+      "PackagePath": "staticwebassets/favicon-16x16.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/favicon-32x32.png",
+      "PackagePath": "staticwebassets/favicon-32x32.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/favicon.ico",
+      "PackagePath": "staticwebassets/favicon.ico"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/images/logo.png",
+      "PackagePath": "staticwebassets/images/logo.png"
+    },
+    {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/site.webmanifest",
+      "PackagePath": "staticwebassets/site.webmanifest"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.FleetManagement.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.FleetManagement.props",
+      "PackagePath": "build\\FleetManagement.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.FleetManagement.props",
+      "PackagePath": "buildMultiTargeting\\FleetManagement.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.FleetManagement.props",
+      "PackagePath": "buildTransitive\\FleetManagement.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

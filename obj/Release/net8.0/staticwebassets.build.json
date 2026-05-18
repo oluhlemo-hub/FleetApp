@@ -1,1 +1,19 @@
-{"Version":1,"Hash":"x1M5u7N9yR1OwuSjznVnFyrPNqPybv+EQbxHyJMirA0=","Source":"FleetManagement","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[{"Name":"FleetManagement/wwwroot","Source":"FleetManagement","ContentRoot":"/Users/suli/fleetmanagement/wwwroot/","BasePath":"/","Pattern":"**"}],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "wy83dLl2Ah2vh1v0ph7qcw/G1rVeyswXyp0d5OhekP4=",
+  "Source": "FleetManagement",
+  "BasePath": "_content/FleetManagement",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "FleetManagement/wwwroot",
+      "Source": "FleetManagement",
+      "ContentRoot": "/Users/suli/fleetmanagement/wwwroot/",
+      "BasePath": "_content/FleetManagement",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}

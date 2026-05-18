@@ -1,10 +1,17 @@
 /Users/suli/fleetmanagement/publish/FleetManagement
+/Users/suli/fleetmanagement/publish/publish/publish/web.config
 /Users/suli/fleetmanagement/publish/publish/web.config
 /Users/suli/fleetmanagement/publish/appsettings.json
+/Users/suli/fleetmanagement/publish/global.json
 /Users/suli/fleetmanagement/publish/publish/appsettings.json
 /Users/suli/fleetmanagement/publish/publish/FleetManagement.deps.json
 /Users/suli/fleetmanagement/publish/publish/FleetManagement.runtimeconfig.json
 /Users/suli/fleetmanagement/publish/publish/FleetManagement.staticwebassets.endpoints.json
+/Users/suli/fleetmanagement/publish/publish/publish/appsettings.json
+/Users/suli/fleetmanagement/publish/publish/publish/FleetManagement.deps.json
+/Users/suli/fleetmanagement/publish/publish/publish/FleetManagement.runtimeconfig.json
+/Users/suli/fleetmanagement/publish/publish/publish/FleetManagement.staticwebassets.endpoints.json
+/Users/suli/fleetmanagement/publish/railway.json
 /Users/suli/fleetmanagement/publish/FleetManagement.dll
 /Users/suli/fleetmanagement/publish/FleetManagement.deps.json
 /Users/suli/fleetmanagement/publish/FleetManagement.runtimeconfig.json

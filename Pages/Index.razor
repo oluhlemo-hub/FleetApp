@@ -1,7 +1,9 @@
 @page "/"
 @layout EmptyLayout
+@using FleetManagement.Models
 @using FleetManagement.Services
 @inject FleetService FleetService
+@inject Supabase.Client Supabase
 @inject NavigationManager Nav
 
 <div class="container d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
@@ -64,18 +66,37 @@
             ErrorMessage = "Please enter your email and password.";
             return;
         }
+
         isLoading = true;
         StateHasChanged();
+
         try
         {
             var role = await FleetService.LoginAsync(UserEmail, Password);
+
             if (role == "Admin")
             {
                 Nav.NavigateTo("/admin");
             }
             else if (role == "Driver")
             {
-                Nav.NavigateTo("/driver");
+                // Check if driver must change password on first login
+                try
+                {
+                    var driverRecord = await Supabase.From<Driver>()
+                        .Filter("email", Postgrest.Constants.Operator.Equals, UserEmail)
+                        .Single();
+
+                    if (driverRecord?.MustChangePassword == true)
+                        Nav.NavigateTo("/change-password");
+                    else
+                        Nav.NavigateTo("/driver");
+                }
+                catch
+                {
+                    // If lookup fails, just send to driver page
+                    Nav.NavigateTo("/driver");
+                }
             }
             else if (role == "Inactive")
             {

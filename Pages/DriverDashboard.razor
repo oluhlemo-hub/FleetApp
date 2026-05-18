@@ -1,6 +1,7 @@
 @page "/driver"
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
+@inject NavigationManager Navigation
 
 <AuthGuard RequiredRole="Driver">
 <div class="container-fluid px-3 py-3">
@@ -224,6 +225,43 @@
             </div>
         </div>
     }
+
+    <!-- Update Mileage Modal (deep link: ?action=update-mileage) -->
+    @if (showUpdateMileage)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="modal-card card shadow p-4">
+                <h5 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>Update Mileage</h5>
+                @if (!hasVehicle)
+                {
+                    <div class="alert alert-warning">No vehicle is currently assigned to you.</div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Vehicle</label>
+                        <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Current Mileage (km)</label>
+                        <input type="number" class="form-control form-control-lg" @bind="updateMileageValue" placeholder="e.g. 47200" />
+                    </div>
+                    @if (mileageServiceWarning)
+                    {
+                        <div class="alert alert-warning py-2 mb-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Service is due at <strong>@currentVehicle.ServiceDueKm km</strong>. Please book a service.
+                        </div>
+                    }
+                }
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitUpdateMileage" disabled="@(!hasVehicle)">Save Mileage</button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="CloseUpdateMileage">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 <style>
@@ -290,6 +328,10 @@
     private int requestMileage;
     private string requestApprover = string.Empty;
 
+    private bool showUpdateMileage = false;
+    private int updateMileageValue;
+    private bool mileageServiceWarning = false;
+
     protected override async Task OnInitializedAsync()
     {
         var session = Supabase.Auth.CurrentSession;
@@ -309,6 +351,20 @@
                 currentUserEmail = session.User.Email;
                 await LoadData();
                 return;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            if (query["action"] == "update-mileage")
+            {
+                showUpdateMileage = true;
+                StateHasChanged();
             }
         }
     }
@@ -477,5 +533,38 @@
             requestApprover = string.Empty;
         }
         catch (Exception ex) { errorMessage = $"Failed to request vehicle: {ex.Message}"; }
+    }
+
+    private void CloseUpdateMileage()
+    {
+        showUpdateMileage = false;
+        mileageServiceWarning = false;
+        updateMileageValue = 0;
+        Navigation.NavigateTo("/driver", replace: true);
+    }
+
+    private async Task SubmitUpdateMileage()
+    {
+        if (updateMileageValue <= 0)
+        {
+            errorMessage = "Please enter a valid mileage.";
+            return;
+        }
+        try
+        {
+            currentVehicle.Mileage = updateMileageValue;
+            await Supabase.From<Vehicle>().Update(currentVehicle);
+
+            mileageServiceWarning = currentVehicle.Mileage >= currentVehicle.ServiceDueKm;
+
+            if (!mileageServiceWarning)
+            {
+                showUpdateMileage = false;
+                Navigation.NavigateTo("/driver", replace: true);
+                successMessage = "Mileage updated successfully.";
+            }
+            // If service is due, keep modal open so driver sees the warning
+        }
+        catch (Exception ex) { errorMessage = $"Failed to update mileage: {ex.Message}"; }
     }
 }

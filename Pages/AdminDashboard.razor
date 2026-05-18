@@ -1046,10 +1046,11 @@
                         Email = driverForm.Email,
                         Phone = driverForm.Phone,
                         Role = driverForm.Role,
-                        IsActive = true
+                        IsActive = true,
+                        MustChangePassword = true   // <-- forces password change on first login
                     };
                     await Supabase.From<Driver>().Insert(driverRecord);
-                    successMessage = $"Account created for {driverForm.Name}.";
+                    successMessage = $"Account created for {driverForm.Name}. They will be prompted to set a password on first login.";
                 }
             }
 

@@ -1,7 +1,5 @@
 is_global = true
 build_property.TargetFramework = net8.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
 build_property.ProjectTypeGuids = 
@@ -19,8 +17,6 @@ build_property.SupportLocalizedComponentNames =
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
 build_property.MSBuildProjectDirectory = /Users/suli/fleetmanagement
 build_property._RazorSourceGeneratorDebug = 
-build_property.EffectiveAnalysisLevelStyle = 8.0
-build_property.EnableCodeStyleSeverity = 
 
 [/Users/suli/fleetmanagement/App.razor]
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
@@ -28,6 +24,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/suli/fleetmanagement/Pages/AdminDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQWRtaW5EYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/suli/fleetmanagement/Pages/ChangePassword.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2hhbmdlUGFzc3dvcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/suli/fleetmanagement/Pages/DriverDashboard.razor]
@@ -40,6 +40,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/suli/fleetmanagement/Pages/Settings.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2V0dGluZ3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/suli/fleetmanagement/Shared/AuthGuard.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0F1dGhHdWFyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/suli/fleetmanagement/Shared/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0VtcHR5TGF5b3V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/suli/fleetmanagement/Shared/MainLayout.razor]

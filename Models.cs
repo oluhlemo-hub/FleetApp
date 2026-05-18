@@ -54,6 +54,9 @@ namespace FleetManagement.Models
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
+
+        [Column("must_change_password")]
+        public bool MustChangePassword { get; set; } = true;
     }
 
     [Table("settings")]
