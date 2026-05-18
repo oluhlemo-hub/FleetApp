@@ -5,7 +5,6 @@
 
 <div class="page">
 
-    <!-- Top Nav Bar -->
     <div class="top-row ps-3 navbar navbar-dark bg-dark shadow-sm">
         <div class="container-fluid d-flex align-items-center justify-content-between">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="">
@@ -13,7 +12,6 @@
                 <span class="brand-text">FLEET MANAGEMENT</span>
             </a>
 
-            <!-- Profile Button -->
             <div class="position-relative me-2">
                 <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-2"
                         @onclick="ToggleProfile">
@@ -27,7 +25,6 @@
                     }
                 </button>
 
-                <!-- Profile Dropdown -->
                 @if (showProfile)
                 {
                     <div class="profile-dropdown card shadow p-3">
@@ -56,10 +53,8 @@
         </div>
     </div>
 
-    <!-- Desktop/Tablet: Sidebar + Content -->
     <div class="layout-body">
 
-        <!-- Sidebar (hidden on mobile, visible md+) -->
         <div class="sidebar bg-dark text-white p-3">
             @if (userRole == "Admin")
             {
@@ -84,14 +79,12 @@
             }
         </div>
 
-        <!-- Main Content -->
         <main class="main-content bg-light">
             @Body
         </main>
 
     </div>
 
-    <!-- Mobile Bottom Nav (visible only on small screens) -->
     <nav class="mobile-bottom-nav bg-dark d-md-none">
         @if (userRole == "Admin")
         {
@@ -119,7 +112,6 @@
 
 </div>
 
-<!-- Click outside to close profile dropdown -->
 @if (showProfile)
 {
     <div class="position-fixed top-0 start-0 w-100 h-100"
@@ -128,7 +120,6 @@
     </div>
 }
 
-<!-- View Profile Modal -->
 @if (showProfileModal)
 {
     <div class="modal fade show d-block" tabindex="-1"
@@ -309,38 +300,12 @@
     private string userRole = "";
     private string userPhone = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        Supabase.Auth.AddStateChangedListener(async (sender, state) =>
-        {
-            await OnAuthStateChanged(state.ToString());
-        });
-
         var email = Supabase.Auth.CurrentSession?.User?.Email;
         if (!string.IsNullOrEmpty(email))
         {
-            _ = LoadUserAsync(email);
-        }
-    }
-
-    private async Task OnAuthStateChanged(string state)
-    {
-        if (state == "SignedIn")
-        {
-            var email = Supabase.Auth.CurrentSession?.User?.Email;
-            if (!string.IsNullOrEmpty(email))
-            {
-                await LoadUserAsync(email);
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-        else if (state == "SignedOut")
-        {
-            userEmail = "";
-            userName = "";
-            userRole = "";
-            userPhone = "";
-            await InvokeAsync(StateHasChanged);
+            await LoadUserAsync(email);
         }
     }
 
@@ -384,9 +349,25 @@
 
     private async Task Logout()
     {
-        await Supabase.Auth.SignOut();
-        showProfile = false;
-        showProfileModal = false;
-        Nav.NavigateTo("/", forceLoad: true);
+        try
+        {
+            showProfile = false;
+            showProfileModal = false;
+            StateHasChanged();
+
+            await Supabase.Auth.SignOut();
+
+            userEmail = "";
+            userName = "";
+            userRole = "";
+            userPhone = "";
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout error details: {ex.Message}");
+            Nav.NavigateTo("/", forceLoad: true);
+        }
     }
 }
