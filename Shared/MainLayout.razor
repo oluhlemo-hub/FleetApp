@@ -2,8 +2,9 @@
 @implements IDisposable
 @inject Supabase.Client Supabase
 @inject NavigationManager Nav
+@inject FleetManagement.Services.ThemeService ThemeService
 
-<div class="page">
+<div class="page @ThemeService.ThemeClass">
 
     <div class="top-row ps-3 navbar navbar-dark bg-dark shadow-sm">
         <div class="container-fluid d-flex align-items-center justify-content-between">
@@ -64,7 +65,7 @@
                     </NavLink>
                 </div>
                 <div class="nav-item mb-2">
-                    <NavLink class="nav-link text-white rounded" href="admin/settings">
+                    <NavLink class="nav-link text-white rounded" href="settings">
                         <i class="bi bi-gear me-2"></i> Settings
                     </NavLink>
                 </div>
@@ -76,10 +77,15 @@
                         <i class="bi bi-truck me-2"></i> My Vehicle
                     </NavLink>
                 </div>
+                <div class="nav-item mb-2">
+                    <NavLink class="nav-link text-white rounded" href="settings">
+                        <i class="bi bi-gear me-2"></i> Settings
+                    </NavLink>
+                </div>
             }
         </div>
 
-        <main class="main-content bg-light">
+        <main class="main-content">
             @Body
         </main>
 
@@ -92,10 +98,6 @@
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </NavLink>
-            <NavLink class="mobile-nav-item text-white" href="admin/settings">
-                <i class="bi bi-gear"></i>
-                <span>Settings</span>
-            </NavLink>
         }
         else if (userRole == "Driver")
         {
@@ -104,6 +106,10 @@
                 <span>My Vehicle</span>
             </NavLink>
         }
+        <NavLink class="mobile-nav-item text-white" href="settings">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+        </NavLink>
         <button class="mobile-nav-item text-white border-0 bg-transparent" @onclick="OpenProfile">
             <i class="bi bi-person-circle"></i>
             <span>Profile</span>
@@ -114,24 +120,17 @@
 
 @if (showProfile)
 {
-    <div class="position-fixed top-0 start-0 w-100 h-100"
-         style="z-index: 999;"
-         @onclick="ToggleProfile">
-    </div>
+    <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 999;" @onclick="ToggleProfile"></div>
 }
 
 @if (showProfileModal)
 {
-    <div class="modal fade show d-block" tabindex="-1"
-         style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-person-circle me-2"></i> My Profile
-                    </h5>
-                    <button type="button" class="btn-close"
-                            @onclick="() => showProfileModal = false"></button>
+                    <h5 class="modal-title"><i class="bi bi-person-circle me-2"></i> My Profile</h5>
+                    <button type="button" class="btn-close" @onclick="() => showProfileModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
@@ -154,18 +153,13 @@
                             <span class="text-muted"><i class="bi bi-phone me-2"></i>Phone</span>
                             <span class="fw-semibold">@(string.IsNullOrEmpty(userPhone) ? "Not set" : userPhone)</span>
                         </div>
-                        <div class="list-group-item d-flex justify-content-between flex-wrap gap-1">
-                            <span class="text-muted"><i class="bi bi-shield me-2"></i>Role</span>
-                            <span class="fw-semibold">@userRole</span>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer flex-column gap-2">
                     <button class="btn btn-danger w-100" @onclick="Logout">
                         <i class="bi bi-box-arrow-right me-1"></i> Logout
                     </button>
-                    <button class="btn btn-secondary w-100"
-                            @onclick="() => showProfileModal = false">Close</button>
+                    <button class="btn btn-secondary w-100" @onclick="() => showProfileModal = false">Close</button>
                 </div>
             </div>
         </div>
@@ -173,7 +167,41 @@
 }
 
 <style>
-    :root { --app-primary: #0d6efd; }
+    :root { 
+        --app-primary: #0d6efd; 
+        --bg-main: #f8f9fa;
+        --text-main: #212529;
+        --card-bg: #ffffff;
+        --card-border: rgba(0,0,0,0.125);
+    }
+
+    .theme-dark {
+        --bg-main: #121212;
+        --text-main: #f8f9fa;
+        --card-bg: #1e1e1e;
+        --card-border: rgba(255,255,255,0.15);
+    }
+
+    .page {
+        color: var(--text-main);
+        background-color: var(--bg-main);
+        min-height: 100vh;
+        transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .main-content {
+        flex: 1;
+        padding: 1rem;
+        min-width: 0;
+        background-color: var(--bg-main);
+    }
+
+    /* Core Adaptive Styles for Nested Elements */
+    .main-content .card {
+        background-color: var(--card-bg) !important;
+        color: var(--text-main) !important;
+        border-color: var(--card-border) !important;
+    }
 
     .btn-primary {
         background-color: var(--app-primary) !important;
@@ -204,12 +232,6 @@
         font-weight: bold;
     }
 
-    .main-content {
-        flex: 1;
-        padding: 1rem;
-        min-width: 0;
-    }
-
     .profile-dropdown {
         position: absolute;
         top: calc(100% + 8px);
@@ -218,6 +240,7 @@
         border-radius: 12px;
         z-index: 1000;
         background: white;
+        color: #212529;
     }
 
     .mobile-bottom-nav {
@@ -250,21 +273,11 @@
     }
 
     .mobile-nav-item i { font-size: 1.3rem; }
-
-    .mobile-nav-item.active,
-    .mobile-nav-item:hover { opacity: 1; }
+    .mobile-nav-item.active, .mobile-nav-item:hover { opacity: 1; }
 
     @@media (min-width: 768px) and (max-width: 991px) {
-        .sidebar {
-            width: 64px;
-            min-width: 64px;
-            padding: 0.75rem 0.5rem !important;
-        }
-        .sidebar .nav-link {
-            display: flex;
-            justify-content: center;
-            padding: 0.6rem;
-        }
+        .sidebar { width: 64px; min-width: 64px; padding: 0.75rem 0.5rem !important; }
+        .sidebar .nav-link { display: flex; justify-content: center; padding: 0.6rem; }
         .sidebar .nav-link i { margin: 0 !important; font-size: 1.3rem; }
         .sidebar .nav-link span { display: none; }
         .brand-text { display: none; }
@@ -278,17 +291,7 @@
             padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
         }
         .brand-text { display: none; }
-        .profile-dropdown {
-            position: fixed;
-            top: 60px;
-            right: 8px;
-            left: 8px;
-            width: auto;
-        }
-    }
-
-    @@media (max-width: 399px) {
-        .main-content { padding: 0.5rem; }
+        .profile-dropdown { position: fixed; top: 60px; right: 8px; left: 8px; width: auto; }
     }
 </style>
 
@@ -302,12 +305,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ThemeService.OnThemeChanged += OnThemeUpdated;
+        
         var email = Supabase.Auth.CurrentSession?.User?.Email;
         if (!string.IsNullOrEmpty(email))
         {
             await LoadUserAsync(email);
         }
     }
+
+    private void OnThemeUpdated() => InvokeAsync(StateHasChanged);
 
     private async Task LoadUserAsync(string email)
     {
@@ -337,15 +344,13 @@
         }
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeUpdated;
+    }
 
     private void ToggleProfile() => showProfile = !showProfile;
-
-    private void OpenProfile()
-    {
-        showProfile = false;
-        showProfileModal = true;
-    }
+    private void OpenProfile() { showProfile = false; showProfileModal = true; }
 
     private async Task Logout()
     {
@@ -364,9 +369,8 @@
 
             Nav.NavigateTo("/", forceLoad: true);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Logout error details: {ex.Message}");
             Nav.NavigateTo("/", forceLoad: true);
         }
     }

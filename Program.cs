@@ -24,7 +24,10 @@ builder.Services.AddScoped<Supabase.Client>(_ =>
         AutoConnectRealtime = false
     }));
 
+// Service registrations for application management
 builder.Services.AddScoped<FleetService>();
+builder.Services.AddScoped<ThemeService>(); // Handles per-user dark/light state broadcasting
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

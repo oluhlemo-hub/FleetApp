@@ -1,21 +1,26 @@
-namespace Fleet.Client.Services;
+using System;
 
-public class ThemeService
+namespace FleetManagement.Services
 {
-    public string AccentColor { get; private set; } = "#0d6efd";
-    public int ServiceInterval { get; private set; } = 1000;
-    public string TenantName { get; private set; } = "My Fleet Company";
-
-    // Added ? to handle the nullability warning
-    public event Action? OnChange;
-
-    public void UpdateSettings(string color, int interval, string name)
+    public class ThemeService
     {
-        AccentColor = color;
-        ServiceInterval = interval;
-        TenantName = name;
-        NotifyStateChanged();
-    }
+        private string _currentTheme = "Light";
 
-    private void NotifyStateChanged() => OnChange?.Invoke();
+        public string CurrentTheme
+        {
+            get => _currentTheme;
+            set
+            {
+                if (_currentTheme != value)
+                {
+                    _currentTheme = value;
+                    OnThemeChanged?.Invoke();
+                }
+            }
+        }
+
+        public string ThemeClass => _currentTheme.ToLower() == "dark" ? "theme-dark" : "theme-light";
+
+        public event Action? OnThemeChanged;
+    }
 }
