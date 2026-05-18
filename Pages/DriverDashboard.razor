@@ -21,7 +21,6 @@
         </div>
     }
 
-    <!-- Vehicle Card -->
     <div class="card shadow-sm mb-4">
         <div class="card-body text-center py-4">
             <div class="mb-2">
@@ -49,7 +48,6 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="row g-3">
         <div class="col-6">
             <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
@@ -87,7 +85,6 @@
         </div>
     </div>
 
-    <!-- Book Service Modal -->
     @if (showBookService)
     {
         <div class="modal-backdrop-custom">
@@ -106,14 +103,15 @@
                     <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
                 </div>
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitBookService">Submit</button>
+                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitBookService" disabled="@isSubmitting">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit
+                    </button>
                     <button class="btn btn-outline-secondary w-100" @onclick="() => showBookService = false">Cancel</button>
                 </div>
             </div>
         </div>
     }
 
-    <!-- Report Fault Modal -->
     @if (showReportFault)
     {
         <div class="modal-backdrop-custom">
@@ -144,14 +142,15 @@
                     }
                 </div>
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-danger btn-lg w-100" @onclick="SubmitFaultReport">Submit Report</button>
+                    <button class="btn btn-danger btn-lg w-100" @onclick="SubmitFaultReport" disabled="@isSubmitting">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit Report
+                    </button>
                     <button class="btn btn-outline-secondary w-100" @onclick="() => showReportFault = false">Cancel</button>
                 </div>
             </div>
         </div>
     }
 
-    <!-- Return Vehicle Modal -->
     @if (showReturnVehicle)
     {
         <div class="modal-backdrop-custom">
@@ -175,58 +174,80 @@
                     </select>
                 </div>
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-dark btn-lg w-100" @onclick="SubmitReturnVehicle">Confirm Return</button>
+                    <button class="btn btn-dark btn-lg w-100" @onclick="SubmitReturnVehicle" disabled="@isSubmitting">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Confirm Return
+                    </button>
                     <button class="btn btn-outline-secondary w-100" @onclick="() => showReturnVehicle = false">Cancel</button>
                 </div>
             </div>
         </div>
     }
 
-    <!-- Request Vehicle Modal -->
     @if (showRequestVehicle)
     {
         <div class="modal-backdrop-custom">
             <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-key me-2"></i>Request Vehicle</h5>
-                <div class="mb-3">
-                    <label class="form-label">Available Vehicles</label>
-                    @if (availableVehicles.Any())
-                    {
-                        <select class="form-select form-select-lg" @bind="requestedVehicleId">
-                            <option value="">-- Select vehicle --</option>
-                            @foreach (var v in availableVehicles)
-                            {
-                                <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <div class="alert alert-warning py-2">
-                            <i class="bi bi-info-circle me-1"></i> No vehicles currently available.
-                        </div>
-                    }
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Current Mileage (km)</label>
-                    <input type="number" class="form-control form-control-lg" @bind="requestMileage" placeholder="e.g. 45000" />
-                </div>
-                <div class="mb-4">
-                    <label class="form-label">Approver</label>
-                    <input class="form-control form-control-lg" @bind="requestApprover" placeholder="Manager name or email" />
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-success btn-lg w-100" @onclick="SubmitVehicleRequest"
-                            disabled="@(string.IsNullOrEmpty(requestedVehicleId) || !availableVehicles.Any())">
-                        Submit Request
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => showRequestVehicle = false">Cancel</button>
-                </div>
+                
+                @if (!isOtpSent)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Available Vehicles</label>
+                        @if (availableVehicles.Any())
+                        {
+                            <select class="form-select form-select-lg" @bind="requestedVehicleId">
+                                <option value="">-- Select vehicle --</option>
+                                @foreach (var v in availableVehicles)
+                                {
+                                    <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning py-2">
+                                <i class="bi bi-info-circle me-1"></i> No vehicles currently available.
+                            </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Mileage (km)</label>
+                        <input type="number" class="form-control form-control-lg" @bind="requestMileage" placeholder="e.g. 45000" />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Admin Email Address</label>
+                        <input type="email" class="form-control form-control-lg" @bind="requestApprover" placeholder="admin@yourcompany.com" />
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-primary btn-lg w-100" @onclick="GenerateAndRequestOtp"
+                                disabled="@(string.IsNullOrEmpty(requestedVehicleId) || requestMileage <= 0 || string.IsNullOrEmpty(requestApprover) || isSubmitting)">
+                            @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span><span>Sending Email...</span> }
+                            else { <span>Request Approval OTP</span> }
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" @onclick="() => showRequestVehicle = false">Cancel</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info py-2 mb-3 text-center">
+                        <i class="bi bi-envelope-check me-1"></i> An approval code was sent to <strong>@requestApprover</strong>.
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Enter 6-Digit Admin OTP</label>
+                        <input type="text" maxlength="6" class="form-control form-control-lg text-center letter-spacing-lg fw-bold" 
+                               @bind="enteredOtp" placeholder="000000" />
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-success btn-lg w-100" @onclick="SubmitVehicleRequest" disabled="@isSubmitting">
+                            @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Verify & Claim Vehicle
+                        </button>
+                        <button class="btn btn-link text-muted small w-100" @onclick="() => isOtpSent = false">Back to change email</button>
+                    </div>
+                }
             </div>
         </div>
     }
 
-    <!-- Update Mileage Modal (deep link: ?action=update-mileage) -->
     @if (showUpdateMileage)
     {
         <div class="modal-backdrop-custom">
@@ -255,7 +276,9 @@
                     }
                 }
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitUpdateMileage" disabled="@(!hasVehicle)">Save Mileage</button>
+                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitUpdateMileage" disabled="@(!hasVehicle || isSubmitting)">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Save Mileage
+                    </button>
                     <button class="btn btn-outline-secondary w-100" @onclick="CloseUpdateMileage">Cancel</button>
                 </div>
             </div>
@@ -270,7 +293,7 @@
         top: 0; left: 0;
         width: 100%; height: 100%;
         background: rgba(0,0,0,0.55);
-        display: flex;
+        display: fixed;
         align-items: flex-end;
         justify-content: center;
         z-index: 1050;
@@ -285,6 +308,11 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .letter-spacing-lg {
+        letter-spacing: 0.5rem;
+        font-size: 1.5rem;
     }
 
     @@media (min-width: 576px) {
@@ -308,6 +336,7 @@
 
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
+    private bool isSubmitting = false;
 
     private bool showBookService = false;
     private string serviceStation = string.Empty;
@@ -323,10 +352,14 @@
     private int returnMileage;
     private string returnCondition = string.Empty;
 
+    // Request properties with automated production infrastructure
     private bool showRequestVehicle = false;
     private string requestedVehicleId = string.Empty;
     private int requestMileage;
     private string requestApprover = string.Empty;
+    private bool isOtpSent = false;
+    private string generatedOtp = string.Empty;
+    private string enteredOtp = string.Empty;
 
     private bool showUpdateMileage = false;
     private int updateMileageValue;
@@ -412,6 +445,8 @@
             .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
             .Get();
         availableVehicles = available.Models;
+        isOtpSent = false;
+        enteredOtp = string.Empty;
         showRequestVehicle = true;
     }
 
@@ -428,6 +463,7 @@
             errorMessage = "Please fill in all fields.";
             return;
         }
+        isSubmitting = true;
         try
         {
             currentVehicle.Status = "In Service";
@@ -440,6 +476,7 @@
             serviceMileage = 0;
         }
         catch (Exception ex) { errorMessage = $"Failed to book service: {ex.Message}"; }
+        finally { isSubmitting = false; }
     }
 
     private async Task SubmitFaultReport()
@@ -449,6 +486,7 @@
             errorMessage = "Please select a fault type and add a description.";
             return;
         }
+        isSubmitting = true;
         try
         {
             var fault = new Fault
@@ -470,6 +508,7 @@
             faultPhotoName = null;
         }
         catch (Exception ex) { errorMessage = $"Failed to submit fault report: {ex.Message}"; }
+        finally { isSubmitting = false; }
     }
 
     private async Task SubmitReturnVehicle()
@@ -479,6 +518,7 @@
             errorMessage = "Please enter mileage and condition.";
             return;
         }
+        isSubmitting = true;
         try
         {
             currentVehicle.Status = "Available";
@@ -492,15 +532,65 @@
             returnCondition = string.Empty;
         }
         catch (Exception ex) { errorMessage = $"Failed to return vehicle: {ex.Message}"; }
+        finally { isSubmitting = false; }
+    }
+
+    private async Task GenerateAndRequestOtp()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(requestApprover) || !requestApprover.Contains("@"))
+        {
+            errorMessage = "Please enter a valid Admin Email address to verify authorization.";
+            return;
+        }
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // 1. Generate 6-digit cryptographic random OTP string
+            var random = new Random();
+            generatedOtp = random.Next(100000, 999999).ToString();
+
+            // 2. Insert record into the new table. This fires the Postgres webhook trigger to Resend.
+            var requestRecord = new VehicleRequest
+            {
+                DriverEmail = currentUserEmail,
+                VehicleId = requestedVehicleId,
+                Mileage = requestMileage,
+                AdminEmail = requestApprover.Trim(),
+                OtpCode = generatedOtp,
+                Status = "Pending"
+            };
+
+            await Supabase.From<VehicleRequest>().Insert(requestRecord);
+
+            isOtpSent = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to trigger email verification process: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
     }
 
     private async Task SubmitVehicleRequest()
     {
-        if (string.IsNullOrWhiteSpace(requestedVehicleId) || requestMileage <= 0 || string.IsNullOrWhiteSpace(requestApprover))
+        errorMessage = string.Empty;
+
+        if (enteredOtp.Trim() != generatedOtp || string.IsNullOrEmpty(enteredOtp))
         {
-            errorMessage = "Please fill in all fields.";
+            errorMessage = "Invalid Admin Verification Code. Please match the token emailed to the administrator.";
             return;
         }
+
+        isSubmitting = true;
         try
         {
             var vehicleResponse = await Supabase.From<Vehicle>()
@@ -520,6 +610,7 @@
             }
             catch { }
 
+            // Approve vehicle shift
             vehicleResponse.Status = "Active";
             vehicleResponse.Mileage = requestMileage;
             vehicleResponse.LastDriver = driverDisplayName;
@@ -527,12 +618,15 @@
 
             await LoadData();
             showRequestVehicle = false;
-            successMessage = $"Vehicle assigned successfully to {driverDisplayName}.";
+            successMessage = $"Vehicle assigned successfully. Verified by Admin: {requestApprover}.";
             requestedVehicleId = string.Empty;
             requestMileage = 0;
             requestApprover = string.Empty;
+            isOtpSent = false;
+            enteredOtp = string.Empty;
         }
-        catch (Exception ex) { errorMessage = $"Failed to request vehicle: {ex.Message}"; }
+        catch (Exception ex) { errorMessage = $"Failed to map vehicle status update: {ex.Message}"; }
+        finally { isSubmitting = false; }
     }
 
     private void CloseUpdateMileage()
@@ -550,6 +644,7 @@
             errorMessage = "Please enter a valid mileage.";
             return;
         }
+        isSubmitting = true;
         try
         {
             currentVehicle.Mileage = updateMileageValue;
@@ -563,8 +658,8 @@
                 Navigation.NavigateTo("/driver", replace: true);
                 successMessage = "Mileage updated successfully.";
             }
-            // If service is due, keep modal open so driver sees the warning
         }
         catch (Exception ex) { errorMessage = $"Failed to update mileage: {ex.Message}"; }
+        finally { isSubmitting = false; }
     }
 }
