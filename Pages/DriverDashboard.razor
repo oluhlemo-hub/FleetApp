@@ -50,12 +50,26 @@
 
     <div class="row g-3">
         <div class="col-6">
-            <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
-                    @onclick="() => showBookService = true"
-                    disabled="@(!hasVehicle)">
-                <i class="bi bi-tools fs-4"></i>
-                <span class="small">Book Service</span>
-            </button>
+            @if (currentVehicle.Status == "In Service")
+            {
+                <!-- Vehicle is in service — show Collect from Service button -->
+                <button class="btn btn-success w-100 py-3 d-flex flex-column align-items-center gap-1"
+                        @onclick="() => showCollectService = true"
+                        disabled="@(!hasVehicle)">
+                    <i class="bi bi-check-circle fs-4"></i>
+                    <span class="small">Collect from Service</span>
+                </button>
+            }
+            else
+            {
+                <!-- Normal Book Service button -->
+                <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
+                        @onclick="() => showBookService = true"
+                        disabled="@(!hasVehicle)">
+                    <i class="bi bi-tools fs-4"></i>
+                    <span class="small">Book Service</span>
+                </button>
+            }
         </div>
         <div class="col-6">
             <button class="btn btn-danger w-100 py-3 d-flex flex-column align-items-center gap-1"
@@ -85,6 +99,7 @@
         </div>
     </div>
 
+    <!-- Book Service Modal -->
     @if (showBookService)
     {
         <div class="modal-backdrop-custom">
@@ -112,6 +127,63 @@
         </div>
     }
 
+    <!-- Collect from Service Modal -->
+    @if (showCollectService)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="modal-card card shadow p-4">
+                <h5 class="mb-3"><i class="bi bi-check-circle me-2 text-success"></i>Collect from Service</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Vehicle</label>
+                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Updated Mileage after Service (km)</label>
+                    <input type="number" class="form-control form-control-lg" @bind="collectMileage"
+                           placeholder="e.g. 45200" />
+                    <small class="text-muted">Next service will be set to this mileage + 10,000 km.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Service Report</label>
+                    <InputFile OnChange="OnServiceReportSelected" accept="image/*,application/pdf" class="form-control" />
+                    @if (serviceReportName != null)
+                    {
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <i class="bi @(serviceReportName.EndsWith(".pdf") ? "bi-file-pdf text-danger" : "bi-image text-primary") fs-5"></i>
+                            <small class="text-muted">@serviceReportName</small>
+                        </div>
+                    }
+                    <small class="text-muted d-block mt-1">Upload the service report or take a photo of it. Accepts image or PDF.</small>
+                </div>
+
+                @if (!string.IsNullOrEmpty(collectError))
+                {
+                    <div class="alert alert-danger py-2 mb-3">@collectError</div>
+                }
+
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-success btn-lg w-100" @onclick="SubmitCollectService" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Processing...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>Confirm Collection</span>
+                        }
+                    </button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => { showCollectService = false; collectError = string.Empty; }">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Report Fault Modal -->
     @if (showReportFault)
     {
         <div class="modal-backdrop-custom">
@@ -151,6 +223,7 @@
         </div>
     }
 
+    <!-- Return Vehicle Modal -->
     @if (showReturnVehicle)
     {
         <div class="modal-backdrop-custom">
@@ -183,12 +256,13 @@
         </div>
     }
 
+    <!-- Request Vehicle Modal -->
     @if (showRequestVehicle)
     {
         <div class="modal-backdrop-custom">
             <div class="modal-card card shadow p-4">
                 <h5 class="mb-3"><i class="bi bi-key me-2"></i>Request Vehicle</h5>
-                
+
                 @if (!isOtpSent)
                 {
                     <div class="mb-3">
@@ -234,7 +308,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-bold">Enter 6-Digit Admin OTP</label>
-                        <input type="text" maxlength="6" class="form-control form-control-lg text-center letter-spacing-lg fw-bold" 
+                        <input type="text" maxlength="6" class="form-control form-control-lg text-center letter-spacing-lg fw-bold"
                                @bind="enteredOtp" placeholder="000000" />
                     </div>
                     <div class="d-flex flex-column gap-2">
@@ -248,6 +322,7 @@
         </div>
     }
 
+    <!-- Update Mileage Modal -->
     @if (showUpdateMileage)
     {
         <div class="modal-backdrop-custom">
@@ -293,7 +368,7 @@
         top: 0; left: 0;
         width: 100%; height: 100%;
         background: rgba(0,0,0,0.55);
-        display: fixed;
+        display: flex;
         align-items: flex-end;
         justify-content: center;
         z-index: 1050;
@@ -338,21 +413,31 @@
     private string errorMessage = string.Empty;
     private bool isSubmitting = false;
 
+    // Book Service
     private bool showBookService = false;
     private string serviceStation = string.Empty;
     private int serviceMileage;
 
+    // Collect from Service
+    private bool showCollectService = false;
+    private int collectMileage;
+    private IBrowserFile? serviceReportFile;
+    private string? serviceReportName;
+    private string collectError = string.Empty;
+
+    // Report Fault
     private bool showReportFault = false;
     private string faultType = string.Empty;
     private string faultDescription = string.Empty;
     private string? faultPhotoName;
     private IBrowserFile? faultPhoto;
 
+    // Return Vehicle
     private bool showReturnVehicle = false;
     private int returnMileage;
     private string returnCondition = string.Empty;
 
-    // Request properties with automated production infrastructure
+    // Request Vehicle
     private bool showRequestVehicle = false;
     private string requestedVehicleId = string.Empty;
     private int requestMileage;
@@ -361,6 +446,7 @@
     private string generatedOtp = string.Empty;
     private string enteredOtp = string.Empty;
 
+    // Update Mileage
     private bool showUpdateMileage = false;
     private int updateMileageValue;
     private bool mileageServiceWarning = false;
@@ -456,6 +542,12 @@
         faultPhotoName = e.File.Name;
     }
 
+    private void OnServiceReportSelected(InputFileChangeEventArgs e)
+    {
+        serviceReportFile = e.File;
+        serviceReportName = e.File.Name;
+    }
+
     private async Task SubmitBookService()
     {
         if (string.IsNullOrWhiteSpace(serviceStation) || serviceMileage <= 0)
@@ -471,11 +563,74 @@
             await Supabase.From<Vehicle>().Update(currentVehicle);
             await LoadData();
             showBookService = false;
-            successMessage = $"Service booked at {serviceStation} for {currentVehicle.Registration}.";
+            successMessage = $"Service booked at {serviceStation}. Button will change to 'Collect from Service' when ready.";
             serviceStation = string.Empty;
             serviceMileage = 0;
         }
         catch (Exception ex) { errorMessage = $"Failed to book service: {ex.Message}"; }
+        finally { isSubmitting = false; }
+    }
+
+    private async Task SubmitCollectService()
+    {
+        collectError = string.Empty;
+
+        if (collectMileage <= 0)
+        {
+            collectError = "Please enter the updated mileage after service.";
+            return;
+        }
+        if (serviceReportFile == null)
+        {
+            collectError = "Please upload the service report or a photo of it.";
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            // Upload service report to Supabase Storage
+            string reportUrl = string.Empty;
+            try
+            {
+                var extension = Path.GetExtension(serviceReportFile.Name);
+                var fileName = $"service-reports/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+
+                using var stream = serviceReportFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                await Supabase.Storage
+                    .From("vehicle-documents")
+                    .Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+
+                reportUrl = Supabase.Storage
+                    .From("vehicle-documents")
+                    .GetPublicUrl(fileName);
+            }
+            catch
+            {
+                // Storage upload failed — still proceed with mileage update
+                // but note the failure
+                collectError = "Warning: report upload failed, but mileage was updated.";
+            }
+
+            // Update vehicle: status back to Active, new mileage, next service due
+            currentVehicle.Status = "Active";
+            currentVehicle.Mileage = collectMileage;
+            currentVehicle.ServiceDueKm = collectMileage + 10000;
+            await Supabase.From<Vehicle>().Update(currentVehicle);
+
+            await LoadData();
+            showCollectService = false;
+            collectMileage = 0;
+            serviceReportFile = null;
+            serviceReportName = null;
+
+            successMessage = $"Vehicle collected from service. Mileage updated to {collectMileage} km. Next service due at {collectMileage + 10000} km.";
+        }
+        catch (Exception ex) { collectError = $"Failed to collect vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
     }
 
@@ -541,7 +696,7 @@
 
         if (string.IsNullOrWhiteSpace(requestApprover) || !requestApprover.Contains("@"))
         {
-            errorMessage = "Please enter a valid Admin Email address to verify authorization.";
+            errorMessage = "Please enter a valid Admin Email address.";
             return;
         }
 
@@ -550,11 +705,9 @@
 
         try
         {
-            // 1. Generate 6-digit cryptographic random OTP string
             var random = new Random();
             generatedOtp = random.Next(100000, 999999).ToString();
 
-            // 2. Insert record into the new table. This fires the Postgres webhook trigger to Resend.
             var requestRecord = new VehicleRequest
             {
                 DriverEmail = currentUserEmail,
@@ -566,12 +719,11 @@
             };
 
             await Supabase.From<VehicleRequest>().Insert(requestRecord);
-
             isOtpSent = true;
         }
         catch (Exception ex)
         {
-            errorMessage = $"Failed to trigger email verification process: {ex.Message}";
+            errorMessage = $"Failed to send OTP: {ex.Message}";
         }
         finally
         {
@@ -586,7 +738,7 @@
 
         if (enteredOtp.Trim() != generatedOtp || string.IsNullOrEmpty(enteredOtp))
         {
-            errorMessage = "Invalid Admin Verification Code. Please match the token emailed to the administrator.";
+            errorMessage = "Invalid OTP. Please enter the code sent to the administrator.";
             return;
         }
 
@@ -610,7 +762,6 @@
             }
             catch { }
 
-            // Approve vehicle shift
             vehicleResponse.Status = "Active";
             vehicleResponse.Mileage = requestMileage;
             vehicleResponse.LastDriver = driverDisplayName;
@@ -625,7 +776,7 @@
             isOtpSent = false;
             enteredOtp = string.Empty;
         }
-        catch (Exception ex) { errorMessage = $"Failed to map vehicle status update: {ex.Message}"; }
+        catch (Exception ex) { errorMessage = $"Failed to assign vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
     }
 
