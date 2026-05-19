@@ -1,198 +1,532 @@
 @page "/settings"
 @inject FleetManagement.Services.ThemeService ThemeService
-@inject Supabase.Client Supabase
+@inject Supabase.Client SupabaseClient
+@using FleetManagement.Models
 
 <div class="container py-4">
-    <h2 class="fw-bold mb-4">App Settings</h2>
+    <h2 class="fw-bold mb-1">Settings</h2>
+    <p class="text-muted mb-4">Manage your preferences and account configuration.</p>
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div class="alert alert-success shadow-sm">
+        <div class="alert alert-success alert-dismissible shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@successMessage
+            <button type="button" class="btn-close" @onclick='() => successMessage = string.Empty'></button>
         </div>
     }
 
-    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; background-color: var(--card-bg); color: var(--text-main);">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3"><i class="bi bi-palette me-2 text-primary"></i>Personal Preferences</h5>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold small">Application Theme</label>
-                    <select class="form-select bg-body text-body" @bind="SelectedTheme">
-                        <option value="Light">Light Mode</option>
-                        <option value="Dark">Dark Mode</option>
-                    </select>
-                    <small class="text-muted">Switch between a crisp light appearance or a late-night dark profile.</small>
-                </div>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+            <button type="button" class="btn-close" @onclick='() => errorMessage = string.Empty'></button>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading settings...</span>
             </div>
         </div>
-    </div>
-
-    @if (userRole == "Admin")
+    }
+    else
     {
-        <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; background-color: var(--card-bg); color: var(--text-main);">
+        <!-- Personal Preferences (all roles) -->
+        <div class="card shadow-sm border-0 mb-4" style="border-radius:15px; background-color:var(--card-bg); color:var(--text-main);">
             <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">General Tenant Options</h5>
+                <h5 class="fw-bold mb-3"><i class="bi bi-palette me-2 text-primary"></i>Personal Preferences</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Company / Tenant Name</label>
-                        <input class="form-control" @bind="CompanyName" placeholder="e.g. Acme Fleet Co." />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Support Email</label>
-                        <input type="email" class="form-control" @bind="SupportEmail" placeholder="support@company.com" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Service Interval (km)</label>
-                        <input type="number" class="form-control" @bind="ServiceIntervalKm" placeholder="e.g. 1000" />
-                        <small class="text-muted">How many km between services</small>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Default Vehicle Status</label>
-                        <select class="form-select" @bind="DefaultStatus">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="In Service">In Service</option>
+                        <label class="form-label fw-bold small">Application Theme</label>
+                        <select class="form-select bg-body text-body" @bind="SelectedTheme">
+                            <option value="Light">Light Mode</option>
+                            <option value="Dark">Dark Mode</option>
                         </select>
+                        <small class="text-muted">Switch between light and dark appearance.</small>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; background-color: var(--card-bg); color: var(--text-main);">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-3">Branding</h5>
-                <div class="row align-items-center">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold small">Main Accent Color</label>
-                        <div class="d-flex gap-2 mt-2">
-                            @foreach (var color in ThemeColors)
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small">Accent / Button Colour</label>
+                        <div class="d-flex gap-2 flex-wrap mt-1">
+                            @foreach (var colour in AccentOptions)
                             {
-                                <div @onclick="() => SelectColor(color)"
-                                     style="background-color: @color; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: @(SelectedColor == color ? "3px solid #000" : "2px solid transparent")">
-                                </div>
+                                <button class="btn btn-sm rounded-circle border-0"
+                                        style="width:32px;height:32px;background-color:@colour;
+                                               outline: @(SelectedAccent == colour ? "3px solid #000" : "none");
+                                               outline-offset:2px;"
+                                        title="@colour"
+                                        @onclick='() => SelectedAccent = colour'>
+                                </button>
                             }
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold small">Custom Color Hex</label>
-                        <input type="text" class="form-control" @bind="SelectedColor" placeholder="#000000" />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold small">Preview</label>
-                        <div style="background-color: @SelectedColor; height: 40px; border-radius: 10px;"></div>
+                        <small class="text-muted">Changes button and highlight colours across the app.</small>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold small">Company Logo URL</label>
-                    <input type="text" class="form-control" @bind="LogoUrl" placeholder="https://yourcompany.com/logo.png" />
-                    @if (!string.IsNullOrEmpty(LogoUrl))
-                    {
-                        <img src="@LogoUrl" alt="Logo preview" style="height: 50px; margin-top: 10px;" />
-                    }
+
+                <!-- Notification Preferences -->
+                <hr class="my-3" />
+                <h6 class="fw-bold mb-3"><i class="bi bi-bell me-2 text-primary"></i>Notification Preferences</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifEmail" @bind="NotifyByEmail" />
+                            <label class="form-check-label" for="notifEmail">Email Notifications</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifSMS" @bind="NotifyBySMS" />
+                            <label class="form-check-label" for="notifSMS">SMS Notifications</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifPush" @bind="NotifyByPush" />
+                            <label class="form-check-label" for="notifPush">In-App Alerts</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn text-white fw-semibold px-4"
+                            style="background-color:@SelectedAccent;"
+                            @onclick="SavePersonalSettings"
+                            disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        Save Preferences
+                    </button>
                 </div>
             </div>
         </div>
+
+        <!-- Admin-only settings -->
+        @if (userRole == "Admin")
+        {
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:15px; background-color:var(--card-bg); color:var(--text-main);">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-building me-2 text-primary"></i>Organisation Settings</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small">Company / Tenant Name</label>
+                            <input class="form-control" @bind="CompanyName" placeholder="e.g. Acme Fleet Co." />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small">Support Email</label>
+                            <input type="email" class="form-control" @bind="SupportEmail" placeholder="support@company.com" />
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Company Logo</label>
+                        <div class="d-flex align-items-center gap-3">
+                            @if (!string.IsNullOrEmpty(LogoUrl))
+                            {
+                                <img src="@LogoUrl" alt="Company Logo" style="height:60px;object-fit:contain;border-radius:8px;border:1px solid #ddd;" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center bg-light rounded"
+                                     style="width:80px;height:60px;border:1px dashed #ccc;">
+                                    <i class="bi bi-image text-muted fs-4"></i>
+                                </div>
+                            }
+                            <div>
+                                <InputFile OnChange="HandleLogoUpload" accept="image/*" class="form-control form-control-sm" style="max-width:300px;" />
+                                <small class="text-muted">PNG or JPG, max 2 MB.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Notification Settings -->
+                    <hr class="my-3" />
+                    <h6 class="fw-bold mb-3"><i class="bi bi-bell me-2 text-primary"></i>System-Wide Notifications</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="adminMaintenanceAlerts" @bind="MaintenanceAlerts" />
+                                <label class="form-check-label" for="adminMaintenanceAlerts">Maintenance Due Alerts</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="adminFuelAlerts" @bind="FuelAlerts" />
+                                <label class="form-check-label" for="adminFuelAlerts">Low Fuel / Fuel Log Alerts</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="adminDocExpiry" @bind="DocExpiryAlerts" />
+                                <label class="form-check-label" for="adminDocExpiry">Document Expiry Alerts</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="adminTripAlerts" @bind="TripAlerts" />
+                                <label class="form-check-label" for="adminTripAlerts">Trip Start / End Alerts</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn text-white fw-semibold px-4"
+                                style="background-color:@SelectedAccent;"
+                                @onclick="SaveAdminSettings"
+                                disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            Save Organisation Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Manager-only settings -->
+        @if (userRole == "Manager" || userRole == "Admin")
+        {
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:15px; background-color:var(--card-bg); color:var(--text-main);">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-people me-2 text-primary"></i>Team Settings</h5>
+                    <p class="text-muted small">Configure defaults for drivers and vehicles under your management.</p>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small">Default Trip Approval</label>
+                            <select class="form-select bg-body text-body" @bind="TripApprovalMode">
+                                <option value="Auto">Auto-Approve</option>
+                                <option value="Manual">Require Manual Approval</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small">Fuel Log Approval</label>
+                            <select class="form-select bg-body text-body" @bind="FuelApprovalMode">
+                                <option value="Auto">Auto-Approve</option>
+                                <option value="Manual">Require Manual Approval</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn text-white fw-semibold px-4"
+                                style="background-color:@SelectedAccent;"
+                                @onclick="SaveManagerSettings"
+                                disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            Save Team Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
     }
-
-    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; background-color: var(--card-bg); color: var(--text-main);">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h5>
-            
-            @if (userRole == "Admin")
-            {
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="srvDue" @bind="NotifyOnServiceDue" />
-                    <label class="form-check-label" for="srvDue">Notify admin when service is due</label>
-                </div>
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="drvAssign" @bind="NotifyOnDriverAssigned" />
-                    <label class="form-check-label" for="drvAssign">Notify admin when a driver takes a vehicle</label>
-                </div>
-            }
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="drvsrvDue" @bind="NotifyDriverOnServiceDue" />
-                <label class="form-check-label" for="drvsrvDue">Notify me when vehicle inspections or services are due</label>
-            </div>
-        </div>
-    </div>
-
-    @if (userRole == "Admin")
-    {
-        <div class="card border-danger mb-4" style="border-radius: 15px; background-color: var(--card-bg);">
-            <div class="card-body p-4">
-                <h5 class="fw-bold text-danger mb-3">Danger Zone</h5>
-                <p class="text-muted small">These actions are irreversible. Please be certain.</p>
-                <button class="btn btn-outline-danger btn-sm">Delete All Vehicles</button>
-            </div>
-        </div>
-    }
-
-    <div class="d-flex justify-content-end">
-        <button class="btn btn-primary px-5 py-2 shadow-sm fw-bold" @onclick="ApplySettings">
-            <i class="bi bi-check2-all me-2"></i>Apply Changes
-        </button>
-    </div>
 </div>
 
 @code {
-    private string userRole = "Driver"; // Defaults to safe fallback route
-    private string SelectedTheme { get; set; } = "Light";
+    // ── State ──────────────────────────────────────────────────────────────
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
 
-    private string CompanyName { get; set; } = "My Fleet Company";
-    private string SupportEmail { get; set; } = "";
-    private int ServiceIntervalKm { get; set; } = 1000;
-    private string DefaultStatus { get; set; } = "Active";
-    private string SelectedColor { get; set; } = "#0d6efd";
-    private string LogoUrl { get; set; } = "";
-    private bool NotifyOnServiceDue { get; set; } = true;
-    private bool NotifyOnDriverAssigned { get; set; } = false;
-    private bool NotifyDriverOnServiceDue { get; set; } = false;
-    private string successMessage { get; set; } = "";
+    // ── User info ──────────────────────────────────────────────────────────
+    private string userRole = string.Empty; // "Admin" | "Manager" | "Driver" | etc.
+    private string userId = string.Empty;
 
-    private List<string> ThemeColors = new List<string>
+    // ── Personal prefs ─────────────────────────────────────────────────────
+    private string SelectedTheme = "Light";
+    private string SelectedAccent = "#0d6efd";
+    private bool NotifyByEmail = true;
+    private bool NotifyBySMS = false;
+    private bool NotifyByPush = true;
+
+    private readonly List<string> AccentOptions = new()
     {
-        "#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#212529"
+        "#0d6efd", // Bootstrap blue
+        "#198754", // green
+        "#dc3545", // red
+        "#fd7e14", // orange
+        "#6f42c1", // purple
+        "#0dcaf0", // cyan
+        "#212529", // dark
     };
 
+    // ── Admin prefs ────────────────────────────────────────────────────────
+    private string CompanyName = string.Empty;
+    private string SupportEmail = string.Empty;
+    private string LogoUrl = string.Empty;
+    private bool MaintenanceAlerts = true;
+    private bool FuelAlerts = true;
+    private bool DocExpiryAlerts = true;
+    private bool TripAlerts = false;
+
+    // ── Manager prefs ──────────────────────────────────────────────────────
+    private string TripApprovalMode = "Auto";
+    private string FuelApprovalMode = "Auto";
+
+    // ── Lifecycle ──────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        // Bind selection state directly from the theme service engine
-        SelectedTheme = ThemeService.CurrentTheme;
-
-        // Pull active user role context straight from the authorization session
-        var email = Supabase.Auth.CurrentSession?.User?.Email;
-        if (!string.IsNullOrEmpty(email))
+        try
         {
-            try
+            var session = SupabaseClient.Auth.CurrentSession;
+            if (session?.User == null)
             {
-                var result = await Supabase
-                    .From<FleetManagement.Models.Driver>()
-                    .Filter("email", Postgrest.Constants.Operator.Equals, email)
+                isLoading = false;
+                return;
+            }
+
+            userId = session.User.Id ?? string.Empty;
+
+            // Fetch user role from profiles table
+            var profileResult = await SupabaseClient
+                .From<UserProfile>()
+                .Where(p => p.Id == userId)
+                .Single();
+
+            if (profileResult != null)
+                userRole = profileResult.Role ?? "Driver";
+
+            // Fetch saved settings
+            var settingsResult = await SupabaseClient
+                .From<UserSettings>()
+                .Where(s => s.UserId == userId)
+                .Single();
+
+            if (settingsResult != null)
+            {
+                SelectedTheme   = settingsResult.Theme ?? "Light";
+                SelectedAccent  = settingsResult.AccentColour ?? "#0d6efd";
+                NotifyByEmail   = settingsResult.NotifyByEmail;
+                NotifyBySMS     = settingsResult.NotifyBySMS;
+                NotifyByPush    = settingsResult.NotifyByPush;
+            }
+
+            if (userRole == "Admin")
+            {
+                var tenantResult = await SupabaseClient
+                    .From<TenantSettings>()
                     .Single();
 
-                if (result != null)
+                if (tenantResult != null)
                 {
-                    userRole = result.Role;
+                    CompanyName       = tenantResult.CompanyName ?? string.Empty;
+                    SupportEmail      = tenantResult.SupportEmail ?? string.Empty;
+                    LogoUrl           = tenantResult.LogoUrl ?? string.Empty;
+                    MaintenanceAlerts = tenantResult.MaintenanceAlerts;
+                    FuelAlerts        = tenantResult.FuelAlerts;
+                    DocExpiryAlerts   = tenantResult.DocExpiryAlerts;
+                    TripAlerts        = tenantResult.TripAlerts;
                 }
             }
-            catch
+
+            if (userRole == "Manager" || userRole == "Admin")
             {
-                // Soft landing context fallback
-                userRole = "Driver";
+                var managerResult = await SupabaseClient
+                    .From<ManagerSettings>()
+                    .Where(m => m.UserId == userId)
+                    .Single();
+
+                if (managerResult != null)
+                {
+                    TripApprovalMode = managerResult.TripApprovalMode ?? "Auto";
+                    FuelApprovalMode = managerResult.FuelApprovalMode ?? "Auto";
+                }
             }
+
+            // Apply theme via ThemeService
+            await ThemeService.SetThemeAsync(SelectedTheme);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load settings: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
-    private void SelectColor(string color) => SelectedColor = color;
-
-    private void ApplySettings()
+    // ── Save personal settings ─────────────────────────────────────────────
+    private async Task SavePersonalSettings()
     {
-        // 🚀 CRUCIAL: Pass the theme updates directly up to the Global State Manager
-        ThemeService.CurrentTheme = SelectedTheme;
+        isSaving = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ThemeService.SetThemeAsync(SelectedTheme);
 
-        successMessage = $"Settings successfully applied! Theme shifted to {SelectedTheme}.";
-        StateHasChanged();
+            var existing = await SupabaseClient
+                .From<UserSettings>()
+                .Where(s => s.UserId == userId)
+                .Single();
+
+            if (existing != null)
+            {
+                existing.Theme        = SelectedTheme;
+                existing.AccentColour = SelectedAccent;
+                existing.NotifyByEmail = NotifyByEmail;
+                existing.NotifyBySMS  = NotifyBySMS;
+                existing.NotifyByPush = NotifyByPush;
+                await SupabaseClient.From<UserSettings>().Update(existing);
+            }
+            else
+            {
+                await SupabaseClient.From<UserSettings>().Insert(new UserSettings
+                {
+                    UserId        = userId,
+                    Theme         = SelectedTheme,
+                    AccentColour  = SelectedAccent,
+                    NotifyByEmail = NotifyByEmail,
+                    NotifyBySMS   = NotifyBySMS,
+                    NotifyByPush  = NotifyByPush
+                });
+            }
+
+            successMessage = "Personal preferences saved!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving preferences: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Save admin settings ────────────────────────────────────────────────
+    private async Task SaveAdminSettings()
+    {
+        isSaving = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var existing = await SupabaseClient
+                .From<TenantSettings>()
+                .Single();
+
+            if (existing != null)
+            {
+                existing.CompanyName       = CompanyName;
+                existing.SupportEmail      = SupportEmail;
+                existing.LogoUrl           = LogoUrl;
+                existing.MaintenanceAlerts = MaintenanceAlerts;
+                existing.FuelAlerts        = FuelAlerts;
+                existing.DocExpiryAlerts   = DocExpiryAlerts;
+                existing.TripAlerts        = TripAlerts;
+                await SupabaseClient.From<TenantSettings>().Update(existing);
+            }
+            else
+            {
+                await SupabaseClient.From<TenantSettings>().Insert(new TenantSettings
+                {
+                    CompanyName       = CompanyName,
+                    SupportEmail      = SupportEmail,
+                    LogoUrl           = LogoUrl,
+                    MaintenanceAlerts = MaintenanceAlerts,
+                    FuelAlerts        = FuelAlerts,
+                    DocExpiryAlerts   = DocExpiryAlerts,
+                    TripAlerts        = TripAlerts
+                });
+            }
+
+            successMessage = "Organisation settings saved!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving organisation settings: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Save manager settings ──────────────────────────────────────────────
+    private async Task SaveManagerSettings()
+    {
+        isSaving = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var existing = await SupabaseClient
+                .From<ManagerSettings>()
+                .Where(m => m.UserId == userId)
+                .Single();
+
+            if (existing != null)
+            {
+                existing.TripApprovalMode = TripApprovalMode;
+                existing.FuelApprovalMode = FuelApprovalMode;
+                await SupabaseClient.From<ManagerSettings>().Update(existing);
+            }
+            else
+            {
+                await SupabaseClient.From<ManagerSettings>().Insert(new ManagerSettings
+                {
+                    UserId           = userId,
+                    TripApprovalMode = TripApprovalMode,
+                    FuelApprovalMode = FuelApprovalMode
+                });
+            }
+
+            successMessage = "Team settings saved!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving team settings: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Logo upload ────────────────────────────────────────────────────────
+    private async Task HandleLogoUpload(InputFileChangeEventArgs e)
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            var file = e.File;
+            if (file.Size > 2 * 1024 * 1024)
+            {
+                errorMessage = "Logo must be under 2 MB.";
+                return;
+            }
+
+            var extension = Path.GetExtension(file.Name);
+            var fileName  = $"logos/{userId}{extension}";
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024);
+            using var ms     = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            await SupabaseClient.Storage
+                .From("company-assets")
+                .Upload(bytes, fileName, new Supabase.Storage.FileOptions
+                {
+                    Upsert = true
+                });
+
+            LogoUrl = SupabaseClient.Storage
+                .From("company-assets")
+                .GetPublicUrl(fileName);
+
+            successMessage = "Logo uploaded successfully!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Logo upload failed: {ex.Message}";
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace FleetManagement.Services
 {
@@ -22,5 +23,11 @@ namespace FleetManagement.Services
         public string ThemeClass => _currentTheme.ToLower() == "dark" ? "theme-dark" : "theme-light";
 
         public event Action? OnThemeChanged;
+
+        public Task SetThemeAsync(string theme)
+        {
+            CurrentTheme = theme;
+            return Task.CompletedTask;
+        }
     }
 }

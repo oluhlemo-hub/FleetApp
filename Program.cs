@@ -27,6 +27,7 @@ builder.Services.AddScoped<Supabase.Client>(_ =>
 // Service registrations for application management
 builder.Services.AddScoped<FleetService>();
 builder.Services.AddScoped<ThemeService>(); // Handles per-user dark/light state broadcasting
+builder.Services.AddScoped<FleetManagement.Services.ThemeService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
