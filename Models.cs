@@ -246,3 +246,33 @@ namespace FleetManagement.Models
         public DateTime ServicedAt { get; set; } = DateTime.UtcNow;
     }
 }
+    [Table("trip_history")]
+    public class TripHistory : BaseModel
+    {
+        [PrimaryKey("id", false)]
+        public string Id { get; set; } = "";
+
+        [Column("vehicle_id")]
+        public string VehicleId { get; set; } = "";
+
+        [Column("vehicle_registration")]
+        public string VehicleRegistration { get; set; } = "";
+
+        [Column("driver_email")]
+        public string DriverEmail { get; set; } = "";
+
+        [Column("driver_name")]
+        public string DriverName { get; set; } = "";
+
+        [Column("start_mileage")]
+        public int StartMileage { get; set; }
+
+        [Column("end_mileage")]
+        public int EndMileage { get; set; }
+
+        [Column("return_condition")]
+        public string? ReturnCondition { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
