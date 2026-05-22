@@ -615,7 +615,7 @@
             {
                 VehicleId = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration,
-                DriverEmail = currentUser?.Email ?? string.Empty,
+                DriverEmail = currentUserEmail,
                 MileageAtService = collectMileage,
                 NextServiceKm = collectMileage + 10000,
                 ReportUrl = reportUrl,
