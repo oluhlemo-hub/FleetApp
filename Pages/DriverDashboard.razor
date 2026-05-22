@@ -670,10 +670,37 @@
         isSubmitting = true;
         try
         {
+            // Record trip history before clearing the driver
+            string driverName = currentUserEmail;
+            try
+            {
+                var driverRecord = await Supabase.From<Driver>()
+                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                    .Single();
+                if (driverRecord != null)
+                    driverName = driverRecord.Name;
+            }
+            catch { }
+
+            var trip = new TripHistory
+            {
+                VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration,
+                DriverEmail = currentUserEmail,
+                DriverName = driverName,
+                StartMileage = currentVehicle.Mileage,
+                EndMileage = returnMileage,
+                ReturnCondition = returnCondition,
+                CreatedAt = DateTime.UtcNow
+            };
+            await Supabase.From<TripHistory>().Insert(trip);
+
+            // Now update the vehicle
             currentVehicle.Status = "Available";
             currentVehicle.Mileage = returnMileage;
             currentVehicle.LastDriver = string.Empty;
             await Supabase.From<Vehicle>().Update(currentVehicle);
+
             await LoadData();
             showReturnVehicle = false;
             successMessage = "Vehicle returned successfully.";
