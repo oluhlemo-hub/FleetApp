@@ -52,7 +52,6 @@
         <div class="col-6">
             @if (currentVehicle.Status == "In Service")
             {
-                <!-- Vehicle is in service — show Collect from Service button -->
                 <button class="btn btn-success w-100 py-3 d-flex flex-column align-items-center gap-1"
                         @onclick="() => showCollectService = true"
                         disabled="@(!hasVehicle)">
@@ -62,7 +61,6 @@
             }
             else
             {
-                <!-- Normal Book Service button -->
                 <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
                         @onclick="() => showBookService = true"
                         disabled="@(!hasVehicle)">
@@ -589,7 +587,6 @@
         isSubmitting = true;
         try
         {
-            // Upload service report to Supabase Storage
             string reportUrl = string.Empty;
             try
             {
@@ -611,12 +608,9 @@
             }
             catch
             {
-                // Storage upload failed — still proceed with mileage update
-                // but note the failure
                 collectError = "Warning: report upload failed, but mileage was updated.";
             }
 
-            // Update vehicle: status back to Active, new mileage, next service due
             currentVehicle.Status = "Active";
             currentVehicle.Mileage = collectMileage;
             currentVehicle.ServiceDueKm = collectMileage + 10000;
@@ -705,6 +699,23 @@
 
         try
         {
+            // ✅ FIX: Verify the entered email belongs to a user with the Admin role
+            Driver? adminRecord = null;
+            try
+            {
+                adminRecord = await Supabase.From<Driver>()
+                    .Filter("email", Postgrest.Constants.Operator.Equals, requestApprover.Trim())
+                    .Filter("role", Postgrest.Constants.Operator.Equals, "Admin")
+                    .Single();
+            }
+            catch { }
+
+            if (adminRecord == null)
+            {
+                errorMessage = "The email entered does not belong to an Admin. Please ask your administrator for their email address.";
+                return;
+            }
+
             var random = new Random();
             generatedOtp = random.Next(100000, 999999).ToString();
 
