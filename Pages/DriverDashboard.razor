@@ -611,6 +611,15 @@
                 collectError = "Warning: report upload failed, but mileage was updated.";
             }
 
+            var serviceRecord = new ServiceHistory
+            {
+                VehicleId = currentVehicle.Id,
+                ServiceDate = DateTime.UtcNow,
+                Mileage = collectMileage,
+                ReportUrl = reportUrl,
+                Notes = "Collected from service"
+            };
+            await Supabase.From<ServiceHistory>().Insert(serviceRecord);
             currentVehicle.Status = "Active";
             currentVehicle.Mileage = collectMileage;
             currentVehicle.ServiceDueKm = collectMileage + 10000;
