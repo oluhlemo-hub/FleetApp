@@ -614,10 +614,12 @@
             var serviceRecord = new ServiceHistory
             {
                 VehicleId = currentVehicle.Id,
-                ServiceDate = DateTime.UtcNow,
-                Mileage = collectMileage,
+                VehicleRegistration = currentVehicle.Registration,
+                DriverEmail = currentUser?.Email ?? string.Empty,
+                MileageAtService = collectMileage,
+                NextServiceKm = collectMileage + 10000,
                 ReportUrl = reportUrl,
-                Notes = "Collected from service"
+                ServicedAt = DateTime.UtcNow
             };
             await Supabase.From<ServiceHistory>().Insert(serviceRecord);
             currentVehicle.Status = "Active";
