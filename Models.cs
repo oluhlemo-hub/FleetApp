@@ -43,6 +43,8 @@ namespace FleetManagement.Models
         public string? AuthId { get; set; }
         [Column("must_change_password")]
         public bool MustChangePassword { get; set; }
+        [Column("fuel_card_number")]
+        public string? FuelCardNumber { get; set; }
     }
 
     [Table("faults")]
@@ -150,8 +152,8 @@ namespace FleetManagement.Models
         public decimal? Litres { get; set; }
         [Column("cost")]
         public decimal Cost { get; set; }
-        [Column("odometer_km")]
-        public int? OdometerKm { get; set; }
+        [Column("mileage_km")]
+        public int? MileageKm { get; set; }
         [Column("station_name")]
         public string? StationName { get; set; }
         [Column("expense_category")]
@@ -160,8 +162,27 @@ namespace FleetManagement.Models
         public string? ExpenseDescription { get; set; }
         [Column("receipt_url")]
         public string? ReceiptUrl { get; set; }
+        [Column("fuel_card_number")]
+        public string? FuelCardNumber { get; set; }
         [Column("logged_at")]
         public DateTime LoggedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    [Table("fuel_cards")]
+    public class FuelCard : BaseModel
+    {
+        [PrimaryKey("id", false)]
+        public string Id { get; set; } = string.Empty;
+        [Column("card_number")]
+        public string CardNumber { get; set; } = string.Empty;
+        [Column("provider")]
+        public string? Provider { get; set; }
+        [Column("assigned_driver_email")]
+        public string? AssignedDriverEmail { get; set; }
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
     [Table("profiles")]
@@ -224,13 +245,5 @@ namespace FleetManagement.Models
         public string? TripApprovalMode { get; set; }
         [Column("fuel_approval_mode")]
         public string? FuelApprovalMode { get; set; }
-    }
-
-    public class DriverFormModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public string Role { get; set; } = "Driver";
     }
 }

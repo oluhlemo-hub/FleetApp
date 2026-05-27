@@ -101,6 +101,12 @@
             <button class="btn btn-secondary" @onclick="() => { isDriverModalVisible = true; modalError = string.Empty; }">
                 <i class="bi bi-person-plus me-1"></i><span class="d-none d-sm-inline"> Add Driver</span>
             </button>
+            <button class="btn btn-warning" @onclick="OpenFuelCardModal">
+                <i class="bi bi-credit-card me-1"></i><span class="d-none d-sm-inline"> Fuel Cards</span>
+            </button>
+            <button class="btn btn-outline-warning" @onclick="async () => { isFuelCardModalVisible = true; modalError = string.Empty; await LoadFuelCards(); }">
+                <i class="bi bi-credit-card me-1"></i><span class="d-none d-sm-inline"> Fuel Cards</span>
+            </button>
         </div>
     </div>
 
@@ -122,6 +128,11 @@
                 {
                     <span class="badge bg-danger ms-1">@allFaults.Count(f => f.Status == "Open")</span>
                 }
+            </button>
+        </li>
+        <li class="nav-item flex-shrink-0">
+            <button class="nav-link @(activeTab == "fuellogs" ? "active" : "")" @onclick='() => activeTab = "fuellogs"'>
+                <i class="bi bi-fuel-pump me-1"></i> Fuel Logs <span class="badge bg-secondary ms-1">@allFuelLogs.Count</span>
             </button>
         </li>
     </ul>
@@ -377,6 +388,185 @@
     }
 </div>
 
+
+    @if (activeTab == "fuellogs")
+    {
+        <div class="card shadow-sm d-none d-md-block">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th><th>Vehicle</th><th>Driver</th><th>Type</th>
+                            <th>Litres</th><th>Cost (R)</th><th>Mileage</th><th>Card #</th><th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (allFuelLogs.Any())
+                        {
+                            @foreach (var log in allFuelLogs.OrderByDescending(l => l.LoggedAt))
+                            {
+                                <tr>
+                                    <td>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td><strong>@log.VehicleRegistration</strong></td>
+                                    <td>@log.DriverEmail</td>
+                                    <td>
+                                        @if (log.ExpenseType == "Fuel")
+                                        { <span class="badge bg-warning text-dark">@log.FuelType</span> }
+                                        else
+                                        { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
+                                    </td>
+                                    <td>@(log.Litres.HasValue ? $"{log.Litres:F1} L" : "—")</td>
+                                    <td>R @log.Cost.ToString("F2")</td>
+                                    <td>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</td>
+                                    <td>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "—" : log.FuelCardNumber)</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                                        { <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i></a> }
+                                        else
+                                        { <span class="text-muted small">—</span> }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else { <tr><td colspan="9" class="text-center text-muted py-4">No fuel logs yet.</td></tr> }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-md-none">
+            @if (!allFuelLogs.Any())
+            {
+                <p class="text-center text-muted py-4">No fuel logs yet.</p>
+            }
+            @foreach (var log in allFuelLogs.OrderByDescending(l => l.LoggedAt))
+            {
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>@log.VehicleRegistration</strong>
+                                <span class="text-muted small d-block">@log.DriverEmail</span>
+                            </div>
+                            <div class="text-end">
+                                @if (log.ExpenseType == "Fuel")
+                                { <span class="badge bg-warning text-dark">@log.FuelType</span> }
+                                else
+                                { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
+                                <div class="small text-muted mt-1">@log.LoggedAt.ToLocalTime().ToString("dd MMM HH:mm")</div>
+                            </div>
+                        </div>
+                        <div class="row g-1 small text-muted mb-2">
+                            @if (log.Litres.HasValue)
+                            { <div class="col-6"><i class="bi bi-droplet me-1"></i>@($"{log.Litres:F1} L")</div> }
+                            <div class="col-6"><i class="bi bi-cash me-1"></i>R @log.Cost.ToString("F2")</div>
+                            @if (log.MileageKm.HasValue)
+                            { <div class="col-6"><i class="bi bi-speedometer2 me-1"></i>@log.MileageKm km</div> }
+                            @if (!string.IsNullOrEmpty(log.FuelCardNumber))
+                            { <div class="col-12"><i class="bi bi-credit-card me-1"></i>@log.FuelCardNumber</div> }
+                        </div>
+                        @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                        {
+                            <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-image me-1"></i> View Receipt
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+@if (activeTab == "fuellogs")
+{
+    <div class="card shadow-sm d-none d-md-block">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th><th>Vehicle</th><th>Driver</th><th>Type</th>
+                        <th>Details</th><th>Cost</th><th>Mileage</th><th>Card</th><th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (allFuelLogs.Any())
+                    {
+                        @foreach (var log in allFuelLogs.OrderByDescending(f => f.LoggedAt))
+                        {
+                            <tr>
+                                <td>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                <td><strong>@log.VehicleRegistration</strong></td>
+                                <td>@log.DriverEmail</td>
+                                <td>
+                                    @if (log.ExpenseType == "Fuel")
+                                    { <span class="badge bg-warning text-dark">@log.FuelType</span> }
+                                    else
+                                    { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
+                                </td>
+                                <td>
+                                    @if (log.ExpenseType == "Fuel")
+                                    { <span>@($"{log.Litres:F1} L") · @(log.StationName ?? "—")</span> }
+                                    else
+                                    { <span>@(log.ExpenseDescription ?? "—")</span> }
+                                </td>
+                                <td>R @log.Cost.ToString("F2")</td>
+                                <td>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</td>
+                                <td>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "—" : log.FuelCardNumber)</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                                    { <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i></a> }
+                                    else
+                                    { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else { <tr><td colspan="9" class="text-center text-muted py-4">No fuel logs yet.</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-md-none">
+        @foreach (var log in allFuelLogs.OrderByDescending(f => f.LoggedAt))
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>@log.VehicleRegistration</strong>
+                            <span class="text-muted small d-block">@log.DriverEmail</span>
+                        </div>
+                        <div class="text-end">
+                            @if (log.ExpenseType == "Fuel")
+                            { <span class="badge bg-warning text-dark">@log.FuelType</span> }
+                            else
+                            { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
+                            <div class="fw-bold mt-1">R @log.Cost.ToString("F2")</div>
+                        </div>
+                    </div>
+                    <div class="row g-1 small text-muted">
+                        @if (log.ExpenseType == "Fuel")
+                        {
+                            <div class="col-6"><i class="bi bi-droplet me-1"></i>@($"{log.Litres:F1} L")</div>
+                            <div class="col-6"><i class="bi bi-speedometer2 me-1"></i>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</div>
+                            <div class="col-12"><i class="bi bi-geo-alt me-1"></i>@(log.StationName ?? "—")</div>
+                        }
+                        <div class="col-12"><i class="bi bi-credit-card me-1"></i>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "No card" : log.FuelCardNumber)</div>
+                        <div class="col-12"><i class="bi bi-calendar me-1"></i>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                    {
+                        <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                            <i class="bi bi-image me-1"></i> View Receipt
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
 @if (showNotifications)
 {
     <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 999;" @onclick="ToggleNotifications"></div>
@@ -552,6 +742,10 @@
                                 <option value="Admin">Admin</option>
                             </InputSelect>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fuel Card Number <span class="text-muted fw-normal small">(optional)</span></label>
+                            <InputText @bind-Value="driverForm.FuelCardNumber" class="form-control" placeholder="e.g. 4567-8901-2345" />
+                        </div>
                         @if (selectedDriver == null)
                         {
                             <div class="mb-3">
@@ -593,22 +787,28 @@
 
                 <!-- Stats -->
                 <div class="row g-3 mb-4">
-                    <div class="col-4">
+                    <div class="col-3">
                         <div class="text-center p-3 rounded-3 bg-primary bg-opacity-10">
                             <div class="fs-4 fw-bold text-primary">@vehicleServiceHistory.Count</div>
                             <div class="small text-muted">Services</div>
                         </div>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3">
                         <div class="text-center p-3 rounded-3 bg-danger bg-opacity-10">
                             <div class="fs-4 fw-bold text-danger">@vehicleFaultHistory.Count</div>
                             <div class="small text-muted">Faults</div>
                         </div>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3">
                         <div class="text-center p-3 rounded-3 bg-success bg-opacity-10">
                             <div class="fs-4 fw-bold text-success">@vehicleTripHistory.Count</div>
                             <div class="small text-muted">Trips</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="text-center p-3 rounded-3 bg-warning bg-opacity-10">
+                            <div class="fs-4 fw-bold text-warning">@allFuelLogs.Count(f => f.VehicleId == vehicleHistoryTarget!.Id)</div>
+                            <div class="small text-muted">Fuel Logs</div>
                         </div>
                     </div>
                 </div>
@@ -673,6 +873,52 @@
                     <p class="text-muted small mb-4">No trip records yet.</p>
                 }
 
+
+                <!-- Fuel Log History -->
+                <h6 class="fw-bold mb-3 mt-4"><i class="bi bi-fuel-pump me-2 text-warning"></i>Fuel Log History</h6>
+                @{
+                    var vehicleFuelHistory = allFuelLogs
+                        .Where(f => f.VehicleId == vehicleHistoryTarget.Id)
+                        .OrderByDescending(f => f.LoggedAt).ToList();
+                }
+                @if (vehicleFuelHistory.Any())
+                {
+                    @foreach (var log in vehicleFuelHistory)
+                    {
+                        <div class="card border-0 bg-light mb-2">
+                            <div class="card-body py-2 px-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        @if (log.ExpenseType == "Fuel")
+                                        {
+                                            <span class="badge bg-warning text-dark me-1">@log.FuelType</span>
+                                            <span class="small fw-semibold">@($"{log.Litres:F1} L") · R @log.Cost.ToString("F2")</span>
+                                            @if (log.MileageKm.HasValue)
+                                            { <div class="text-muted x-small">Mileage: @log.MileageKm km</div> }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary me-1">@log.ExpenseCategory</span>
+                                            <span class="small fw-semibold">R @log.Cost.ToString("F2")</span>
+                                        }
+                                        <div class="text-muted x-small">@log.DriverEmail</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="text-muted x-small">@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                                        @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                                        {
+                                            <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-link p-0 small">Receipt</a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted small">No fuel logs recorded.</p>
+                }
                 <!-- Fault History -->
                 <h6 class="fw-bold mb-3 mt-4"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Fault History</h6>
                 @if (vehicleFaultHistory.Any())
@@ -923,16 +1169,97 @@
     }
 </style>
 
+
+<!-- FUEL CARD MANAGEMENT MODAL -->
+@if (isFuelCardModalVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-credit-card me-2 text-warning"></i>Fuel Card Management</h5>
+                    <button type="button" class="btn-close" @onclick="() => isFuelCardModalVisible = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(modalError))
+                    {
+                        <div class="alert alert-danger py-2">@modalError</div>
+                    }
+                    <!-- Add new card form -->
+                    <div class="card border-0 bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2"></i>Add New Fuel Card</h6>
+                            <div class="row g-2">
+                                <div class="col-12 col-sm-5">
+                                    <input class="form-control" @bind="newFuelCardNumber" placeholder="Card number e.g. 4567-8901" />
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <input class="form-control" @bind="newFuelCardProvider" placeholder="Provider e.g. Shell, BP" />
+                                </div>
+                                <div class="col-12 col-sm-3">
+                                    <button class="btn btn-warning w-100" @onclick="AddFuelCard" disabled="@isSubmittingCard">
+                                        @if (isSubmittingCard) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        <i class="bi bi-plus-lg me-1"></i> Add Card
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card list -->
+                    @if (fuelCards.Any())
+                    {
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Card Number</th><th>Provider</th><th>Assigned Driver</th><th>Status</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var card in fuelCards)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@card.CardNumber</td>
+                                        <td>@(string.IsNullOrEmpty(card.Provider) ? "—" : card.Provider)</td>
+                                        <td>@if (string.IsNullOrEmpty(card.AssignedDriverEmail)) { <span class="text-muted">Unassigned</span> } else { @card.AssignedDriverEmail }</td>
+                                        <td><span class="badge @(card.IsActive ? "bg-success" : "bg-secondary")">@(card.IsActive ? "Active" : "Inactive")</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeactivateFuelCard(card)" disabled="@(!card.IsActive)">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted py-3">No fuel cards added yet.</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => isFuelCardModalVisible = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 </AuthGuard>
 
 @code {
-    @inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
 
     private List<Vehicle> vehicles = new();
     private List<Driver> drivers = new();
     private List<Fault> allFaults = new();
     private List<Fault> openFaults = new();
     private List<TripHistory> allTripHistory = new();
+    private List<FuelLog> allFuelLogs = new();
+    private List<FuelCard> fuelCards = new();
+
+    // Fuel Card Modal
+    private bool isFuelCardModalVisible = false;
+    private bool isSubmittingCard = false;
+    private string newFuelCardNumber = string.Empty;
+    private string newFuelCardProvider = string.Empty;
 
     private Vehicle newVehicle = new() { Status = "Available" };
     private Vehicle? selectedVehicle = null;
@@ -982,11 +1309,24 @@
 
             var tripResponse = await Supabase.From<TripHistory>().Get();
             allTripHistory = tripResponse.Models;
+
+            var fuelLogResponse = await Supabase.From<FuelLog>().Get();
+            allFuelLogs = fuelLogResponse.Models;
+
+            var fuelCardResponse = await Supabase.From<FuelCard>().Get();
+            fuelCards = fuelCardResponse.Models;
         }
         catch (Exception ex)
         {
             successMessage = $"Error loading data: {ex.Message}";
         }
+    }
+
+    private async Task OpenFuelCardModal()
+    {
+        await LoadFuelCards();
+        isFuelCardModalVisible = true;
+        modalError = string.Empty;
     }
 
     // ── Vehicle History ──────────────────────────────────────
@@ -1176,7 +1516,7 @@
     private void SelectDriver(Driver driver)
     {
         selectedDriver = driver;
-        driverForm = new DriverFormModel { Name = driver.Name, Email = driver.Email, Phone = driver.Phone ?? "", Role = driver.Role };
+        driverForm = new DriverFormModel { Name = driver.Name, Email = driver.Email, Phone = driver.Phone ?? "", Role = driver.Role, FuelCardNumber = driver.FuelCardNumber ?? "" };
         isDriverModalVisible = true;
         modalError = string.Empty;
     }
@@ -1237,13 +1577,14 @@
             }
             if (selectedDriver != null)
             {
+#pragma warning disable CS8603
                 await Supabase.From<Driver>().Where(d => d.Id == selectedDriver.Id)
                     .Set(d => d.Name, driverForm.Name)
-#pragma warning disable CS8603
                     .Set(d => d.Phone, driverForm.Phone ?? "")
-#pragma warning restore CS8603
                     .Set(d => d.Role, driverForm.Role)
+                    .Set(d => d.FuelCardNumber, driverForm.FuelCardNumber)
                     .Update();
+#pragma warning restore CS8603
                 successMessage = $"{driverForm.Name} updated successfully.";
             }
             else
@@ -1264,7 +1605,8 @@
                         Phone = driverForm.Phone,
                         Role = driverForm.Role,
                         IsActive = true,
-                        MustChangePassword = true
+                        MustChangePassword = true,
+                        FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
                     };
                     await Supabase.From<Driver>().Insert(driverRecord);
                     successMessage = $"Account created for {driverForm.Name}.";
@@ -1280,6 +1622,50 @@
         catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
     }
 
+    private async Task LoadFuelCards()
+    {
+        try
+        {
+            var resp = await Supabase.From<FuelCard>().Get();
+            fuelCards = resp.Models;
+        }
+        catch { fuelCards = new(); }
+    }
+
+    private async Task AddFuelCard()
+    {
+        if (string.IsNullOrWhiteSpace(newFuelCardNumber)) { modalError = "Please enter a card number."; return; }
+        isSubmittingCard = true;
+        modalError = string.Empty;
+        try
+        {
+            var card = new FuelCard
+            {
+                CardNumber = newFuelCardNumber.Trim(),
+                Provider = string.IsNullOrWhiteSpace(newFuelCardProvider) ? null : newFuelCardProvider.Trim(),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await Supabase.From<FuelCard>().Insert(card);
+            newFuelCardNumber = string.Empty;
+            newFuelCardProvider = string.Empty;
+            await LoadFuelCards();
+            successMessage = "Fuel card added successfully.";
+        }
+        catch (Exception ex) { modalError = $"Error adding card: {ex.Message}"; }
+        finally { isSubmittingCard = false; }
+    }
+
+    private async Task DeactivateFuelCard(FuelCard card)
+    {
+        try
+        {
+            await Supabase.From<FuelCard>().Where(c => c.Id == card.Id).Set(c => c.IsActive, false).Update();
+            await LoadFuelCards();
+        }
+        catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
+    }
+
     private string GetStatusBadge(string status) => status switch
     {
         "Active"     => "bg-success",
@@ -1289,11 +1675,14 @@
         _            => "bg-light text-dark"
     };
 
+
     public class DriverFormModel
     {
-        public string Name  { get; set; } = "";
+        public string Name { get; set; } = "";
         public string Email { get; set; } = "";
         public string Phone { get; set; } = "";
-        public string Role  { get; set; } = "Driver";
+        public string Role { get; set; } = "Driver";
+        public string FuelCardNumber { get; set; } = "";
     }
+
 }

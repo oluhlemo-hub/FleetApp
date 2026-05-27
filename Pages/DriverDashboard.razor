@@ -280,9 +280,9 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Odometer Reading (km)</label>
+                        <label class="form-label">Mileage</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" @bind="fuelOdometer" placeholder="e.g. 47500" />
+                            <input type="number" class="form-control" @bind="fuelMileage" placeholder="e.g. 47500" />
                             <span class="input-group-text">km</span>
                         </div>
                     </div>
@@ -317,10 +317,10 @@
                     </div>
                 }
 
-                <!-- Receipt Photo -->
+                <!-- Receipt Photo (required) -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">
-                        Receipt Photo <span class="text-muted fw-normal">(optional)</span>
+                        Receipt Photo <span class="text-danger">*</span>
                     </label>
                     <InputFile OnChange="OnReceiptSelected" accept="image/*" class="form-control" />
                     @if (fuelReceiptName != null)
@@ -336,8 +336,15 @@
                     }
                     else
                     {
-                        <small class="text-muted d-block mt-1">Take a photo or upload an image of the receipt.</small>
+                        <small class="text-muted d-block mt-1">A photo of the receipt is required.</small>
                     }
+                </div>
+
+                <!-- Fuel Card Number -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Fuel Card Number</label>
+                    <input class="form-control" @bind="fuelCardNumber" placeholder="e.g. 4567-8901-2345" />
+                    <small class="text-muted">Auto-filled from your profile if a card is assigned.</small>
                 </div>
 
                 @if (!string.IsNullOrEmpty(fuelError))
@@ -594,13 +601,15 @@
     private string fuelType = string.Empty;
     private decimal fuelLitres;
     private decimal fuelCost;
-    private int fuelOdometer;
+    private int fuelMileage;
     private string fuelStation = string.Empty;
     private string fuelExpenseCategory = string.Empty;
     private string fuelExpenseDescription = string.Empty;
     private IBrowserFile? fuelReceiptFile;
     private string? fuelReceiptName;
     private string fuelError = string.Empty;
+    private string fuelCardNumber = string.Empty;
+    private bool fuelSubmitAttempted = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -673,6 +682,17 @@
             .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
             .Get();
         availableVehicles = available.Models;
+
+        // Auto-fill driver fuel card number
+        try
+        {
+            var driverRec = await Supabase.From<Driver>()
+                .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                .Single();
+            if (!string.IsNullOrEmpty(driverRec?.FuelCardNumber))
+                fuelCardNumber = driverRec.FuelCardNumber;
+        }
+        catch { }
     }
 
     private async Task OpenRequestVehicle()
@@ -711,13 +731,15 @@
         fuelType = string.Empty;
         fuelLitres = 0;
         fuelCost = 0;
-        fuelOdometer = 0;
+        fuelMileage = 0;
         fuelStation = string.Empty;
         fuelExpenseCategory = string.Empty;
         fuelExpenseDescription = string.Empty;
         fuelReceiptFile = null;
         fuelReceiptName = null;
         fuelError = string.Empty;
+        fuelCardNumber = string.Empty;
+        fuelSubmitAttempted = false;
     }
 
     private async Task SubmitFuelLog()
@@ -725,18 +747,20 @@
         fuelError = string.Empty;
 
         // Validation
+        fuelSubmitAttempted = true;
         if (fuelExpenseType == "Fuel")
         {
             if (string.IsNullOrWhiteSpace(fuelType))   { fuelError = "Please select a fuel type."; return; }
             if (fuelLitres <= 0)                        { fuelError = "Please enter a valid number of litres."; return; }
             if (fuelCost <= 0)                          { fuelError = "Please enter the cost."; return; }
-            if (fuelOdometer <= 0)                      { fuelError = "Please enter the current odometer reading."; return; }
+            if (fuelMileage <= 0)                      { fuelError = "Please enter the current mileage."; return; }
         }
         else
         {
             if (string.IsNullOrWhiteSpace(fuelExpenseCategory)) { fuelError = "Please select an expense category."; return; }
             if (fuelCost <= 0)                                   { fuelError = "Please enter the amount."; return; }
         }
+        if (fuelReceiptFile == null) { fuelError = "A receipt photo is required."; return; }
 
         isSubmitting = true;
         try
@@ -779,20 +803,21 @@
                 FuelType           = fuelExpenseType == "Fuel" ? fuelType : null,
                 Litres             = fuelExpenseType == "Fuel" ? fuelLitres : null,
                 Cost               = fuelCost,
-                OdometerKm         = fuelExpenseType == "Fuel" ? fuelOdometer : null,
+                MileageKm         = fuelExpenseType == "Fuel" ? fuelMileage : null,
                 StationName        = fuelExpenseType == "Fuel" ? fuelStation : null,
                 ExpenseCategory    = fuelExpenseType == "Other" ? fuelExpenseCategory : null,
                 ExpenseDescription = fuelExpenseType == "Other" ? fuelExpenseDescription : null,
                 ReceiptUrl         = receiptUrl,
+                FuelCardNumber     = fuelCardNumber,
                 LoggedAt           = DateTime.UtcNow
             };
 
             await Supabase.From<FuelLog>().Insert(log);
 
             // Optionally update vehicle odometer if fuel fill-up odometer is higher
-            if (fuelExpenseType == "Fuel" && fuelOdometer > currentVehicle.Mileage)
+            if (fuelExpenseType == "Fuel" && fuelMileage > currentVehicle.Mileage)
             {
-                currentVehicle.Mileage = fuelOdometer;
+                currentVehicle.Mileage = fuelMileage;
                 await Supabase.From<Vehicle>().Update(currentVehicle);
                 await LoadData();
             }
