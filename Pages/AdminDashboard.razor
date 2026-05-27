@@ -475,95 +475,6 @@
         </div>
     }
 
-@if (activeTab == "fuellogs")
-{
-    <div class="card shadow-sm d-none d-md-block">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Date</th><th>Vehicle</th><th>Driver</th><th>Type</th>
-                        <th>Details</th><th>Cost</th><th>Mileage</th><th>Card</th><th>Receipt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (allFuelLogs.Any())
-                    {
-                        @foreach (var log in allFuelLogs.OrderByDescending(f => f.LoggedAt))
-                        {
-                            <tr>
-                                <td>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                <td><strong>@log.VehicleRegistration</strong></td>
-                                <td>@log.DriverEmail</td>
-                                <td>
-                                    @if (log.ExpenseType == "Fuel")
-                                    { <span class="badge bg-warning text-dark">@log.FuelType</span> }
-                                    else
-                                    { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
-                                </td>
-                                <td>
-                                    @if (log.ExpenseType == "Fuel")
-                                    { <span>@($"{log.Litres:F1} L") · @(log.StationName ?? "—")</span> }
-                                    else
-                                    { <span>@(log.ExpenseDescription ?? "—")</span> }
-                                </td>
-                                <td>R @log.Cost.ToString("F2")</td>
-                                <td>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</td>
-                                <td>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "—" : log.FuelCardNumber)</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(log.ReceiptUrl))
-                                    { <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i></a> }
-                                    else
-                                    { <span class="text-muted">—</span> }
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else { <tr><td colspan="9" class="text-center text-muted py-4">No fuel logs yet.</td></tr> }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="d-md-none">
-        @foreach (var log in allFuelLogs.OrderByDescending(f => f.LoggedAt))
-        {
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <strong>@log.VehicleRegistration</strong>
-                            <span class="text-muted small d-block">@log.DriverEmail</span>
-                        </div>
-                        <div class="text-end">
-                            @if (log.ExpenseType == "Fuel")
-                            { <span class="badge bg-warning text-dark">@log.FuelType</span> }
-                            else
-                            { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
-                            <div class="fw-bold mt-1">R @log.Cost.ToString("F2")</div>
-                        </div>
-                    </div>
-                    <div class="row g-1 small text-muted">
-                        @if (log.ExpenseType == "Fuel")
-                        {
-                            <div class="col-6"><i class="bi bi-droplet me-1"></i>@($"{log.Litres:F1} L")</div>
-                            <div class="col-6"><i class="bi bi-speedometer2 me-1"></i>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</div>
-                            <div class="col-12"><i class="bi bi-geo-alt me-1"></i>@(log.StationName ?? "—")</div>
-                        }
-                        <div class="col-12"><i class="bi bi-credit-card me-1"></i>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "No card" : log.FuelCardNumber)</div>
-                        <div class="col-12"><i class="bi bi-calendar me-1"></i>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
-                    </div>
-                    @if (!string.IsNullOrEmpty(log.ReceiptUrl))
-                    {
-                        <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                            <i class="bi bi-image me-1"></i> View Receipt
-                        </a>
-                    }
-                </div>
-            </div>
-        }
-    </div>
-}
 
 @if (showNotifications)
 {
@@ -1320,9 +1231,9 @@
             var fuelCardResponse = await Supabase.From<FuelCard>().Get();
             fuelCards = fuelCardResponse.Models;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            successMessage = $"Error loading data: {ex.Message}";
+            successMessage = "Failed to load data. Please refresh the page.";
         }
     }
 
@@ -1456,7 +1367,7 @@
             successMessage = $"{car.Registration} removed successfully.";
             await LoadData();
         }
-        catch (Exception ex) { successMessage = $"Error removing vehicle: {ex.Message}"; }
+        catch (Exception) { successMessage = "Could not remove vehicle. Please try again."; }
     }
 
     private async Task DeactivateDriver(Driver driver)
@@ -1467,7 +1378,7 @@
             successMessage = $"{driver.Name} has been deactivated.";
             await LoadData();
         }
-        catch (Exception ex) { successMessage = $"Error deactivating driver: {ex.Message}"; }
+        catch (Exception) { successMessage = "Could not deactivate driver. Please try again."; }
     }
 
     private async Task ReactivateDriver(Driver driver)
@@ -1478,7 +1389,7 @@
             successMessage = $"{driver.Name} has been reactivated.";
             await LoadData();
         }
-        catch (Exception ex) { successMessage = $"Error reactivating driver: {ex.Message}"; }
+        catch (Exception) { successMessage = "Could not reactivate driver. Please try again."; }
     }
 
     private void ToggleNotifications() => showNotifications = !showNotifications;
@@ -1566,7 +1477,7 @@
             selectedVehicle = null;
             newVehicle = new Vehicle { Status = "Available" };
         }
-        catch (Exception ex) { modalError = $"Error saving vehicle: {ex.Message}"; }
+        catch (Exception) { modalError = "Could not save vehicle. Please check your inputs and try again."; }
     }
 
     private async Task HandleSaveDriver()
@@ -1581,11 +1492,19 @@
             }
             if (selectedDriver != null)
             {
-                selectedDriver.Name = driverForm.Name;
-                selectedDriver.Phone = driverForm.Phone ?? "";
-                selectedDriver.Role = driverForm.Role;
-                selectedDriver.FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber;
-                await Supabase.From<Driver>().Update(selectedDriver);
+                var updatedDriver = new Driver
+                {
+                    Id = selectedDriver.Id,
+                    AuthId = selectedDriver.AuthId,
+                    Name = driverForm.Name,
+                    Email = selectedDriver.Email,
+                    Phone = driverForm.Phone ?? "",
+                    Role = driverForm.Role,
+                    IsActive = selectedDriver.IsActive,
+                    MustChangePassword = selectedDriver.MustChangePassword,
+                    FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
+                };
+                await Supabase.From<Driver>().Update(updatedDriver);
                 successMessage = $"{driverForm.Name} updated successfully.";
             }
             else
@@ -1620,7 +1539,7 @@
         {
             modalError = "A user with this email already exists.";
         }
-        catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
+        catch (Exception) { modalError = "Something went wrong. Please try again."; }
     }
 
     private async Task LoadFuelCards()
@@ -1653,7 +1572,7 @@
             await LoadFuelCards();
             successMessage = "Fuel card added successfully.";
         }
-        catch (Exception ex) { modalError = $"Error adding card: {ex.Message}"; }
+        catch (Exception) { modalError = "Could not add fuel card. Please try again."; }
         finally { isSubmittingCard = false; }
     }
 
@@ -1664,7 +1583,7 @@
             await Supabase.From<FuelCard>().Where(c => c.Id == card.Id).Set(c => c.IsActive, false).Update();
             await LoadFuelCards();
         }
-        catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
+        catch (Exception) { modalError = "Something went wrong. Please try again."; }
     }
 
     private string GetStatusBadge(string status) => status switch
