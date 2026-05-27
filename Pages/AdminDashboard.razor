@@ -98,15 +98,13 @@
             <button class="btn btn-primary" @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; }">
                 <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline"> Add Vehicle</span>
             </button>
-            <button class="btn btn-secondary" @onclick="() => { isDriverModalVisible = true; modalError = string.Empty; }">
+            <button class="btn btn-secondary" @onclick="async () => { await LoadFuelCards(); isDriverModalVisible = true; modalError = string.Empty; }">
                 <i class="bi bi-person-plus me-1"></i><span class="d-none d-sm-inline"> Add Driver</span>
             </button>
             <button class="btn btn-warning" @onclick="OpenFuelCardModal">
                 <i class="bi bi-credit-card me-1"></i><span class="d-none d-sm-inline"> Fuel Cards</span>
             </button>
-            <button class="btn btn-outline-warning" @onclick="async () => { isFuelCardModalVisible = true; modalError = string.Empty; await LoadFuelCards(); }">
-                <i class="bi bi-credit-card me-1"></i><span class="d-none d-sm-inline"> Fuel Cards</span>
-            </button>
+
         </div>
     </div>
 
@@ -743,8 +741,14 @@
                             </InputSelect>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Fuel Card Number <span class="text-muted fw-normal small">(optional)</span></label>
-                            <InputText @bind-Value="driverForm.FuelCardNumber" class="form-control" placeholder="e.g. 4567-8901-2345" />
+                            <label class="form-label">Fuel Card <span class="text-muted fw-normal small">(optional)</span></label>
+                            <InputSelect @bind-Value="driverForm.FuelCardNumber" class="form-select">
+                                <option value="">-- No card assigned --</option>
+                                @foreach (var card in fuelCards.Where(c => c.IsActive))
+                                {
+                                    <option value="@card.CardNumber">@card.CardNumber @(string.IsNullOrEmpty(card.Provider) ? "" : $"({card.Provider})")</option>
+                                }
+                            </InputSelect>
                         </div>
                         @if (selectedDriver == null)
                         {
@@ -1577,14 +1581,11 @@
             }
             if (selectedDriver != null)
             {
-#pragma warning disable CS8603
-                await Supabase.From<Driver>().Where(d => d.Id == selectedDriver.Id)
-                    .Set(d => d.Name, driverForm.Name)
-                    .Set(d => d.Phone, driverForm.Phone ?? "")
-                    .Set(d => d.Role, driverForm.Role)
-                    .Set(d => d.FuelCardNumber, driverForm.FuelCardNumber)
-                    .Update();
-#pragma warning restore CS8603
+                selectedDriver.Name = driverForm.Name;
+                selectedDriver.Phone = driverForm.Phone ?? "";
+                selectedDriver.Role = driverForm.Role;
+                selectedDriver.FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber;
+                await Supabase.From<Driver>().Update(selectedDriver);
                 successMessage = $"{driverForm.Name} updated successfully.";
             }
             else
