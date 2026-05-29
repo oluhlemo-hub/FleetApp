@@ -17,7 +17,7 @@ var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
 var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_KEY")
                   ?? builder.Configuration["Supabase:Key"]!;
 
-builder.Services.AddScoped<Supabase.Client>(_ =>
+builder.Services.AddSingleton<Supabase.Client>(_ =>
     new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
     {
         AutoRefreshToken = true,

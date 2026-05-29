@@ -364,20 +364,16 @@
         {
             showProfile = false;
             showProfileModal = false;
-            userEmail = "";
-            userName = "";
-            userRole = "";
-            userPhone = "";
             StateHasChanged();
-
             await Supabase.Auth.SignOut();
         }
         catch { }
         finally
         {
-            // forceLoad: false so Blazor router handles it cleanly
-            // Index.razor uses EmptyLayout so the sidebar won't flash
-            Nav.NavigateTo("/", forceLoad: false);
+            // forceLoad: true forces a full browser reload which destroys
+            // the Blazor circuit and scoped Supabase client — required
+            // because Supabase.Client is AddScoped (lives for circuit lifetime)
+            Nav.NavigateTo("/", forceLoad: true);
         }
     }
 }
