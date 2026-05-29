@@ -68,7 +68,7 @@ public class MileageReminderService : BackgroundService
 
         foreach (var vehicle in activeVehicles)
         {
-            var driver = drivers.FirstOrDefault(d => d.Email == vehicle.LastDriver);
+            var driver = drivers.FirstOrDefault(d => d.Name == vehicle.LastDriver || d.Email == vehicle.LastDriver);
             if (driver == null) continue;
 
             _logger.LogInformation("MileageReminderService: Checking driver {Email}, recent trip: {HasTrip}", driver.Email, recentTrips.Contains(driver.Email));
