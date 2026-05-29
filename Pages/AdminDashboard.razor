@@ -54,10 +54,10 @@
             <div class="position-relative">
                 <button class="btn btn-outline-secondary position-relative" @onclick="ToggleNotifications">
                     <i class="bi bi-bell fs-5"></i>
-                    @if (allFaults.Count(f => f.Status == "Open") > 0)
+                    @if (allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count > 0)
                     {
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            @allFaults.Count(f => f.Status == "Open")
+                            @(allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count)
                         </span>
                     }
                 </button>
