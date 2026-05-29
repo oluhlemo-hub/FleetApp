@@ -43,19 +43,21 @@ public class MileageReminderService : BackgroundService
         var adminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN") ?? "";
         var cutoff = DateTime.UtcNow.AddHours(-12);
 
-        // Get all active drivers with an assigned vehicle
+        // Get all active vehicles with an assigned driver
+        var vehiclesResult = await supabase.From<Vehicle>()
+            .Filter("status", Postgrest.Constants.Operator.Equals, "Active")
+            .Get();
+
+        var activeVehicles = vehiclesResult.Models
+            .Where(v => !string.IsNullOrEmpty(v.LastDriver))
+            .ToList();
+        _logger.LogInformation("MileageReminderService: Found {Count} active vehicles with drivers", activeVehicles.Count);
+
+        // Get all active drivers
         var driversResult = await supabase.From<Driver>()
             .Filter("is_active", Postgrest.Constants.Operator.Equals, "true")
             .Get();
-
-        var drivers = driversResult.Models
-            .Where(d => !string.IsNullOrEmpty(d.LastVehicle))
-            .ToList();
-        _logger.LogInformation("MileageReminderService: Found {Count} active drivers with vehicles", drivers.Count);
-
-        // Get all vehicles
-        var vehiclesResult = await supabase.From<Vehicle>().Get();
-        var vehicles = vehiclesResult.Models;
+        var drivers = driversResult.Models;
 
         // Get recent trips (last 12 hours)
         var tripsResult = await supabase.From<TripHistory>().Get();
@@ -64,17 +66,15 @@ public class MileageReminderService : BackgroundService
             .Select(t => t.DriverEmail)
             .ToHashSet();
 
-        foreach (var driver in drivers)
+        foreach (var vehicle in activeVehicles)
         {
+            var driver = drivers.FirstOrDefault(d => d.Email == vehicle.LastDriver);
+            if (driver == null) continue;
+
             _logger.LogInformation("MileageReminderService: Checking driver {Email}, recent trip: {HasTrip}", driver.Email, recentTrips.Contains(driver.Email));
             if (recentTrips.Contains(driver.Email)) continue;
 
-            var vehicle = vehicles.FirstOrDefault(v =>
-                v.Registration == driver.LastVehicle && v.Status == "Active");
-
-            if (vehicle == null) continue;
-
-            _logger.LogInformation("Sending mileage reminder to {Email}", driver.Email);
+            _logger.LogInformation("MileageReminderService: Sending reminder to {Email} for vehicle {Reg}", driver.Email, vehicle.Registration);
 
             // Email driver
             await SendReminderEmail(apiKey, driver.Email, driver.Name, vehicle.Registration, vehicle.Mileage);
