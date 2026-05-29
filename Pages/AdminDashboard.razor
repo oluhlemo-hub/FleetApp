@@ -1542,6 +1542,7 @@
                 // Step 2: insert the driver profile (Id omitted — Postgres generates UUID)
                 var driverRecord = new Driver
                 {
+                    Id = Guid.NewGuid().ToString(),
                     AuthId = authResponse.User.Id ?? "",
                     Name = driverForm.Name,
                     Email = driverForm.Email,
@@ -1549,6 +1550,7 @@
                     Role = driverForm.Role,
                     IsActive = true,
                     MustChangePassword = true,
+                    TotalKmDriven = 0,
                     FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
                 };
 
