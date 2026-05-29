@@ -72,7 +72,8 @@ public class MileageReminderService : BackgroundService
             if (driver == null) continue;
 
             _logger.LogInformation("MileageReminderService: Checking driver {Email}, recent trip: {HasTrip}", driver.Email, recentTrips.Contains(driver.Email));
-            if (recentTrips.Contains(driver.Email)) continue;
+            // TESTING: skip trip check
+            // if (recentTrips.Contains(driver.Email)) continue;
 
             _logger.LogInformation("MileageReminderService: Sending reminder to {Email} for vehicle {Reg}", driver.Email, vehicle.Registration);
 
