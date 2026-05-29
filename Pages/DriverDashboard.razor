@@ -2,6 +2,7 @@
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
 @inject NavigationManager Navigation
+@inject FleetManagement.Services.EmailService EmailService
 
 <AuthGuard RequiredRole="Driver">
 <div class="container-fluid px-3 py-3">
@@ -1053,6 +1054,15 @@
                 ServicedAt = DateTime.UtcNow
             };
             await Supabase.From<ServiceHistory>().Insert(serviceRecord);
+            try
+            {
+                await EmailService.SendServiceReportAsync(
+                    currentVehicle.Registration,
+                    currentUserEmail,
+                    collectMileage,
+                    reportUrl);
+            }
+            catch { /* email failure should not block the user */ }
             currentVehicle.Status = "Active";
             currentVehicle.Mileage = collectMileage;
             currentVehicle.ServiceDueKm = collectMileage + 10000;
