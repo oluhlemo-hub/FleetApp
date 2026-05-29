@@ -1,49 +1,45 @@
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace FleetManagement.Services;
 
 public class EmailService
 {
-    private readonly IConfiguration _config;
-
-    public EmailService(IConfiguration config)
-    {
-        _config = config;
-    }
-
     public async Task SendServiceReportAsync(string vehicleReg, string driverEmail, int mileage, string reportUrl)
     {
-        var sender = "oluhlemo@gmail.com";
-        var password = "mepy cmax zktv kflg";
-        var adminEmail = "oluhlemo@gmail.com";
+        var apiKey = Environment.GetEnvironmentVariable("RESEND_API_KEY") ?? "";
+        var adminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN") ?? "oluhlemo@gmail.com";
 
-        using var client = new SmtpClient("smtp.gmail.com", 465)
+        if (string.IsNullOrEmpty(apiKey))
+            throw new Exception("RESEND_API_KEY environment variable is not set.");
+
+        var payload = new
         {
-            Credentials = new NetworkCredential(sender, password),
-            EnableSsl = true,
-            DeliveryMethod = SmtpDeliveryMethod.Network
+            from = "onboarding@resend.dev",
+            to = new[] { adminEmail },
+            subject = $"Service Report - {vehicleReg} collected",
+            html = $@"
+                <h2>Vehicle Collected from Service</h2>
+                <p><strong>Vehicle:</strong> {vehicleReg}</p>
+                <p><strong>Driver:</strong> {driverEmail}</p>
+                <p><strong>Mileage at Service:</strong> {mileage} km</p>
+                <p><strong>Next Service Due:</strong> {mileage + 10000} km</p>
+                <p><strong>Service Report:</strong> <a href='{reportUrl}'>View Report</a></p>
+                <hr/>
+                <p style='color:gray;font-size:12px'>Sent automatically by Fleet Management System</p>"
         };
 
-        var body = $@"
-            <h2>Vehicle Collected from Service</h2>
-            <p><strong>Vehicle:</strong> {vehicleReg}</p>
-            <p><strong>Driver:</strong> {driverEmail}</p>
-            <p><strong>Mileage at Service:</strong> {mileage} km</p>
-            <p><strong>Next Service Due:</strong> {mileage + 10000} km</p>
-            <p><strong>Service Report:</strong> <a href='{reportUrl}'>View Report</a></p>
-            <hr/>
-            <p style='color:gray;font-size:12px'>Sent automatically by Fleet Management System</p>";
+        using var http = new HttpClient();
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(sender, "Fleet Management"),
-            Subject = $"Service Report - {vehicleReg} collected",
-            Body = body,
-            IsBodyHtml = true
-        };
-        message.To.Add(adminEmail);
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        await client.SendMailAsync(message);
+        var response = await http.PostAsync("https://api.resend.com/emails", content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Resend API error {response.StatusCode}: {responseBody}");
     }
 }
