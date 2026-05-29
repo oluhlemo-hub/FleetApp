@@ -35,6 +35,7 @@ public class MileageReminderService : BackgroundService
 
     private async Task CheckAndSendReminders()
     {
+        _logger.LogInformation("MileageReminderService: Starting check at {Time}", DateTime.UtcNow);
         using var scope = _services.CreateScope();
         var supabase = scope.ServiceProvider.GetRequiredService<Supabase.Client>();
 
@@ -50,6 +51,7 @@ public class MileageReminderService : BackgroundService
         var drivers = driversResult.Models
             .Where(d => !string.IsNullOrEmpty(d.LastVehicle))
             .ToList();
+        _logger.LogInformation("MileageReminderService: Found {Count} active drivers with vehicles", drivers.Count);
 
         // Get all vehicles
         var vehiclesResult = await supabase.From<Vehicle>().Get();
@@ -64,6 +66,7 @@ public class MileageReminderService : BackgroundService
 
         foreach (var driver in drivers)
         {
+            _logger.LogInformation("MileageReminderService: Checking driver {Email}, recent trip: {HasTrip}", driver.Email, recentTrips.Contains(driver.Email));
             if (recentTrips.Contains(driver.Email)) continue;
 
             var vehicle = vehicles.FirstOrDefault(v =>
