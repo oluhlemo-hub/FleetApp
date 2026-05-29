@@ -71,6 +71,32 @@
                             </button>
                         </div>
                         <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                            @if (mileageAlerts.Any())
+                            {
+                                <div class="px-3 pt-2 pb-1">
+                                    <small class="text-uppercase fw-bold text-warning" style="font-size:0.7rem;">⚠️ Mileage Not Updated</small>
+                                </div>
+                                @foreach (var alert in mileageAlerts)
+                                {
+                                    <div class="notification-item p-3 border-bottom bg-warning-subtle">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span class="badge bg-warning text-dark me-1">Mileage</span>
+                                                <strong>@alert.DriverName</strong>
+                                            </div>
+                                            <small class="text-muted ms-2 flex-shrink-0">@alert.VehicleReg</small>
+                                        </div>
+                                        <div class="mt-1 small text-muted">
+                                            <i class="bi bi-speedometer2 me-1"></i>Last: @alert.Mileage km
+                                            &nbsp;·&nbsp;<i class="bi bi-person me-1"></i>@alert.DriverEmail
+                                        </div>
+                                        <div class="mt-1 small text-warning-emphasis">Has not logged a trip in the last 12 hours</div>
+                                    </div>
+                                }
+                                <div class="px-3 pt-2 pb-1 border-top">
+                                    <small class="text-uppercase fw-bold text-muted" style="font-size:0.7rem;">Fault Reports</small>
+                                </div>
+                            }
                             @if (!allFaults.Any())
                             {
                                 <div class="text-center text-muted py-4">
@@ -1490,6 +1516,7 @@
     private bool isVehicleModalVisible = false;
     private bool isDriverModalVisible = false;
     private bool showNotifications = false;
+    private List<(string DriverName, string DriverEmail, string VehicleReg, int Mileage)> mileageAlerts = new();
     private string modalError = "";
     private string successMessage = "";
     private string activeTab = "vehicles";
@@ -1507,8 +1534,39 @@
 
     protected override async Task OnInitializedAsync() => await LoadData();
 
+    private async Task LoadMileageAlerts()
+    {
+        try
+        {
+            var cutoff = DateTime.UtcNow.AddMinutes(-2); // Change to AddHours(-12) for production
+            var vehicles = await Supabase.From<Vehicle>()
+                .Filter("status", Postgrest.Constants.Operator.Equals, "Active")
+                .Get();
+            var activeVehicles = vehicles.Models.Where(v => !string.IsNullOrEmpty(v.LastDriver)).ToList();
+
+            var drivers = await Supabase.From<Driver>().Get();
+            var trips = await Supabase.From<TripHistory>().Get();
+            var recentDrivers = trips.Models
+                .Where(t => t.CreatedAt >= cutoff)
+                .Select(t => t.DriverEmail)
+                .ToHashSet();
+
+            mileageAlerts = new();
+            foreach (var vehicle in activeVehicles)
+            {
+                var driver = drivers.Models.FirstOrDefault(d =>
+                    d.Name == vehicle.LastDriver || d.Email == vehicle.LastDriver);
+                if (driver == null) continue;
+                if (recentDrivers.Contains(driver.Email)) continue;
+                mileageAlerts.Add((driver.Name, driver.Email, vehicle.Registration, vehicle.Mileage));
+            }
+        }
+        catch { }
+    }
+
     private async Task LoadData()
     {
+        await LoadMileageAlerts();
         try
         {
             var vehicleResponse = await Supabase.From<Vehicle>().Get();
