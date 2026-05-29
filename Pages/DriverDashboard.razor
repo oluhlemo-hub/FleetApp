@@ -715,6 +715,7 @@
     private IBrowserFile? serviceReportFile;
     private string? serviceReportName;
     private string collectError = string.Empty;
+    private string emailError = string.Empty;
 
     // Report Fault
     private bool showReportFault = false;
@@ -1062,17 +1063,20 @@
                     collectMileage,
                     reportUrl);
             }
-            catch (Exception emailEx) { collectError = $"Email failed: {emailEx.Message}"; }
+            catch (Exception emailEx) { emailError = emailEx.Message; }
             currentVehicle.Status = "Active";
             currentVehicle.Mileage = collectMileage;
             currentVehicle.ServiceDueKm = collectMileage + 10000;
             await Supabase.From<Vehicle>().Update(currentVehicle);
             await LoadData();
             showCollectService = false;
+            var finalMileage = collectMileage;
             collectMileage = 0;
             serviceReportFile = null;
             serviceReportName = null;
-            successMessage = $"Vehicle collected from service. Mileage updated to {collectMileage} km. Next service due at {collectMileage + 10000} km.";
+            successMessage = string.IsNullOrEmpty(emailError)
+                ? $"Vehicle collected from service. Mileage updated to {finalMileage} km. Next service due at {finalMileage + 10000} km."
+                : $"Vehicle collected but email failed: {emailError}";
         }
         catch (Exception ex) { collectError = $"Failed to collect vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
