@@ -9,7 +9,7 @@ public class MileageReminderService : BackgroundService
 {
     private readonly IServiceProvider _services;
     private readonly ILogger<MileageReminderService> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromMinutes(2);
+    private readonly TimeSpan _interval = TimeSpan.FromHours(12);
 
     public MileageReminderService(IServiceProvider services, ILogger<MileageReminderService> logger)
     {
@@ -41,7 +41,7 @@ public class MileageReminderService : BackgroundService
 
         var apiKey = Environment.GetEnvironmentVariable("RESEND_API_KEY") ?? "";
         var adminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN") ?? "";
-        var cutoff = DateTime.UtcNow.AddMinutes(-2);
+        var cutoff = DateTime.UtcNow.AddHours(-12);
 
         // Get all active vehicles with an assigned driver
         var vehiclesResult = await supabase.From<Vehicle>()

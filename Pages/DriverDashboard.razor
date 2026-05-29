@@ -1200,7 +1200,7 @@
         try
         {
             if (currentVehicle == null) return;
-            var cutoff = DateTime.UtcNow.AddMinutes(-2); // Change to AddHours(-12) for production
+            var cutoff = DateTime.UtcNow.AddHours(-12);
             var recentTrips = await Supabase.From<TripHistory>()
                 .Filter("driver_email", Postgrest.Constants.Operator.Equals, currentUserEmail)
                 .Get();
@@ -1319,6 +1319,7 @@
             currentVehicle.Mileage = updateMileageValue;
             await Supabase.From<Vehicle>().Update(currentVehicle);
             mileageServiceWarning = currentVehicle.Mileage >= currentVehicle.ServiceDueKm;
+            showMileageReminder = false;
             if (!mileageServiceWarning)
             {
                 showUpdateMileage = false;

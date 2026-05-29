@@ -1538,7 +1538,7 @@
     {
         try
         {
-            var cutoff = DateTime.UtcNow.AddMinutes(-2); // Change to AddHours(-12) for production
+            var cutoff = DateTime.UtcNow.AddHours(-12);
             var vehicles = await Supabase.From<Vehicle>()
                 .Filter("status", Postgrest.Constants.Operator.Equals, "Active")
                 .Get();
