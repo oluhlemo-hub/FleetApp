@@ -6,28 +6,47 @@
 {
     @ChildContent
 }
+else if (isChecking)
+{
+    <div class="d-flex align-items-center justify-content-center" style="height: 60vh;">
+        <div class="text-center text-muted">
+            <div class="spinner-border mb-3" role="status"></div>
+            <div class="small">Loading...</div>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? RequiredRole { get; set; }
-
     private bool isAuthenticated = false;
+    private bool isChecking = true;
 
     protected override async Task OnInitializedAsync()
     {
-        // Wait longer for session to restore after navigation
-        for (int i = 0; i < 20; i++)
+        // Try immediately first
+        var session = Supabase.Auth.CurrentSession;
+        if (session?.User != null)
         {
-            var session = Supabase.Auth.CurrentSession;
+            await ValidateAndRedirect(session.User.Email!);
+            return;
+        }
+
+        // Session not ready yet — poll briefly (max 3s)
+        for (int i = 0; i < 10; i++)
+        {
+            await Task.Delay(300);
+            session = Supabase.Auth.CurrentSession;
             if (session?.User != null)
             {
                 await ValidateAndRedirect(session.User.Email!);
                 return;
             }
-            await Task.Delay(300);
         }
 
-        // No session found after waiting — redirect to login
+        // No session found — go to login
+        isChecking = false;
+        StateHasChanged();
         Nav.NavigateTo("/", forceLoad: false);
     }
 
@@ -36,10 +55,10 @@
         if (string.IsNullOrEmpty(RequiredRole))
         {
             isAuthenticated = true;
+            isChecking = false;
             StateHasChanged();
             return;
         }
-
         try
         {
             var driver = await Supabase
@@ -50,21 +69,23 @@
             if (driver == null || !driver.IsActive)
             {
                 await Supabase.Auth.SignOut();
+                isChecking = false;
                 Nav.NavigateTo("/", forceLoad: false);
                 return;
             }
-
             if (driver.Role != RequiredRole)
             {
+                isChecking = false;
                 Nav.NavigateTo(driver.Role == "Admin" ? "/admin" : "/driver", forceLoad: false);
                 return;
             }
-
             isAuthenticated = true;
+            isChecking = false;
             StateHasChanged();
         }
         catch
         {
+            isChecking = false;
             Nav.NavigateTo("/", forceLoad: false);
         }
     }

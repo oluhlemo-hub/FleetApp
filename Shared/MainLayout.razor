@@ -306,11 +306,17 @@
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnThemeChanged += OnThemeUpdated;
-        
+
         var email = Supabase.Auth.CurrentSession?.User?.Email;
         if (!string.IsNullOrEmpty(email))
         {
             await LoadUserAsync(email);
+        }
+        else
+        {
+            // No session — AuthGuard on each page will redirect to login
+            // but also navigate here proactively to avoid blank sidebar
+            Nav.NavigateTo("/", forceLoad: false);
         }
     }
 
@@ -358,20 +364,20 @@
         {
             showProfile = false;
             showProfileModal = false;
-            StateHasChanged();
-
-            await Supabase.Auth.SignOut();
-
             userEmail = "";
             userName = "";
             userRole = "";
             userPhone = "";
+            StateHasChanged();
 
-            Nav.NavigateTo("/", forceLoad: true);
+            await Supabase.Auth.SignOut();
         }
-        catch
+        catch { }
+        finally
         {
-            Nav.NavigateTo("/", forceLoad: true);
+            // forceLoad: false so Blazor router handles it cleanly
+            // Index.razor uses EmptyLayout so the sidebar won't flash
+            Nav.NavigateTo("/", forceLoad: false);
         }
     }
 }
