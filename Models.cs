@@ -29,7 +29,7 @@ namespace FleetManagement.Models
     {
         [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
-        [Column("name")]
+        [Column("full_name")]
         public string Name { get; set; } = string.Empty;
         [Column("email")]
         public string Email { get; set; } = string.Empty;
@@ -45,6 +45,10 @@ namespace FleetManagement.Models
         public bool MustChangePassword { get; set; }
         [Column("fuel_card_number")]
         public string? FuelCardNumber { get; set; }
+        [Column("total_km_driven")]
+        public int TotalKmDriven { get; set; }
+        [Column("last_vehicle")]
+        public string? LastVehicle { get; set; }
     }
 
     [Table("faults")]
