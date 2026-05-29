@@ -41,7 +41,7 @@ public class MileageReminderService : BackgroundService
 
         var apiKey = Environment.GetEnvironmentVariable("RESEND_API_KEY") ?? "";
         var adminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN") ?? "";
-        var cutoff = DateTime.UtcNow.AddHours(-12);
+        var cutoff = DateTime.UtcNow.AddMinutes(-2);
 
         // Get all active vehicles with an assigned driver
         var vehiclesResult = await supabase.From<Vehicle>()
