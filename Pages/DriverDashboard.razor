@@ -343,7 +343,18 @@
                 <!-- Fuel Card Number -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Fuel Card Number</label>
-                    <input class="form-control" @bind="fuelCardNumber" placeholder="e.g. 4567-8901-2345" />
+                    <input class="form-control" @bind="fuelCardNumber" 
+                           placeholder="e.g. 4567-8901-2345"
+                           readonly="@(!string.IsNullOrEmpty(driverFuelCardNumber))"
+                           style="@(!string.IsNullOrEmpty(driverFuelCardNumber) ? "background-color:#e9ecef;cursor:not-allowed;" : "")" />
+                    @if (!string.IsNullOrEmpty(driverFuelCardNumber))
+                    {
+                        <div class="form-text text-success"><i class="bi bi-lock-fill me-1"></i>Assigned card — cannot be changed here.</div>
+                    }
+                    else
+                    {
+                        <div class="form-text text-muted">Auto-filled from your profile if a card is assigned.</div>
+                    }
                     <small class="text-muted">Auto-filled from your profile if a card is assigned.</small>
                 </div>
 
@@ -609,6 +620,7 @@
     private string? fuelReceiptName;
     private string fuelError = string.Empty;
     private string fuelCardNumber = string.Empty;
+    private string driverFuelCardNumber = string.Empty;
     private bool fuelSubmitAttempted = false;
 
     protected override async Task OnInitializedAsync()
@@ -690,7 +702,10 @@
                 .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
                 .Single();
             if (!string.IsNullOrEmpty(driverRec?.FuelCardNumber))
+            {
                 fuelCardNumber = driverRec.FuelCardNumber;
+                driverFuelCardNumber = driverRec.FuelCardNumber;
+            }
         }
         catch { }
     }
@@ -796,6 +811,7 @@
 
             var log = new FuelLog
             {
+                Id                 = Guid.NewGuid().ToString(),
                 VehicleId          = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration,
                 DriverEmail        = currentUserEmail,
