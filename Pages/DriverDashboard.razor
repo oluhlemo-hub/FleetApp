@@ -896,6 +896,7 @@
 
             var serviceRecord = new ServiceHistory
             {
+                Id = Guid.NewGuid().ToString(),
                 VehicleId = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration,
                 DriverEmail = currentUserEmail,
@@ -932,6 +933,7 @@
         {
             var fault = new Fault
             {
+                Id = Guid.NewGuid().ToString(),
                 VehicleId = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration,
                 DriverEmail = currentUserEmail,
@@ -974,6 +976,7 @@
 
             var trip = new TripHistory
             {
+                Id = Guid.NewGuid().ToString(),
                 VehicleId = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration,
                 DriverEmail = currentUserEmail,
