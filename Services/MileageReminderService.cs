@@ -77,10 +77,8 @@ public class MileageReminderService : BackgroundService
 
             _logger.LogInformation("MileageReminderService: Sending reminder to {Email} for vehicle {Reg}", driver.Email, vehicle.Registration);
 
-            // Email driver
-            await SendReminderEmail(apiKey, driver.Email, driver.Name, vehicle.Registration, vehicle.Mileage);
-
-            // Email admin
+            // Send both driver reminder and admin alert to admin email
+            await SendReminderEmail(apiKey, adminEmail, driver.Name, vehicle.Registration, vehicle.Mileage);
             await SendAdminAlertEmail(apiKey, adminEmail, driver.Name, driver.Email, vehicle.Registration, vehicle.Mileage);
         }
     }
