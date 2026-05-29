@@ -13,6 +13,30 @@
             <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
         </div>
     }
+
+    @if (hasVehicle && !todayDvirDone)
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-2 mt-2" role="alert">
+            <i class="bi bi-clipboard-check fs-4 flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <strong>Daily Inspection Required</strong>
+                <div class="small">Complete your walk-around checklist before driving today.</div>
+            </div>
+            <button class="btn btn-warning btn-sm fw-semibold flex-shrink-0"
+                    @onclick='() => OpenDvir("morning")'>
+                <i class="bi bi-play-fill me-1"></i> Start
+            </button>
+        </div>
+    }
+    @if (hasVehicle && todayDvirDone)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-2 mt-2 py-2">
+            <i class="bi bi-clipboard-check-fill flex-shrink-0"></i>
+            <div class="small">Today's inspection completed ✓</div>
+            <button class="btn btn-sm btn-outline-success ms-auto"
+                    @onclick='() => OpenDvir("morning")'>Re-inspect</button>
+        </div>
+    }
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-danger alert-dismissible">
@@ -556,6 +580,117 @@
         }
     }
 </style>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- DVIR CHECKLIST MODAL                               -->
+<!-- ══════════════════════════════════════════════════ -->
+@if (showDvirModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:1055;">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard-check me-2 text-warning"></i>
+                        @(dvirTrigger == "morning" ? "Daily Walk-Around Inspection" :
+                          dvirTrigger == "pre_trip" ? "Pre-Trip Inspection" : "Post-Trip Inspection")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseDvir"></button>
+                </div>
+                <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+                    @if (!string.IsNullOrEmpty(dvirError))
+                    {
+                        <div class="alert alert-danger py-2 small">@dvirError</div>
+                    }
+                    @if (!dvirItems.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm me-2"></div> Loading checklist...
+                        </div>
+                    }
+                    else
+                    {
+                        var answered = dvirResults.Count;
+                        var total = dvirItems.Count;
+                        var failures = dvirResults.Values.Count(v => v == "fail");
+                        @foreach (var group in dvirItems.GroupBy(i => i.Category).OrderBy(g => g.Key))
+                        {
+                            <div class="mb-3">
+                                <div class="fw-bold small text-uppercase text-muted mb-2 border-bottom pb-1">
+                                    <i class="bi bi-tag me-1"></i>@group.Key
+                                </div>
+                                @foreach (var item in group.OrderBy(i => i.SortOrder))
+                                {
+                                    var result = dvirResults.GetValueOrDefault(item.Id, string.Empty);
+                                    var itemId = item.Id;
+                                    <div class="card border-0 bg-light mb-2">
+                                        <div class="card-body py-2 px-3">
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <span class="fw-semibold small">@item.Name</span>
+                                                <div class="d-flex gap-1">
+                                                    <button class="btn btn-sm @(result == "pass" ? "btn-success" : "btn-outline-success")"
+                                                            @onclick='() => SetDvirResult(itemId, "pass")'>
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm @(result == "fail" ? "btn-danger" : "btn-outline-danger")"
+                                                            @onclick='() => SetDvirResult(itemId, "fail")'>
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm @(result == "na" ? "btn-secondary" : "btn-outline-secondary")"
+                                                            @onclick='() => SetDvirResult(itemId, "na")'>
+                                                        N/A
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @if (result == "fail")
+                                            {
+                                                <input class="form-control form-control-sm mt-1"
+                                                       placeholder="Describe the issue..."
+                                                       value="@dvirItemNotes.GetValueOrDefault(itemId, string.Empty)"
+                                                       @oninput='e => dvirItemNotes[itemId] = e.Value?.ToString() ?? string.Empty' />
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <div class="progress flex-grow-1" style="height:6px;">
+                                <div class="progress-bar @(failures > 0 ? "bg-danger" : "bg-success")"
+                                     style="width:@(total > 0 ? (answered * 100 / total) : 0)%"></div>
+                            </div>
+                            <small class="text-muted flex-shrink-0">@answered / @total</small>
+                        </div>
+                        @if (failures > 0)
+                        {
+                            <div class="alert alert-warning py-2 small mt-2">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <strong>@failures item@(failures == 1 ? "" : "s") flagged.</strong>
+                                The trip will be allowed but admin will be notified.
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer flex-column gap-2">
+                    <button class="btn btn-warning w-100 fw-semibold"
+                            @onclick="SubmitDvir"
+                            disabled="@(isDvirSubmitting || dvirResults.Count < dvirItems.Count)">
+                        @if (isDvirSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        <i class="bi bi-clipboard-check me-1"></i>
+                        @(dvirResults.Count < dvirItems.Count
+                            ? $"Answer all items ({dvirItems.Count - dvirResults.Count} remaining)"
+                            : "Submit Inspection")
+                    </button>
+                    <button class="btn btn-secondary w-100" @onclick="CloseDvir">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 </AuthGuard>
 
 @code {
@@ -621,6 +756,17 @@
     private string fuelError = string.Empty;
     private string fuelCardNumber = string.Empty;
     private string driverFuelCardNumber = string.Empty;
+
+    // ── DVIR ────────────────────────────────────────────────────────────────
+    private bool showDvirModal = false;
+    private string dvirTrigger = "morning"; // morning | pre_trip | post_trip
+    private List<FleetManagement.Models.DvirChecklistItem> dvirItems = new();
+    private Dictionary<string, string> dvirResults = new();   // itemId -> pass/fail/na
+    private Dictionary<string, string> dvirItemNotes = new(); // itemId -> notes
+    private bool isDvirSubmitting = false;
+    private string dvirError = "";
+    private bool todayDvirDone = false;
+    private bool dvirRequiredForTrip = false;
     private bool fuelSubmitAttempted = false;
 
     protected override async Task OnInitializedAsync()
@@ -708,6 +854,7 @@
             }
         }
         catch { }
+        await CheckTodayDvir();
     }
 
     private async Task OpenRequestVehicle()
@@ -1120,4 +1267,102 @@
         catch (Exception ex) { errorMessage = $"Failed to update mileage: {ex.Message}"; }
         finally { isSubmitting = false; }
     }
+    // ── DVIR Methods ─────────────────────────────────────────────────────────
+
+    private async Task CheckTodayDvir()
+    {
+        if (currentVehicle == null) return;
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+            var resp = await Supabase.From<FleetManagement.Models.DvirSubmission>()
+                .Filter("driver_email", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                .Filter("vehicle_id", Postgrest.Constants.Operator.Equals, currentVehicle.Id)
+                .Get();
+            todayDvirDone = resp.Models.Any(s => s.SubmittedAt.Date == today);
+        }
+        catch { todayDvirDone = false; }
+    }
+
+    private async Task OpenDvir(string trigger)
+    {
+        dvirTrigger = trigger;
+        dvirResults = new();
+        dvirItemNotes = new();
+        dvirError = "";
+        showDvirModal = true;
+        try
+        {
+            var resp = await Supabase.From<FleetManagement.Models.DvirChecklistItem>()
+                .Filter("is_active", Postgrest.Constants.Operator.Equals, "true")
+                .Get();
+            dvirItems = resp.Models.OrderBy(i => i.SortOrder).ToList();
+        }
+        catch { dvirError = "Could not load checklist items. Please try again."; }
+    }
+
+    private void SetDvirResult(string itemId, string result)
+    {
+        dvirResults[itemId] = result;
+        if (result != "fail") dvirItemNotes.Remove(itemId);
+        StateHasChanged();
+    }
+
+    private void CloseDvir()
+    {
+        showDvirModal = false;
+        dvirRequiredForTrip = false;
+    }
+
+    private async Task SubmitDvir()
+    {
+        if (currentVehicle == null) return;
+        isDvirSubmitting = true;
+        dvirError = "";
+        try
+        {
+            var hasFailures = dvirResults.Values.Any(v => v == "fail");
+            var submissionId = Guid.NewGuid().ToString();
+
+            var submission = new FleetManagement.Models.DvirSubmission
+            {
+                Id = submissionId,
+                DriverEmail = currentUserEmail,
+                VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration,
+                TriggerType = dvirTrigger,
+                HasFailures = hasFailures,
+                SubmittedAt = DateTime.UtcNow
+            };
+            await Supabase.From<FleetManagement.Models.DvirSubmission>().Insert(submission);
+
+            foreach (var item in dvirItems)
+            {
+                var subItem = new FleetManagement.Models.DvirSubmissionItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    SubmissionId = submissionId,
+                    ItemId = item.Id,
+                    ItemName = item.Name,
+                    Result = dvirResults.GetValueOrDefault(item.Id, "na"),
+                    Notes = dvirItemNotes.GetValueOrDefault(item.Id),
+                    CreatedAt = DateTime.UtcNow
+                };
+                await Supabase.From<FleetManagement.Models.DvirSubmissionItem>().Insert(subItem);
+            }
+
+            todayDvirDone = true;
+            showDvirModal = false;
+            dvirRequiredForTrip = false;
+            successMessage = hasFailures
+                ? "⚠️ Inspection submitted with flagged items — admin has been notified."
+                : "✓ Inspection completed — all items passed.";
+        }
+        catch (Exception ex)
+        {
+            dvirError = $"Failed to submit inspection: {ex.Message}";
+        }
+        finally { isDvirSubmitting = false; StateHasChanged(); }
+    }
+
 }

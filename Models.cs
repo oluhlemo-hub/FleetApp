@@ -189,6 +189,64 @@ namespace FleetManagement.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
+
+    [Table("dvir_checklist_items")]
+    public class DvirChecklistItem : BaseModel
+    {
+        [PrimaryKey("id", true)]
+        public string Id { get; set; } = string.Empty;
+        [Column("name")]
+        public string Name { get; set; } = string.Empty;
+        [Column("category")]
+        public string Category { get; set; } = "General";
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
+        [Column("sort_order")]
+        public int SortOrder { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    [Table("dvir_submissions")]
+    public class DvirSubmission : BaseModel
+    {
+        [PrimaryKey("id", true)]
+        public string Id { get; set; } = string.Empty;
+        [Column("driver_email")]
+        public string DriverEmail { get; set; } = string.Empty;
+        [Column("vehicle_id")]
+        public string VehicleId { get; set; } = string.Empty;
+        [Column("vehicle_registration")]
+        public string VehicleRegistration { get; set; } = string.Empty;
+        [Column("trigger_type")]
+        public string TriggerType { get; set; } = string.Empty;
+        [Column("has_failures")]
+        public bool HasFailures { get; set; }
+        [Column("notes")]
+        public string? Notes { get; set; }
+        [Column("submitted_at")]
+        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    [Table("dvir_submission_items")]
+    public class DvirSubmissionItem : BaseModel
+    {
+        [PrimaryKey("id", true)]
+        public string Id { get; set; } = string.Empty;
+        [Column("submission_id")]
+        public string SubmissionId { get; set; } = string.Empty;
+        [Column("item_id")]
+        public string ItemId { get; set; } = string.Empty;
+        [Column("item_name")]
+        public string ItemName { get; set; } = string.Empty;
+        [Column("result")]
+        public string Result { get; set; } = "pass";
+        [Column("notes")]
+        public string? Notes { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
     [Table("profiles")]
     public class UserProfile : BaseModel
     {
