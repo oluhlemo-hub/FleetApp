@@ -9,7 +9,7 @@ public class MileageReminderService : BackgroundService
 {
     private readonly IServiceProvider _services;
     private readonly ILogger<MileageReminderService> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromHours(12);
+    private readonly TimeSpan _interval = TimeSpan.FromMinutes(2);
 
     public MileageReminderService(IServiceProvider services, ILogger<MileageReminderService> logger)
     {
