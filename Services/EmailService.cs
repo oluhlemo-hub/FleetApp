@@ -14,20 +14,19 @@ public class EmailService
 
     public async Task SendServiceReportAsync(string vehicleReg, string driverEmail, int mileage, string reportUrl)
     {
-        var host = "smtp.gmail.com";
-        var port = 587;
         var sender = "oluhlemo@gmail.com";
         var password = "mepy cmax zktv kflg";
         var adminEmail = "oluhlemo@gmail.com";
 
-        using var client = new SmtpClient(host, port)
+        using var client = new SmtpClient("smtp.gmail.com", 465)
         {
             Credentials = new NetworkCredential(sender, password),
-            EnableSsl = true
+            EnableSsl = true,
+            DeliveryMethod = SmtpDeliveryMethod.Network
         };
 
         var body = $@"
-            <h2>🔧 Vehicle Collected from Service</h2>
+            <h2>Vehicle Collected from Service</h2>
             <p><strong>Vehicle:</strong> {vehicleReg}</p>
             <p><strong>Driver:</strong> {driverEmail}</p>
             <p><strong>Mileage at Service:</strong> {mileage} km</p>
