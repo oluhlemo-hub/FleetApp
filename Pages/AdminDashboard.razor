@@ -54,10 +54,10 @@
             <div class="position-relative">
                 <button class="btn btn-outline-secondary position-relative" @onclick="ToggleNotifications">
                     <i class="bi bi-bell fs-5"></i>
-                    @if (allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count > 0)
+                    @if (allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count(a => !dismissedMileageAlerts.Contains(a.DriverEmail)) > 0)
                     {
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            @(allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count)
+                            @(allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count(a => !dismissedMileageAlerts.Contains(a.DriverEmail)))
                         </span>
                     }
                 </button>
@@ -71,12 +71,17 @@
                             </button>
                         </div>
                         <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
-                            @if (mileageAlerts.Any())
+                            @{ var visibleAlerts = mileageAlerts.Where(a => !dismissedMileageAlerts.Contains(a.DriverEmail)).ToList(); }
+                            @if (visibleAlerts.Any())
                             {
-                                <div class="px-3 pt-2 pb-1">
+                                <div class="px-3 pt-2 pb-1 d-flex justify-content-between align-items-center">
                                     <small class="text-uppercase fw-bold text-warning" style="font-size:0.7rem;">⚠️ Mileage Not Updated</small>
+                                    <button class="btn btn-link btn-sm text-muted p-0" style="font-size:0.7rem;"
+                                        @onclick="() => { foreach(var a in mileageAlerts) dismissedMileageAlerts.Add(a.DriverEmail); }">
+                                        Clear All
+                                    </button>
                                 </div>
-                                @foreach (var alert in mileageAlerts)
+                                @foreach (var alert in visibleAlerts)
                                 {
                                     <div class="notification-item p-3 border-bottom bg-warning-subtle">
                                         <div class="d-flex justify-content-between align-items-start">
@@ -84,7 +89,13 @@
                                                 <span class="badge bg-warning text-dark me-1">Mileage</span>
                                                 <strong>@alert.DriverName</strong>
                                             </div>
-                                            <small class="text-muted ms-2 flex-shrink-0">@alert.VehicleReg</small>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <small class="text-muted">@alert.VehicleReg</small>
+                                                <button class="btn btn-link btn-sm text-muted p-0" title="Dismiss"
+                                                    @onclick="() => dismissedMileageAlerts.Add(alert.DriverEmail)">
+                                                    <i class="bi bi-x-lg" style="font-size:0.75rem;"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="mt-1 small text-muted">
                                             <i class="bi bi-speedometer2 me-1"></i>Last: @alert.Mileage km
@@ -1517,6 +1528,7 @@
     private bool isDriverModalVisible = false;
     private bool showNotifications = false;
     private List<(string DriverName, string DriverEmail, string VehicleReg, int Mileage)> mileageAlerts = new();
+    private HashSet<string> dismissedMileageAlerts = new();
     private string modalError = "";
     private string successMessage = "";
     private string activeTab = "vehicles";
