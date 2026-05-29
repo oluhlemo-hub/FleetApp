@@ -1,6 +1,8 @@
 @page "/admin"
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Components.Forms
 @inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
 
 <AuthGuard RequiredRole="Admin">
@@ -12,6 +14,23 @@
         <div class="alert alert-success alert-dismissible mt-2">
             @successMessage
             <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+
+    @foreach (var doc in expiringDocs)
+    {
+        var daysLeft = (doc.ExpiryDate.Date - DateTime.Today).Days;
+        var alertClass = daysLeft <= 0 ? "alert-danger" : daysLeft <= 7 ? "alert-danger" : daysLeft <= 14 ? "alert-warning" : "alert-warning";
+        var icon = daysLeft <= 7 ? "bi-exclamation-octagon-fill" : "bi-exclamation-triangle-fill";
+        var label = daysLeft <= 0 ? "EXPIRED" : daysLeft == 1 ? "expires tomorrow" : $"expires in {daysLeft} days";
+        <div class="alert @alertClass alert-dismissible d-flex align-items-start gap-2 mt-2" role="alert">
+            <i class="bi @icon fs-5 flex-shrink-0 mt-1"></i>
+            <div class="flex-grow-1 min-w-0">
+                <strong>Document Expiry:</strong>
+                @doc.DocumentType for <strong>@doc.VehicleRegistration</strong> @label —
+                <a href="#" class="alert-link" @onclick='() => { activeTab = "documents"; }' @onclick:preventDefault>View Documents</a>
+            </div>
+            <button type="button" class="btn-close flex-shrink-0" @onclick="() => expiringDocs.Remove(doc)"></button>
         </div>
     }
 
@@ -131,6 +150,20 @@
         <li class="nav-item flex-shrink-0">
             <button class="nav-link @(activeTab == "fuellogs" ? "active" : "")" @onclick='() => activeTab = "fuellogs"'>
                 <i class="bi bi-fuel-pump me-1"></i> Fuel Logs <span class="badge bg-secondary ms-1">@allFuelLogs.Count</span>
+            </button>
+        </li>
+        <li class="nav-item flex-shrink-0">
+            <button class="nav-link @(activeTab == "documents" ? "active" : "") position-relative" @onclick='() => activeTab = "documents"'>
+                <i class="bi bi-folder2-open me-1"></i> Documents
+                @if (expiringDocs.Any())
+                {
+                    <span class="badge bg-danger ms-1">@expiringDocs.Count</span>
+                }
+            </button>
+        </li>
+        <li class="nav-item flex-shrink-0">
+            <button class="nav-link @(activeTab == "reports" ? "active" : "")" @onclick='() => activeTab = "reports"'>
+                <i class="bi bi-download me-1"></i> Reports
             </button>
         </li>
     </ul>
@@ -1085,6 +1118,196 @@
 </style>
 
 
+@if (activeTab == "documents")
+{
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-folder2-open me-2"></i>Vehicle Documents</strong>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 d-none d-md-table">
+                <thead class="table-dark">
+                    <tr><th>Vehicle</th><th>Document Type</th><th>Expiry Date</th><th>Status</th><th>File</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    @if (vehicleDocs.Any())
+                    {
+                        @foreach (var doc in vehicleDocs.OrderBy(d => d.ExpiryDate))
+                        {
+                            var days = (doc.ExpiryDate.Date - DateTime.Today).Days;
+                            var badge = days <= 0 ? "bg-danger" : days <= 7 ? "bg-danger" : days <= 14 ? "bg-warning text-dark" : days <= 30 ? "bg-warning text-dark" : "bg-success";
+                            var status = days <= 0 ? "Expired" : days <= 7 ? $"{days}d left" : days <= 30 ? $"{days}d left" : "Valid";
+                            <tr class="@(days <= 7 ? "table-danger" : days <= 30 ? "table-warning" : "")">
+                                <td><strong>@doc.VehicleRegistration</strong></td>
+                                <td><span class="badge bg-secondary">@doc.DocumentType</span></td>
+                                <td>@doc.ExpiryDate.ToString("dd MMM yyyy")</td>
+                                <td><span class="badge @badge">@status</span></td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(doc.FileUrl))
+                                    {
+                                        <a href="@doc.FileUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-file-earmark me-1"></i>View
+                                        </a>
+                                    }
+                                    else { <span class="text-muted small">No file</span> }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteDocument(doc)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">No documents uploaded yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+            <div class="d-md-none">
+                @foreach (var doc in vehicleDocs.OrderBy(d => d.ExpiryDate))
+                {
+                    var days = (doc.ExpiryDate.Date - DateTime.Today).Days;
+                    var badge = days <= 0 ? "bg-danger" : days <= 14 ? "bg-warning text-dark" : "bg-success";
+                    var status = days <= 0 ? "Expired" : days <= 30 ? $"{days} days left" : "Valid";
+                    <div class="card shadow-sm mb-3 @(days <= 7 ? "border-danger" : days <= 30 ? "border-warning" : "")">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-1">
+                                <strong>@doc.VehicleRegistration</strong>
+                                <span class="badge @badge">@status</span>
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <span class="badge bg-secondary me-1">@doc.DocumentType</span>
+                                Expires @doc.ExpiryDate.ToString("dd MMM yyyy")
+                            </div>
+                            <div class="d-flex gap-2">
+                                @if (!string.IsNullOrEmpty(doc.FileUrl))
+                                {
+                                    <a href="@doc.FileUrl" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-file-earmark me-1"></i>View
+                                    </a>
+                                }
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteDocument(doc)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (!vehicleDocs.Any())
+                {
+                    <p class="text-center text-muted py-4">No documents uploaded yet.</p>
+                }
+            </div>
+        </div>
+        <div class="card-footer">
+            <button class="btn btn-primary" @onclick="() => { isDocModalVisible = true; modalError = string.Empty; }">
+                <i class="bi bi-plus-circle me-1"></i> Add Document
+            </button>
+        </div>
+    </div>
+}
+
+@if (activeTab == "reports")
+{
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <strong><i class="bi bi-download me-2"></i>Export Reports</strong>
+            <div class="text-muted small mt-1">Download CSV reports for all fleet data</div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-truck fs-4 text-primary"></i>
+                                <strong>Vehicles Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">Full vehicle list with status, mileage, service due, trip counts, fault counts and fuel log totals.</p>
+                            <button class="btn btn-primary btn-sm mt-2" @onclick='() => DownloadCsv("vehicles")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-people fs-4 text-success"></i>
+                                <strong>Drivers Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">All drivers with role, status, trip count, total km, faults reported, clean return rate and rating.</p>
+                            <button class="btn btn-success btn-sm mt-2" @onclick='() => DownloadCsv("drivers")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-fuel-pump fs-4 text-warning"></i>
+                                <strong>Fuel Logs Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">All fuel and expense logs with date, vehicle, driver, litres, cost, station and card number.</p>
+                            <button class="btn btn-warning btn-sm mt-2 text-dark" @onclick='() => DownloadCsv("fuellogs")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-exclamation-triangle fs-4 text-danger"></i>
+                                <strong>Faults Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">All fault reports with date, vehicle, driver, fault type, description and resolution status.</p>
+                            <button class="btn btn-danger btn-sm mt-2" @onclick='() => DownloadCsv("faults")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-car-front fs-4 text-info"></i>
+                                <strong>Trip History Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">All trips with date, driver, vehicle, start/end mileage, km driven and return condition.</p>
+                            <button class="btn btn-info btn-sm mt-2 text-white" @onclick='() => DownloadCsv("trips")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-tools fs-4 text-secondary"></i>
+                                <strong>Service History Report</strong>
+                            </div>
+                            <p class="small text-muted flex-grow-1">All service records with date, vehicle, driver, station, mileage at service and next service due.</p>
+                            <button class="btn btn-secondary btn-sm mt-2" @onclick='() => DownloadCsv("services")'>
+                                <i class="bi bi-download me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
 <!-- FUEL CARD MANAGEMENT MODAL -->
 @if (isFuelCardModalVisible)
 {
@@ -1158,6 +1381,69 @@
     </div>
 }
 
+<!-- ADD DOCUMENT MODAL -->
+@if (isDocModalVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:1050;">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-plus me-2"></i>Add Vehicle Document</h5>
+                    <button type="button" class="btn-close" @onclick="() => isDocModalVisible = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(modalError))
+                    {
+                        <div class="alert alert-danger py-2">@modalError</div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">Vehicle</label>
+                        <select class="form-select" @bind="docVehicleId" @bind:after="OnDocVehicleChanged">
+                            <option value="">-- Select vehicle --</option>
+                            @foreach (var v in vehicles)
+                            {
+                                <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <select class="form-select" @bind="docType">
+                            <option value="registration">Vehicle Registration</option>
+                            <option value="insurance">Insurance Policy</option>
+                            <option value="roadworthy">Roadworthy Certificate</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control"
+                               value="@docExpiryDate.ToString("yyyy-MM-dd")"
+                               @onchange="e => docExpiryDate = DateTime.Parse(e.Value?.ToString() ?? DateTime.Today.ToString())" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document File <span class="text-muted small">(optional — PDF or image)</span></label>
+                        <InputFile OnChange="OnDocFileSelected" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+                        @if (!string.IsNullOrEmpty(docFileUrl))
+                        {
+                            <div class="form-text text-success"><i class="bi bi-check-circle me-1"></i>File uploaded.</div>
+                        }
+                        @if (isUploadingDoc)
+                        {
+                            <div class="form-text"><span class="spinner-border spinner-border-sm me-1"></span>Uploading...</div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer flex-column gap-2">
+                    <button class="btn btn-primary w-100" @onclick="SaveDocument" disabled="@(isUploadingDoc || string.IsNullOrEmpty(docVehicleId))">
+                        <i class="bi bi-save me-1"></i> Save Document
+                    </button>
+                    <button class="btn btn-secondary w-100" @onclick="() => isDocModalVisible = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 </AuthGuard>
 
 @code {
@@ -1169,6 +1455,19 @@
     private List<TripHistory> allTripHistory = new();
     private List<FuelLog> allFuelLogs = new();
     private List<FuelCard> fuelCards = new();
+    private List<FleetManagement.Models.VehicleDocument> vehicleDocs = new();
+
+    // Documents modal
+    private bool isDocModalVisible = false;
+    private string docVehicleId = string.Empty;
+    private string docVehicleReg = string.Empty;
+    private string docType = "registration";
+    private DateTime docExpiryDate = DateTime.Today.AddYears(1);
+    private string docFileUrl = string.Empty;
+    private bool isUploadingDoc = false;
+
+    // Expiry alerts
+    private List<FleetManagement.Models.VehicleDocument> expiringDocs = new();
 
     // Fuel Card Modal
     private bool isFuelCardModalVisible = false;
@@ -1230,6 +1529,8 @@
 
             var fuelCardResponse = await Supabase.From<FuelCard>().Get();
             fuelCards = fuelCardResponse.Models;
+
+            await LoadDocuments();
         }
         catch (Exception)
         {
@@ -1637,6 +1938,164 @@
         public string Phone { get; set; } = "";
         public string Role { get; set; } = "Driver";
         public string FuelCardNumber { get; set; } = "";
+    }
+
+    // ── Document Vault ───────────────────────────────────────────────────────
+
+    private async Task LoadDocuments()
+    {
+        try
+        {
+            var resp = await Supabase.From<FleetManagement.Models.VehicleDocument>().Get();
+            vehicleDocs = resp.Models;
+            var today = DateTime.Today;
+            expiringDocs = vehicleDocs
+                .Where(d => (d.ExpiryDate.Date - today).Days <= 30)
+                .OrderBy(d => d.ExpiryDate)
+                .ToList();
+        }
+        catch { vehicleDocs = new(); expiringDocs = new(); }
+    }
+
+    private void OnDocVehicleChanged()
+    {
+        var v = vehicles.FirstOrDefault(x => x.Id == docVehicleId);
+        docVehicleReg = v?.Registration ?? string.Empty;
+    }
+
+    private async Task OnDocFileSelected(InputFileChangeEventArgs e)
+    {
+        isUploadingDoc = true;
+        modalError = string.Empty;
+        try
+        {
+            var file = e.File;
+            var ext = Path.GetExtension(file.Name);
+            var fileName = $"docs/{Guid.NewGuid()}{ext}";
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var bytes = new byte[file.Size];
+            await stream.ReadAsync(bytes);
+            await Supabase.Storage.From("documents").Upload(bytes, fileName,
+                new Supabase.Storage.FileOptions { ContentType = file.ContentType, Upsert = true });
+            docFileUrl = Supabase.Storage.From("documents").GetPublicUrl(fileName);
+        }
+        catch (Exception ex) { modalError = $"File upload failed: {ex.Message}"; }
+        finally { isUploadingDoc = false; StateHasChanged(); }
+    }
+
+    private async Task SaveDocument()
+    {
+        if (string.IsNullOrEmpty(docVehicleId)) { modalError = "Please select a vehicle."; return; }
+        modalError = string.Empty;
+        try
+        {
+            var doc = new FleetManagement.Models.VehicleDocument
+            {
+                Id = Guid.NewGuid().ToString(),
+                VehicleId = docVehicleId,
+                VehicleRegistration = docVehicleReg,
+                DocumentType = docType,
+                FileUrl = string.IsNullOrEmpty(docFileUrl) ? null : docFileUrl,
+                ExpiryDate = docExpiryDate,
+                UploadedBy = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+            await Supabase.From<FleetManagement.Models.VehicleDocument>().Insert(doc);
+            await LoadDocuments();
+            isDocModalVisible = false;
+            docVehicleId = string.Empty;
+            docVehicleReg = string.Empty;
+            docFileUrl = string.Empty;
+            docExpiryDate = DateTime.Today.AddYears(1);
+            successMessage = "✓ Document saved successfully.";
+        }
+        catch (Exception ex) { modalError = $"Could not save document: {ex.Message}"; }
+    }
+
+    private async Task DeleteDocument(FleetManagement.Models.VehicleDocument doc)
+    {
+        try
+        {
+            await Supabase.From<FleetManagement.Models.VehicleDocument>()
+                .Where(d => d.Id == doc.Id).Delete();
+            await LoadDocuments();
+            successMessage = "Document removed.";
+        }
+        catch { }
+    }
+
+    // ── CSV Reports ──────────────────────────────────────────────────────────
+
+    private async Task DownloadCsv(string reportType)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            var fileName = string.Empty;
+
+            switch (reportType)
+            {
+                case "vehicles":
+                    fileName = $"vehicles_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Registration,Make,Model,Status,Mileage,ServiceDueKm,LastDriver,TotalTrips,TotalFaults,TotalFuelLogs");
+                    foreach (var v in vehicles)
+                    {
+                        var trips  = allTripHistory.Count(t => t.VehicleId == v.Id);
+                        var faults = allFaults.Count(f => f.VehicleId == v.Id);
+                        var fuels  = allFuelLogs.Count(f => f.VehicleId == v.Id);
+                        sb.AppendLine($"{v.Registration},{v.Make},{v.Model},{v.Status},{v.Mileage},{v.ServiceDueKm},{v.LastDriver ?? "Unassigned"},{trips},{faults},{fuels}");
+                    }
+                    break;
+
+                case "drivers":
+                    fileName = $"drivers_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Name,Email,Phone,Role,Status,TotalTrips,TotalKm,FaultsReported,CleanReturns,Rating,FuelCard,LastVehicle");
+                    foreach (var d in drivers)
+                    {
+                        var dTrips = allTripHistory.Where(t => t.DriverEmail == d.Email).ToList();
+                        var dFaults = allFaults.Count(f => f.DriverEmail == d.Email);
+                        var cleanR = dTrips.Count(t => t.ReturnCondition == "Clean" || t.ReturnCondition == "Good");
+                        var totalKm = dTrips.Sum(t => t.EndMileage - t.StartMileage);
+                        var rating = GetDriverRating(d.Email);
+                        sb.AppendLine($"{d.Name},{d.Email},{d.Phone ?? ""},{d.Role},{(d.IsActive ? "Active" : "Inactive")},{dTrips.Count},{totalKm},{dFaults},{cleanR},{rating:0.0},{d.FuelCardNumber ?? ""},{d.LastVehicle ?? ""}");
+                    }
+                    break;
+
+                case "fuellogs":
+                    fileName = $"fuel_logs_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Date,Vehicle,Driver,ExpenseType,FuelType,Litres,Cost,Station,FuelCard,ExpenseCategory");
+                    foreach (var l in allFuelLogs.OrderByDescending(x => x.LoggedAt))
+                        sb.AppendLine($"{l.LoggedAt.ToLocalTime():dd/MM/yyyy HH:mm},{l.VehicleRegistration},{l.DriverEmail},{l.ExpenseType},{l.FuelType ?? ""},{l.Litres?.ToString("F1") ?? ""},{l.Cost:F2},{l.StationName ?? ""},{l.FuelCardNumber ?? ""},{l.ExpenseCategory ?? ""}");
+                    break;
+
+                case "faults":
+                    fileName = $"faults_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Date,Vehicle,Driver,FaultType,Description,Status");
+                    foreach (var f in allFaults.OrderByDescending(x => x.CreatedAt))
+                        sb.AppendLine($"{f.CreatedAt.ToLocalTime():dd/MM/yyyy HH:mm},{f.VehicleRegistration},{f.DriverEmail},{f.FaultType},\"" + f.Description.Replace("\"", "\"\""  ) + "\",{f.Status}");
+                    break;
+
+                case "trips":
+                    fileName = $"trips_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Date,Driver,DriverEmail,Vehicle,StartMileage,EndMileage,KmDriven,ReturnCondition");
+                    foreach (var t in allTripHistory.OrderByDescending(x => x.CreatedAt))
+                        sb.AppendLine($"{t.CreatedAt.ToLocalTime():dd/MM/yyyy HH:mm},{t.DriverName},{t.DriverEmail},{t.VehicleRegistration},{t.StartMileage},{t.EndMileage},{t.EndMileage - t.StartMileage},{t.ReturnCondition ?? ""}");
+                    break;
+
+                case "services":
+                    fileName = $"service_history_{DateTime.Today:yyyyMMdd}.csv";
+                    sb.AppendLine("Date,Vehicle,Driver,ServiceStation,MileageAtService,NextServiceKm,ReportUrl");
+                    var svcResp = await Supabase.From<ServiceHistory>().Get();
+                    foreach (var s in svcResp.Models.OrderByDescending(x => x.ServicedAt))
+                        sb.AppendLine($"{s.ServicedAt.ToLocalTime():dd/MM/yyyy HH:mm},{s.VehicleRegistration},{s.DriverEmail},{s.ServiceStation ?? ""},{s.MileageAtService},{s.NextServiceKm},{s.ReportUrl ?? ""}");
+                    break;
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("downloadFile", fileName, "text/csv", base64);
+        }
+        catch (Exception ex) { successMessage = $"Export failed: {ex.Message}"; }
     }
 
 }

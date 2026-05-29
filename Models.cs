@@ -190,6 +190,28 @@ namespace FleetManagement.Models
     }
 
 
+    
+    [Table("vehicle_documents")]
+    public class VehicleDocument : BaseModel
+    {
+        [PrimaryKey("id", true)]
+        public string Id { get; set; } = string.Empty;
+        [Column("vehicle_id")]
+        public string VehicleId { get; set; } = string.Empty;
+        [Column("vehicle_registration")]
+        public string VehicleRegistration { get; set; } = string.Empty;
+        [Column("document_type")]
+        public string DocumentType { get; set; } = string.Empty;
+        [Column("file_url")]
+        public string? FileUrl { get; set; }
+        [Column("expiry_date")]
+        public DateTime ExpiryDate { get; set; }
+        [Column("uploaded_by")]
+        public string UploadedBy { get; set; } = string.Empty;
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
     [Table("dvir_checklist_items")]
     public class DvirChecklistItem : BaseModel
     {
