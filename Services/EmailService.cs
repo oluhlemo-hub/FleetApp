@@ -14,16 +14,11 @@ public class EmailService
 
     public async Task SendServiceReportAsync(string vehicleReg, string driverEmail, int mileage, string reportUrl)
     {
-        var host = Environment.GetEnvironmentVariable("EMAIL_SMTP_HOST")
-                   ?? _config["Email:SmtpHost"] ?? "smtp.gmail.com";
-        var port = int.Parse(Environment.GetEnvironmentVariable("EMAIL_SMTP_PORT")
-                   ?? _config["Email:SmtpPort"] ?? "587");
-        var sender = Environment.GetEnvironmentVariable("EMAIL_SENDER")
-                     ?? _config["Email:SenderEmail"]!;
-        var password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD")
-                       ?? _config["Email:SenderPassword"]!;
-        var adminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN")
-                         ?? _config["Email:AdminEmail"]!;
+        var host = "smtp.gmail.com";
+        var port = 587;
+        var sender = "oluhlemo@gmail.com";
+        var password = "mepy cmax zktv kflg";
+        var adminEmail = "oluhlemo@gmail.com";
 
         using var client = new SmtpClient(host, port)
         {
