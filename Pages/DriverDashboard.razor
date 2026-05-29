@@ -1062,7 +1062,7 @@
                     collectMileage,
                     reportUrl);
             }
-            catch { /* email failure should not block the user */ }
+            catch (Exception emailEx) { collectError = $"Email failed: {emailEx.Message}"; }
             currentVehicle.Status = "Active";
             currentVehicle.Mileage = collectMileage;
             currentVehicle.ServiceDueKm = collectMileage + 10000;
