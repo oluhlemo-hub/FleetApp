@@ -1016,6 +1016,7 @@
 
             var requestRecord = new VehicleRequest
             {
+                Id = Guid.NewGuid().ToString(),
                 DriverEmail = currentUserEmail,
                 VehicleId = requestedVehicleId,
                 Mileage = requestMileage,
