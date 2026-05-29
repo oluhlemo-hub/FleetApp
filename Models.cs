@@ -6,7 +6,7 @@ namespace FleetManagement.Models
     [Table("vehicles")]
     public class Vehicle : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("make")]
         public string Make { get; set; } = string.Empty;
@@ -27,7 +27,7 @@ namespace FleetManagement.Models
     [Table("drivers")]
     public class Driver : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("name")]
         public string Name { get; set; } = string.Empty;
@@ -50,7 +50,7 @@ namespace FleetManagement.Models
     [Table("faults")]
     public class Fault : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
@@ -71,7 +71,7 @@ namespace FleetManagement.Models
     [Table("service_history")]
     public class ServiceHistory : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
@@ -94,7 +94,7 @@ namespace FleetManagement.Models
     [Table("trip_history")]
     public class TripHistory : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
@@ -117,7 +117,7 @@ namespace FleetManagement.Models
     [Table("vehicle_requests")]
     public class VehicleRequest : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("driver_email")]
         public string DriverEmail { get; set; } = string.Empty;
@@ -136,7 +136,7 @@ namespace FleetManagement.Models
     [Table("fuel_logs")]
     public class FuelLog : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
@@ -171,7 +171,7 @@ namespace FleetManagement.Models
     [Table("fuel_cards")]
     public class FuelCard : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("card_number")]
         public string CardNumber { get; set; } = string.Empty;
@@ -188,7 +188,7 @@ namespace FleetManagement.Models
     [Table("profiles")]
     public class UserProfile : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("role")]
         public string? Role { get; set; }
@@ -197,7 +197,7 @@ namespace FleetManagement.Models
     [Table("user_settings")]
     public class UserSettings : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("user_id")]
         public string UserId { get; set; } = string.Empty;
@@ -216,7 +216,7 @@ namespace FleetManagement.Models
     [Table("tenant_settings")]
     public class TenantSettings : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("company_name")]
         public string? CompanyName { get; set; }
@@ -237,7 +237,7 @@ namespace FleetManagement.Models
     [Table("manager_settings")]
     public class ManagerSettings : BaseModel
     {
-        [PrimaryKey("id", false)]
+        [PrimaryKey("id", true)]
         public string Id { get; set; } = string.Empty;
         [Column("user_id")]
         public string UserId { get; set; } = string.Empty;

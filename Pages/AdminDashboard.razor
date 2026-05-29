@@ -1428,10 +1428,11 @@
         modalError = string.Empty;
     }
 
-    private void SelectDriver(Driver driver)
+    private async Task SelectDriver(Driver driver)
     {
         selectedDriver = driver;
         driverForm = new DriverFormModel { Name = driver.Name, Email = driver.Email, Phone = driver.Phone ?? "", Role = driver.Role, FuelCardNumber = driver.FuelCardNumber ?? "" };
+        await LoadFuelCards();
         isDriverModalVisible = true;
         modalError = string.Empty;
     }
@@ -1487,11 +1488,13 @@
         {
             if (string.IsNullOrWhiteSpace(driverForm.Name) || string.IsNullOrWhiteSpace(driverForm.Email))
             {
-                modalError = "Please fill in Name and Email.";
+                modalError = "Please fill in both Name and Email before continuing.";
                 return;
             }
+
             if (selectedDriver != null)
             {
+                // ── EDIT existing driver ──────────────────────────────────
                 var updatedDriver = new Driver
                 {
                     Id = selectedDriver.Id,
@@ -1505,41 +1508,70 @@
                     FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
                 };
                 await Supabase.From<Driver>().Update(updatedDriver);
-                successMessage = $"{driverForm.Name} updated successfully.";
+                successMessage = $"✓ {driverForm.Name}'s details updated successfully.";
             }
             else
             {
+                // ── CREATE new driver ─────────────────────────────────────
                 if (string.IsNullOrWhiteSpace(tempPassword) || tempPassword.Length < 6)
                 {
-                    modalError = "Password must be at least 6 characters.";
+                    modalError = "Password must be at least 6 characters long.";
                     return;
                 }
-                var authResponse = await Supabase.Auth.SignUp(driverForm.Email, tempPassword);
-                if (authResponse?.User != null)
+
+                // Step 1: create the auth account
+                Supabase.Gotrue.Session? authResponse = null;
+                try
                 {
-                    var driverRecord = new Driver
-                    {
-                        AuthId = authResponse.User.Id ?? "",
-                        Name = driverForm.Name,
-                        Email = driverForm.Email,
-                        Phone = driverForm.Phone,
-                        Role = driverForm.Role,
-                        IsActive = true,
-                        MustChangePassword = true,
-                        FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
-                    };
-                    await Supabase.From<Driver>().Insert(driverRecord);
-                    successMessage = $"Account created for {driverForm.Name}.";
+                    authResponse = await Supabase.Auth.SignUp(driverForm.Email, tempPassword);
                 }
+                catch (Supabase.Gotrue.Exceptions.GotrueException ex)
+                {
+                    modalError = ex.Message.Contains("user_already_exists")
+                        ? $"An account for {driverForm.Email} already exists. Use a different email or reset their password."
+                        : $"Could not create login account: {ex.Message}";
+                    return;
+                }
+
+                if (authResponse?.User == null)
+                {
+                    modalError = "Account creation did not return a valid user. Please try again.";
+                    return;
+                }
+
+                // Step 2: insert the driver profile (Id omitted — Postgres generates UUID)
+                var driverRecord = new Driver
+                {
+                    AuthId = authResponse.User.Id ?? "",
+                    Name = driverForm.Name,
+                    Email = driverForm.Email,
+                    Phone = driverForm.Phone,
+                    Role = driverForm.Role,
+                    IsActive = true,
+                    MustChangePassword = true,
+                    FuelCardNumber = string.IsNullOrWhiteSpace(driverForm.FuelCardNumber) ? null : driverForm.FuelCardNumber
+                };
+
+                try
+                {
+                    await Supabase.From<Driver>().Insert(driverRecord);
+                }
+                catch (Exception dbEx)
+                {
+                    modalError = $"Login account was created but the driver profile could not be saved ({dbEx.Message}). Please contact support.";
+                    return;
+                }
+
+                successMessage = $"✓ Account created for {driverForm.Name}. They can now log in with their temporary password.";
             }
+
             await LoadData();
             CloseDriverModal();
         }
-        catch (Supabase.Gotrue.Exceptions.GotrueException ex) when (ex.Message.Contains("user_already_exists"))
+        catch (Exception ex)
         {
-            modalError = "A user with this email already exists.";
+            modalError = $"An unexpected error occurred: {ex.Message}. Please try again or contact support.";
         }
-        catch (Exception) { modalError = "Something went wrong. Please try again."; }
     }
 
     private async Task LoadFuelCards()
