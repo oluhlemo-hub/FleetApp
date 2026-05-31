@@ -5,7 +5,6 @@
 @inject FleetService FleetService
 @inject Supabase.Client Supabase
 @inject NavigationManager Nav
-
 <style>
     .fleet-login-page {
         min-height: 100vh;
@@ -25,7 +24,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0;
     }
     .fleet-login-logo {
         width: 64px;
@@ -38,41 +36,14 @@
         margin-bottom: 1.25rem;
         overflow: hidden;
     }
-    .fleet-login-logo img {
-        width: 44px;
-        height: 44px;
-        object-fit: contain;
-    }
-    .fleet-login-title {
-        color: #B5D4F4;
-        font-size: 1.5rem;
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-        text-align: center;
-    }
-    .fleet-login-sub {
-        color: #378ADD;
-        font-size: 0.85rem;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-    .fleet-input-wrap {
-        width: 100%;
-        position: relative;
-        margin-bottom: 1rem;
-    }
-    .fleet-input-icon {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #378ADD;
-        font-size: 1rem;
-        pointer-events: none;
-    }
+    .fleet-login-logo img { width: 44px; height: 44px; object-fit: contain; }
+    .fleet-login-title { color: #B5D4F4; font-size: 1.5rem; font-weight: 500; margin-bottom: 0.25rem; text-align: center; }
+    .fleet-login-sub { color: #378ADD; font-size: 0.85rem; margin-bottom: 2rem; text-align: center; }
+    .fleet-divider { width: 100%; height: 0.5px; background: #185FA5; margin-bottom: 1.5rem; }
+    .fleet-input-wrap { width: 100%; position: relative; margin-bottom: 1rem; }
+    .fleet-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #378ADD; font-size: 1rem; pointer-events: none; }
     .fleet-input {
-        width: 100%;
-        height: 48px;
+        width: 100%; height: 48px;
         background: #042C53 !important;
         border: 0.5px solid #185FA5 !important;
         border-radius: 10px !important;
@@ -81,47 +52,22 @@
         font-size: 0.95rem;
     }
     .fleet-input::placeholder { color: #378ADD; opacity: 0.6; }
-    .fleet-input:focus {
-        outline: none !important;
-        box-shadow: 0 0 0 2px #185FA5 !important;
-        border-color: #378ADD !important;
-    }
+    .fleet-input:focus { outline: none !important; box-shadow: 0 0 0 2px #185FA5 !important; border-color: #378ADD !important; }
     .fleet-login-btn {
-        width: 100%;
-        height: 48px;
-        background: #378ADD;
-        border: none;
-        border-radius: 10px;
-        color: #042C53;
-        font-size: 1rem;
-        font-weight: 500;
-        margin-top: 0.5rem;
-        cursor: pointer;
-        transition: background 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        width: 100%; height: 48px;
+        background: #378ADD; border: none; border-radius: 10px;
+        color: #042C53; font-size: 1rem; font-weight: 500;
+        margin-top: 0.5rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .fleet-login-btn:hover:not(:disabled) { background: #B5D4F4; }
     .fleet-login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-    .fleet-login-error {
-        width: 100%;
-        margin-top: 1rem;
-        background: #501313;
-        border: 0.5px solid #A32D2D;
-        border-radius: 8px;
-        padding: 0.6rem 1rem;
-        color: #F7C1C1;
-        font-size: 0.85rem;
-        text-align: center;
-    }
-    .fleet-divider {
-        width: 100%;
-        height: 0.5px;
-        background: #185FA5;
-        margin-bottom: 1.5rem;
-    }
+    .fleet-login-error { width: 100%; margin-top: 1rem; background: #501313; border: 0.5px solid #A32D2D; border-radius: 8px; padding: 0.6rem 1rem; color: #F7C1C1; font-size: 0.85rem; text-align: center; }
+    .fleet-login-success { width: 100%; margin-top: 1rem; background: #04342C; border: 0.5px solid #1D9E75; border-radius: 8px; padding: 0.6rem 1rem; color: #9FE1CB; font-size: 0.85rem; text-align: center; }
+    .fleet-forgot-link { background: none; border: none; color: #378ADD; font-size: 0.85rem; margin-top: 0.75rem; cursor: pointer; text-decoration: underline; }
+    .fleet-forgot-section { width: 100%; margin-top: 1.25rem; border-top: 0.5px solid #185FA5; padding-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .fleet-forgot-title { color: #B5D4F4; font-size: 0.9rem; font-weight: 500; }
+    .fleet-forgot-sub { color: #378ADD; font-size: 0.8rem; margin-bottom: 0.5rem; }
 </style>
 
 <div class="fleet-login-page">
@@ -132,32 +78,45 @@
         <div class="fleet-login-title">Fleet Portal</div>
         <div class="fleet-login-sub">Sign in to manage your fleet</div>
         <div class="fleet-divider"></div>
-        <div class="fleet-input-wrap">
-            <i class="bi bi-envelope fleet-input-icon"></i>
-            <input type="email" @bind="UserEmail" class="form-control fleet-input"
-                   placeholder="name@company.com" />
-        </div>
-        <div class="fleet-input-wrap">
-            <i class="bi bi-lock fleet-input-icon"></i>
-            <input type="password" @bind="Password" class="form-control fleet-input"
-                   placeholder="••••••••"
-                   @onkeydown="HandleKeyDown" />
-        </div>
-        <button class="fleet-login-btn" @onclick="HandleLogin" disabled="@isLoading">
-            @if (isLoading)
-            {
-                <span class="spinner-border spinner-border-sm"></span>
-                <span>Signing in...</span>
-            }
-            else
-            {
-                <span>Sign in</span>
-            }
-        </button>
-        @if (!string.IsNullOrEmpty(ErrorMessage))
+
+        @if (!showForgotPassword)
         {
-            <div class="fleet-login-error">
-                <i class="bi bi-exclamation-circle me-1"></i> @ErrorMessage
+            <div class="fleet-input-wrap">
+                <i class="bi bi-envelope fleet-input-icon"></i>
+                <input type="email" @bind="UserEmail" class="form-control fleet-input" placeholder="name@company.com" />
+            </div>
+            <div class="fleet-input-wrap">
+                <i class="bi bi-lock fleet-input-icon"></i>
+                <input type="password" @bind="Password" class="form-control fleet-input" placeholder="••••••••" @onkeydown="HandleKeyDown" />
+            </div>
+            <button class="fleet-login-btn" @onclick="HandleLogin" disabled="@isLoading">
+                @if (isLoading) { <span class="spinner-border spinner-border-sm"></span><span>Signing in...</span> }
+                else { <span>Sign in</span> }
+            </button>
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="fleet-login-error"><i class="bi bi-exclamation-circle me-1"></i> @ErrorMessage</div>
+            }
+            <button class="fleet-forgot-link" @onclick="() => { showForgotPassword = true; ErrorMessage = string.Empty; }">Forgot password?</button>
+        }
+        else
+        {
+            <div class="fleet-forgot-section">
+                <div class="fleet-forgot-title">Reset your password</div>
+                <div class="fleet-forgot-sub">Enter your email and we will send you a reset link.</div>
+                <div class="fleet-input-wrap">
+                    <i class="bi bi-envelope fleet-input-icon"></i>
+                    <input type="email" @bind="ResetEmail" class="form-control fleet-input" placeholder="name@company.com" />
+                </div>
+                <button class="fleet-login-btn" @onclick="HandleForgotPassword" disabled="@isResetting">
+                    @if (isResetting) { <span class="spinner-border spinner-border-sm"></span><span>Sending...</span> }
+                    else { <span>Send reset link</span> }
+                </button>
+                @if (!string.IsNullOrEmpty(ResetMessage))
+                {
+                    <div class="fleet-login-success"><i class="bi bi-check-circle me-1"></i> @ResetMessage</div>
+                }
+                <button class="fleet-forgot-link" @onclick="() => { showForgotPassword = false; ResetMessage = string.Empty; }">Back to sign in</button>
             </div>
         }
     </div>
@@ -167,11 +126,31 @@
     private string UserEmail { get; set; } = "";
     private string Password { get; set; } = "";
     private string ErrorMessage { get; set; } = "";
+    private string ResetEmail { get; set; } = "";
+    private string ResetMessage { get; set; } = "";
     private bool isLoading = false;
+    private bool isResetting = false;
+    private bool showForgotPassword = false;
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter") await HandleLogin();
+    }
+
+    private async Task HandleForgotPassword()
+    {
+        ResetMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(ResetEmail)) { ResetMessage = "Please enter your email address."; return; }
+        isResetting = true;
+        StateHasChanged();
+        try
+        {
+            await FleetService.SendPasswordResetAsync(ResetEmail.Trim());
+            ResetMessage = "Reset link sent! Check your inbox.";
+            ResetEmail = string.Empty;
+        }
+        catch { ResetMessage = "Failed to send reset link. Please try again."; }
+        finally { isResetting = false; StateHasChanged(); }
     }
 
     private async Task HandleLogin()
@@ -182,55 +161,30 @@
             ErrorMessage = "Please enter your email and password.";
             return;
         }
-
         isLoading = true;
         StateHasChanged();
-
         try
         {
             var role = await FleetService.LoginAsync(UserEmail, Password);
-
-            if (role == "Admin")
-            {
-                Nav.NavigateTo("/admin");
-            }
+            if (role == "Admin") { Nav.NavigateTo("/admin"); }
             else if (role == "Driver")
             {
-                // Check if driver must change password on first login
                 try
                 {
                     var driverRecord = await Supabase.From<Driver>()
                         .Filter("email", Postgrest.Constants.Operator.Equals, UserEmail)
                         .Single();
-
                     if (driverRecord?.MustChangePassword == true)
                         Nav.NavigateTo("/change-password");
                     else
                         Nav.NavigateTo("/driver");
                 }
-                catch
-                {
-                    // If lookup fails, just send to driver page
-                    Nav.NavigateTo("/driver");
-                }
+                catch { Nav.NavigateTo("/driver"); }
             }
-            else if (role == "Inactive")
-            {
-                ErrorMessage = "Your account has been deactivated. Contact your administrator.";
-            }
-            else
-            {
-                ErrorMessage = "Invalid email or password.";
-            }
+            else if (role == "Inactive") { ErrorMessage = "Your account has been deactivated. Contact your administrator."; }
+            else { ErrorMessage = "Invalid email or password."; }
         }
-        catch (Exception)
-        {
-            ErrorMessage = "Invalid email or password.";
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
+        catch { ErrorMessage = "Invalid email or password."; }
+        finally { isLoading = false; StateHasChanged(); }
     }
 }
