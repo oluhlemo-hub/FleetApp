@@ -6,41 +6,157 @@
 @inject Supabase.Client Supabase
 @inject NavigationManager Nav
 
-<div class="container d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
-    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 400px; border-radius: 20px; border: none;">
-        <div class="text-center mb-4">
-            <img src="images/logo.png" alt="Fleet Portal Logo" style="width: 80px; height: 80px; object-fit: contain;" />
-            <h2 class="fw-bold mt-2">Fleet Portal</h2>
-            <p class="text-muted">Sign in to manage your vehicle</p>
+<style>
+    .fleet-login-page {
+        min-height: 100vh;
+        background: #042C53;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .fleet-login-card {
+        width: 100%;
+        max-width: 400px;
+        background: #031f3a;
+        border: 0.5px solid #185FA5;
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+    .fleet-login-logo {
+        width: 64px;
+        height: 64px;
+        background: #185FA5;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+    .fleet-login-logo img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+    .fleet-login-title {
+        color: #B5D4F4;
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        text-align: center;
+    }
+    .fleet-login-sub {
+        color: #378ADD;
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .fleet-input-wrap {
+        width: 100%;
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    .fleet-input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #378ADD;
+        font-size: 1rem;
+        pointer-events: none;
+    }
+    .fleet-input {
+        width: 100%;
+        height: 48px;
+        background: #042C53 !important;
+        border: 0.5px solid #185FA5 !important;
+        border-radius: 10px !important;
+        padding-left: 42px !important;
+        color: #B5D4F4 !important;
+        font-size: 0.95rem;
+    }
+    .fleet-input::placeholder { color: #378ADD; opacity: 0.6; }
+    .fleet-input:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 2px #185FA5 !important;
+        border-color: #378ADD !important;
+    }
+    .fleet-login-btn {
+        width: 100%;
+        height: 48px;
+        background: #378ADD;
+        border: none;
+        border-radius: 10px;
+        color: #042C53;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .fleet-login-btn:hover:not(:disabled) { background: #B5D4F4; }
+    .fleet-login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .fleet-login-error {
+        width: 100%;
+        margin-top: 1rem;
+        background: #501313;
+        border: 0.5px solid #A32D2D;
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        color: #F7C1C1;
+        font-size: 0.85rem;
+        text-align: center;
+    }
+    .fleet-divider {
+        width: 100%;
+        height: 0.5px;
+        background: #185FA5;
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div class="fleet-login-page">
+    <div class="fleet-login-card">
+        <div class="fleet-login-logo">
+            <img src="images/logo.png" alt="Fleet Portal" />
         </div>
-        <div class="mb-3">
-            <label class="form-label fw-bold small">Email Address</label>
-            <input type="email" @bind="UserEmail" class="form-control form-control-lg"
+        <div class="fleet-login-title">Fleet Portal</div>
+        <div class="fleet-login-sub">Sign in to manage your fleet</div>
+        <div class="fleet-divider"></div>
+        <div class="fleet-input-wrap">
+            <i class="bi bi-envelope fleet-input-icon"></i>
+            <input type="email" @bind="UserEmail" class="form-control fleet-input"
                    placeholder="name@company.com" />
         </div>
-        <div class="mb-4">
-            <label class="form-label fw-bold small">Password</label>
-            <input type="password" @bind="Password" class="form-control form-control-lg"
+        <div class="fleet-input-wrap">
+            <i class="bi bi-lock fleet-input-icon"></i>
+            <input type="password" @bind="Password" class="form-control fleet-input"
                    placeholder="••••••••"
                    @onkeydown="HandleKeyDown" />
         </div>
-        <button class="btn btn-primary btn-lg w-100 mb-3"
-                @onclick="HandleLogin"
-                style="border-radius: 10px;"
-                disabled="@(isLoading)">
+        <button class="fleet-login-btn" @onclick="HandleLogin" disabled="@isLoading">
             @if (isLoading)
             {
-                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span class="spinner-border spinner-border-sm"></span>
                 <span>Signing in...</span>
             }
             else
             {
-                <span>Sign In</span>
+                <span>Sign in</span>
             }
         </button>
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div class="alert alert-danger py-2 small text-center">
+            <div class="fleet-login-error">
                 <i class="bi bi-exclamation-circle me-1"></i> @ErrorMessage
             </div>
         }

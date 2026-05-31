@@ -12,6 +12,11 @@ namespace FleetManagement.Services
             _supabase = supabase;
         }
 
+        public async Task SendPasswordResetAsync(string email)
+        {
+            await _supabase.Auth.ResetPasswordForEmail(email);
+        }
+
         public async Task<string?> LoginAsync(string email, string password)
         {
             try
