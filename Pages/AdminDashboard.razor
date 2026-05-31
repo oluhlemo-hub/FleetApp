@@ -1100,12 +1100,24 @@
 }
 
 <style>
+    body { background: #f5f7fa !important; }
+
+    /* ── Page layout ── */
     .page-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 0.5rem;
+        background: #ffffff;
+        border-bottom: 0.5px solid #B5D4F4;
+        padding: 0.75rem 1rem;
+        margin: -0.5rem -0.75rem 1rem -0.75rem;
+    }
+    .page-header h3 {
+        color: #042C53;
+        font-size: 1.1rem;
+        font-weight: 500;
     }
     .header-actions {
         display: flex;
@@ -1113,27 +1125,140 @@
         gap: 0.5rem;
         flex-wrap: wrap;
     }
+
+    /* ── Buttons ── */
+    .btn-primary {
+        background: #185FA5 !important;
+        border-color: #185FA5 !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+    }
+    .btn-primary:hover { background: #042C53 !important; border-color: #042C53 !important; }
+    .btn-secondary {
+        background: #042C53 !important;
+        border-color: #042C53 !important;
+        color: #B5D4F4 !important;
+        border-radius: 8px !important;
+    }
+    .btn-secondary:hover { background: #185FA5 !important; border-color: #185FA5 !important; }
+    .btn-outline-secondary {
+        border-color: #B5D4F4 !important;
+        color: #185FA5 !important;
+        border-radius: 8px !important;
+    }
+    .btn-outline-secondary:hover { background: #E6F1FB !important; }
+    .btn-warning {
+        background: #BA7517 !important;
+        border-color: #BA7517 !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+    }
+    .btn-warning:hover { background: #854F0B !important; }
+    .btn-outline-primary {
+        border-color: #185FA5 !important;
+        color: #185FA5 !important;
+        border-radius: 8px !important;
+    }
+    .btn-outline-primary:hover { background: #E6F1FB !important; }
+    .btn-danger { border-radius: 8px !important; }
+    .btn-success { border-radius: 8px !important; }
+
+    /* ── Nav tabs ── */
+    .nav-tabs {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        border-bottom: 2px solid #B5D4F4 !important;
+        gap: 2px;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tabs .nav-link {
+        color: #5F5E5A !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0 !important;
+        padding: 0.5rem 0.85rem;
+        font-size: 0.875rem;
+        font-weight: 400;
+        margin-bottom: -2px;
+    }
+    .nav-tabs .nav-link:hover { color: #185FA5 !important; background: #E6F1FB !important; }
+    .nav-tabs .nav-link.active {
+        color: #042C53 !important;
+        font-weight: 500;
+        border-bottom: 2px solid #185FA5 !important;
+        background: transparent !important;
+    }
+
+    /* ── Badges ── */
+    .badge.bg-secondary { background: #E6F1FB !important; color: #185FA5 !important; }
+    .badge.bg-success { background: #EAF3DE !important; color: #3B6D11 !important; }
+    .badge.bg-danger { background: #FCEBEB !important; color: #A32D2D !important; }
+    .badge.bg-warning { background: #FAEEDA !important; color: #854F0B !important; }
+    .badge.bg-primary { background: #E6F1FB !important; color: #042C53 !important; }
+
+    /* ── Cards ── */
+    .card {
+        border: 0.5px solid #B5D4F4 !important;
+        border-radius: 12px !important;
+        box-shadow: none !important;
+    }
+    .card-header {
+        background: #E6F1FB !important;
+        border-bottom: 0.5px solid #B5D4F4 !important;
+        color: #042C53 !important;
+        font-weight: 500;
+    }
+
+    /* ── Table ── */
+    .table thead th {
+        background: #042C53 !important;
+        color: #B5D4F4 !important;
+        font-weight: 500;
+        font-size: 0.825rem;
+        border: none !important;
+    }
+    .table tbody tr:hover { background: #E6F1FB !important; }
+    .table { border-radius: 8px; overflow: hidden; }
+
+    /* ── Alerts ── */
+    .alert-success { background: #EAF3DE !important; border-color: #C0DD97 !important; color: #3B6D11 !important; border-radius: 10px !important; }
+    .alert-danger { background: #FCEBEB !important; border-color: #F09595 !important; color: #A32D2D !important; border-radius: 10px !important; }
+    .alert-warning { background: #FAEEDA !important; border-color: #FAC775 !important; color: #854F0B !important; border-radius: 10px !important; }
+
+    /* ── Notifications panel ── */
     .notifications-panel {
         position: absolute;
         top: calc(100%% + 8px);
         right: 0;
         width: 360px;
-        border-radius: 12px;
+        border-radius: 12px !important;
         z-index: 1000;
+        border: 0.5px solid #B5D4F4 !important;
     }
-    .notification-item:hover { background-color: rgba(0,0,0,0.04); }
-    .nav-tabs {
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+    .notification-item:hover { background: #E6F1FB !important; }
+
+    /* ── Form controls ── */
+    .form-control:focus, .form-select:focus {
+        border-color: #378ADD !important;
+        box-shadow: 0 0 0 2px rgba(55,138,221,0.15) !important;
     }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .history-link:hover { text-decoration: underline !important; color: #0d6efd !important; }
+    .form-control, .form-select {
+        border-color: #B5D4F4 !important;
+        border-radius: 8px !important;
+    }
+
+    /* ── Misc ── */
+    .history-link:hover { text-decoration: underline !important; color: #185FA5 !important; }
     .x-small { font-size: 0.75rem; }
+    .bg-danger-subtle { background: #FCEBEB !important; }
+    .bg-warning-subtle { background: #FAEEDA !important; }
+    .text-warning-emphasis { color: #854F0B !important; }
+
     .modal-backdrop-custom {
         position: fixed;
         top: 0; left: 0;
         width: 100%%; height: 100%%;
-        background: rgba(0,0,0,0.55);
+        background: rgba(4,44,83,0.6);
         display: flex;
         align-items: flex-end;
         justify-content: center;
