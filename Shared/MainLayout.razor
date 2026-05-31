@@ -297,8 +297,8 @@
     /* ── Sidebar ── */
     .layout-body { display: flex; min-height: calc(100vh - 56px); }
     .fleet-sidebar {
-        width: 200px;
-        min-width: 200px;
+        width: 64px;
+        min-width: 64px;
         background: var(--navy-900);
         display: flex;
         flex-direction: column;
@@ -319,6 +319,7 @@
     .fleet-sidebar-item {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 10px;
         padding: 0.6rem 0.75rem;
         border-radius: 8px;
@@ -331,7 +332,8 @@
         width: 100%;
         text-align: left;
     }
-    .fleet-sidebar-item i { font-size: 1rem; }
+    .fleet-sidebar-item i { font-size: 1.2rem; }
+    .sidebar-label { display: none; }
     .fleet-sidebar-item:hover { background: var(--navy-600); color: #ffffff; }
     .fleet-sidebar-item.active { background: var(--navy-600); color: #ffffff; font-weight: 500; }
     .fleet-sidebar-bottom { margin-top: auto; }

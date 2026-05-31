@@ -164,6 +164,34 @@
         </div>
     </div>
 
+    <div class="fleet-stat-row">
+        <div class="fleet-stat-card">
+            <div class="fleet-stat-accent" style="background:#378ADD"></div>
+            <div class="fleet-stat-num">@vehicles.Count</div>
+            <div class="fleet-stat-lbl">Total vehicles</div>
+        </div>
+        <div class="fleet-stat-card">
+            <div class="fleet-stat-accent" style="background:#639922"></div>
+            <div class="fleet-stat-num">@vehicles.Count(v => v.Status == "Active")</div>
+            <div class="fleet-stat-lbl">Active</div>
+        </div>
+        <div class="fleet-stat-card">
+            <div class="fleet-stat-accent" style="background:#BA7517"></div>
+            <div class="fleet-stat-num">@vehicles.Count(v => v.Status == "In Service")</div>
+            <div class="fleet-stat-lbl">In service</div>
+        </div>
+        <div class="fleet-stat-card">
+            <div class="fleet-stat-accent" style="background:#E24B4A"></div>
+            <div class="fleet-stat-num">@allFaults.Count(f => f.Status == "Open")</div>
+            <div class="fleet-stat-lbl">Open faults</div>
+        </div>
+        <div class="fleet-stat-card">
+            <div class="fleet-stat-accent" style="background:#5F5E5A"></div>
+            <div class="fleet-stat-num">@drivers.Count(d => d.IsActive)</div>
+            <div class="fleet-stat-lbl">Active drivers</div>
+        </div>
+    </div>
+
     <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto">
         <li class="nav-item flex-shrink-0">
             <button class="nav-link @(activeTab == "vehicles" ? "active" : "")" @onclick='() => activeTab = "vehicles"'>
@@ -1101,6 +1129,41 @@
 
 <style>
     body { background: #f5f7fa !important; }
+
+    /* ── Stat cards ── */
+    .fleet-stat-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .fleet-stat-card {
+        background: #ffffff;
+        border-radius: 10px;
+        border: 0.5px solid #B5D4F4;
+        padding: 0.75rem 1rem;
+    }
+    .fleet-stat-accent {
+        width: 24px;
+        height: 3px;
+        border-radius: 2px;
+        margin-bottom: 0.5rem;
+    }
+    .fleet-stat-num {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #042C53;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    .fleet-stat-lbl {
+        font-size: 0.75rem;
+        color: #888780;
+    }
+    @@media (max-width: 767px) {
+        .fleet-stat-row { grid-template-columns: repeat(2, 1fr); }
+        .fleet-stat-row .fleet-stat-card:last-child { grid-column: span 2; }
+    }
 
     /* ── Page layout ── */
     .page-header {
