@@ -6,111 +6,105 @@
 
 <div class="page @ThemeService.ThemeClass">
 
-    <div class="top-row ps-3 navbar navbar-dark bg-dark shadow-sm">
-        <div class="container-fluid d-flex align-items-center justify-content-between">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="">
-                <img src="images/logo.png" alt="Fleet Logo" style="width: 36px; height: 36px; object-fit: contain;" />
-                <span class="brand-text">FLEET MANAGEMENT</span>
-            </a>
-
-            <div class="position-relative me-2">
-                <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-2"
-                        @onclick="ToggleProfile">
-                    <i class="bi bi-person-circle fs-5"></i>
-                    <span class="d-none d-sm-inline">@userName</span>
-                    @if (!string.IsNullOrEmpty(userRole))
-                    {
-                        <span class="badge @(userRole == "Admin" ? "bg-warning text-dark" : "bg-info text-dark")">
-                            @userRole
-                        </span>
-                    }
-                </button>
-
-                @if (showProfile)
+    <div class="fleet-topbar">
+        <a class="fleet-brand" href="">
+            <div class="fleet-brand-logo">
+                <img src="images/logo.png" alt="Fleet Logo" style="width:28px;height:28px;object-fit:contain;" />
+            </div>
+            <span class="brand-text">Fleet Portal</span>
+        </a>
+        <div class="position-relative">
+            <button class="fleet-profile-btn" @onclick="ToggleProfile">
+                <div class="fleet-avatar">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+                <span class="d-none d-sm-inline fleet-username">@userName</span>
+                @if (!string.IsNullOrEmpty(userRole))
                 {
-                    <div class="profile-dropdown card shadow p-3">
-                        <div class="text-center mb-2">
-                            <i class="bi bi-person-circle display-5 text-secondary"></i>
-                        </div>
-                        <p class="mb-0 fw-bold text-center">@userName</p>
-                        <p class="mb-1 text-center small text-muted">@userEmail</p>
-                        <p class="mb-2 text-center">
-                            <span class="badge @(userRole == "Admin" ? "bg-warning text-dark" : "bg-info text-dark") px-3">
-                                @(userRole == "Admin" ? "Administrator" : "Driver")
-                            </span>
-                        </p>
-                        <hr class="my-2"/>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" @onclick="OpenProfile">
-                                <i class="bi bi-person me-1"></i> View Profile
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" @onclick="Logout">
-                                <i class="bi bi-box-arrow-right me-1"></i> Logout
-                            </button>
+                    <span class="fleet-role-badge @(userRole == "Admin" ? "fleet-badge-admin" : "fleet-badge-driver")">@userRole</span>
+                }
+            </button>
+            @if (showProfile)
+            {
+                <div class="fleet-profile-dropdown">
+                    <div class="fleet-profile-header">
+                        <div class="fleet-avatar-lg">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+                        <div>
+                            <div class="fleet-profile-name">@userName</div>
+                            <div class="fleet-profile-email">@userEmail</div>
                         </div>
                     </div>
-                }
-            </div>
+                    <div class="fleet-profile-actions">
+                        <button class="fleet-profile-action" @onclick="OpenProfile">
+                            <i class="bi bi-person me-2"></i> View Profile
+                        </button>
+                        <button class="fleet-profile-action fleet-profile-action-danger" @onclick="Logout">
+                            <i class="bi bi-box-arrow-right me-2"></i> Sign out
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
     <div class="layout-body">
-
-        <div class="sidebar bg-dark text-white p-3">
+        <div class="fleet-sidebar">
+            <div class="fleet-sidebar-logo">
+                <img src="images/logo.png" alt="Fleet" style="width:28px;height:28px;object-fit:contain;" />
+            </div>
             @if (userRole == "Admin")
             {
-                <div class="nav-item mb-2">
-                    <NavLink class="nav-link text-white rounded" href="admin" Match="NavLinkMatch.All">
-                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                    </NavLink>
-                </div>
-                <div class="nav-item mb-2">
-                    <NavLink class="nav-link text-white rounded" href="settings">
-                        <i class="bi bi-gear me-2"></i> Settings
-                    </NavLink>
-                </div>
+                <NavLink class="fleet-sidebar-item" href="admin" Match="NavLinkMatch.All">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="sidebar-label">Dashboard</span>
+                </NavLink>
+                <NavLink class="fleet-sidebar-item" href="settings">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-label">Settings</span>
+                </NavLink>
             }
             else if (userRole == "Driver")
             {
-                <div class="nav-item mb-2">
-                    <NavLink class="nav-link text-white rounded" href="driver" Match="NavLinkMatch.All">
-                        <i class="bi bi-truck me-2"></i> My Vehicle
-                    </NavLink>
-                </div>
-                <div class="nav-item mb-2">
-                    <NavLink class="nav-link text-white rounded" href="settings">
-                        <i class="bi bi-gear me-2"></i> Settings
-                    </NavLink>
-                </div>
+                <NavLink class="fleet-sidebar-item" href="driver" Match="NavLinkMatch.All">
+                    <i class="bi bi-truck"></i>
+                    <span class="sidebar-label">My Vehicle</span>
+                </NavLink>
+                <NavLink class="fleet-sidebar-item" href="settings">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-label">Settings</span>
+                </NavLink>
             }
+            <div class="fleet-sidebar-bottom">
+                <button class="fleet-sidebar-item fleet-sidebar-logout" @onclick="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-label">Sign out</span>
+                </button>
+            </div>
         </div>
 
         <main class="main-content">
             @Body
         </main>
-
     </div>
 
-    <nav class="mobile-bottom-nav bg-dark d-md-none">
+    <nav class="fleet-mobile-nav">
         @if (userRole == "Admin")
         {
-            <NavLink class="mobile-nav-item text-white" href="admin" Match="NavLinkMatch.All">
+            <NavLink class="fleet-mobile-item" href="admin" Match="NavLinkMatch.All">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </NavLink>
         }
         else if (userRole == "Driver")
         {
-            <NavLink class="mobile-nav-item text-white" href="driver" Match="NavLinkMatch.All">
+            <NavLink class="fleet-mobile-item" href="driver" Match="NavLinkMatch.All">
                 <i class="bi bi-truck"></i>
                 <span>My Vehicle</span>
             </NavLink>
         }
-        <NavLink class="mobile-nav-item text-white" href="settings">
+        <NavLink class="fleet-mobile-item" href="settings">
             <i class="bi bi-gear"></i>
             <span>Settings</span>
         </NavLink>
-        <button class="mobile-nav-item text-white border-0 bg-transparent" @onclick="OpenProfile">
+        <button class="fleet-mobile-item fleet-mobile-btn" @onclick="OpenProfile">
             <i class="bi bi-person-circle"></i>
             <span>Profile</span>
         </button>
@@ -167,131 +161,237 @@
 }
 
 <style>
-    :root { 
-        --app-primary: #0d6efd; 
-        --bg-main: #f8f9fa;
-        --text-main: #212529;
-        --card-bg: #ffffff;
-        --card-border: rgba(0,0,0,0.125);
+    :root {
+        --navy-900: #042C53;
+        --navy-600: #185FA5;
+        --navy-400: #378ADD;
+        --navy-200: #B5D4F4;
+        --navy-50:  #E6F1FB;
+        --surface:  #f5f7fa;
     }
 
-    .theme-dark {
-        --bg-main: #121212;
-        --text-main: #f8f9fa;
-        --card-bg: #1e1e1e;
-        --card-border: rgba(255,255,255,0.15);
-    }
+    .page { min-height: 100vh; background: var(--surface); }
 
-    .page {
-        color: var(--text-main);
-        background-color: var(--bg-main);
-        min-height: 100vh;
-        transition: background-color 0.25s ease, color 0.25s ease;
-    }
-
-    .main-content {
-        flex: 1;
-        padding: 1rem;
-        min-width: 0;
-        background-color: var(--bg-main);
-    }
-
-    /* Core Adaptive Styles for Nested Elements */
-    .main-content .card {
-        background-color: var(--card-bg) !important;
-        color: var(--text-main) !important;
-        border-color: var(--card-border) !important;
-    }
-
-    .btn-primary {
-        background-color: var(--app-primary) !important;
-        border-color: var(--app-primary) !important;
-    }
-
-    .top-row {
+    /* ── Top bar ── */
+    .fleet-topbar {
         height: 56px;
+        background: var(--navy-900);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1rem;
         position: sticky;
         top: 0;
         z-index: 100;
+        border-bottom: 0.5px solid var(--navy-600);
     }
-
-    .layout-body {
+    .fleet-brand {
         display: flex;
-        min-height: calc(100vh - 56px);
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
     }
-
-    .sidebar {
-        width: 220px;
-        min-width: 220px;
-        flex-shrink: 0;
+    .fleet-brand-logo {
+        width: 36px;
+        height: 36px;
+        background: var(--navy-600);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-
-    .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.1); }
-    .sidebar .nav-link.active {
-        background-color: rgba(255,255,255,0.2);
-        font-weight: bold;
+    .brand-text {
+        color: var(--navy-200);
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
     }
+    .fleet-profile-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--navy-600);
+        border: 0.5px solid var(--navy-400);
+        border-radius: 20px;
+        padding: 4px 12px 4px 4px;
+        cursor: pointer;
+        color: var(--navy-200);
+        font-size: 0.875rem;
+    }
+    .fleet-profile-btn:hover { background: var(--navy-400); }
+    .fleet-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--navy-400);
+        color: var(--navy-900);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .fleet-username { color: var(--navy-200); }
+    .fleet-role-badge {
+        font-size: 0.7rem;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-weight: 500;
+    }
+    .fleet-badge-admin { background: #FAEEDA; color: #854F0B; }
+    .fleet-badge-driver { background: var(--navy-50); color: var(--navy-900); }
 
-    .profile-dropdown {
+    /* ── Profile dropdown ── */
+    .fleet-profile-dropdown {
         position: absolute;
-        top: calc(100% + 8px);
+        top: calc(100%% + 8px);
         right: 0;
-        width: 240px;
+        width: 260px;
+        background: #ffffff;
+        border: 0.5px solid var(--navy-200);
         border-radius: 12px;
         z-index: 1000;
-        background: white;
-        color: #212529;
+        overflow: hidden;
     }
+    .fleet-profile-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 1rem;
+        background: var(--navy-50);
+        border-bottom: 0.5px solid var(--navy-200);
+    }
+    .fleet-avatar-lg {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--navy-600);
+        color: var(--navy-200);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    .fleet-profile-name { font-size: 0.9rem; font-weight: 500; color: var(--navy-900); }
+    .fleet-profile-email { font-size: 0.75rem; color: #5F5E5A; }
+    .fleet-profile-actions { padding: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
+    .fleet-profile-action {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--navy-900);
+        font-size: 0.875rem;
+        cursor: pointer;
+        text-align: left;
+    }
+    .fleet-profile-action:hover { background: var(--navy-50); }
+    .fleet-profile-action-danger { color: #A32D2D; }
+    .fleet-profile-action-danger:hover { background: #FCEBEB; }
 
-    .mobile-bottom-nav {
+    /* ── Sidebar ── */
+    .layout-body { display: flex; min-height: calc(100vh - 56px); }
+    .fleet-sidebar {
+        width: 200px;
+        min-width: 200px;
+        background: var(--navy-900);
+        display: flex;
+        flex-direction: column;
+        padding: 1rem 0.75rem;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    .fleet-sidebar-logo {
+        width: 36px;
+        height: 36px;
+        background: var(--navy-600);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .fleet-sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
+        color: var(--navy-200);
+        text-decoration: none;
+        font-size: 0.875rem;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+    }
+    .fleet-sidebar-item i { font-size: 1rem; }
+    .fleet-sidebar-item:hover { background: var(--navy-600); color: #ffffff; }
+    .fleet-sidebar-item.active { background: var(--navy-600); color: #ffffff; font-weight: 500; }
+    .fleet-sidebar-bottom { margin-top: auto; }
+    .fleet-sidebar-logout { color: #F09595; }
+    .fleet-sidebar-logout:hover { background: #501313; color: #F7C1C1; }
+
+    /* ── Main content ── */
+    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--surface); }
+
+    /* ── Mobile nav ── */
+    .fleet-mobile-nav {
         display: none;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         height: 64px;
+        background: var(--navy-900);
+        border-top: 0.5px solid var(--navy-600);
         z-index: 200;
         flex-direction: row;
         align-items: center;
         justify-content: space-around;
-        border-top: 1px solid rgba(255,255,255,0.1);
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-
-    .mobile-nav-item {
+    .fleet-mobile-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
         gap: 2px;
         padding: 6px 16px;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         text-decoration: none;
+        color: var(--navy-200);
         opacity: 0.7;
-        transition: opacity 0.15s;
+        border: none;
+        background: transparent;
         cursor: pointer;
     }
+    .fleet-mobile-item i { font-size: 1.3rem; }
+    .fleet-mobile-item.active, .fleet-mobile-item:hover { opacity: 1; color: #ffffff; }
+    .fleet-mobile-btn { color: var(--navy-200); }
 
-    .mobile-nav-item i { font-size: 1.3rem; }
-    .mobile-nav-item.active, .mobile-nav-item:hover { opacity: 1; }
-
+    /* ── Responsive ── */
     @@media (min-width: 768px) and (max-width: 991px) {
-        .sidebar { width: 64px; min-width: 64px; padding: 0.75rem 0.5rem !important; }
-        .sidebar .nav-link { display: flex; justify-content: center; padding: 0.6rem; }
-        .sidebar .nav-link i { margin: 0 !important; font-size: 1.3rem; }
-        .sidebar .nav-link span { display: none; }
+        .fleet-sidebar { width: 56px; min-width: 56px; padding: 1rem 0.5rem; align-items: center; }
+        .fleet-sidebar-logo { margin-bottom: 1rem; }
+        .sidebar-label { display: none; }
+        .fleet-sidebar-item { justify-content: center; padding: 0.6rem; }
         .brand-text { display: none; }
     }
-
     @@media (max-width: 767.98px) {
-        .sidebar { display: none !important; }
-        .mobile-bottom-nav { display: flex !important; }
+        .fleet-sidebar { display: none !important; }
+        .fleet-mobile-nav { display: flex !important; }
         .main-content {
             padding: 0.75rem;
             padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
         }
         .brand-text { display: none; }
-        .profile-dropdown { position: fixed; top: 60px; right: 8px; left: 8px; width: auto; }
+        .fleet-profile-dropdown { position: fixed; top: 60px; right: 8px; left: 8px; width: auto; }
     }
 </style>
 
