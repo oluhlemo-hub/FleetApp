@@ -2029,7 +2029,7 @@
             }
             else
             {
-                await Supabase.From<Vehicle>().Insert(newVehicle);
+                newVehicle.Id = Guid.NewGuid().ToString(); await Supabase.From<Vehicle>().Insert(newVehicle);
                 successMessage = $"{newVehicle.Registration} added successfully.";
             }
             await LoadData();
