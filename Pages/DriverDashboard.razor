@@ -1199,7 +1199,7 @@
     {
         try
         {
-            if (currentVehicle == null) return;
+            if (!hasVehicle || currentVehicle == null) return;
             var cutoff = DateTime.UtcNow.AddHours(-12);
             var recentTrips = await Supabase.From<TripHistory>()
                 .Filter("driver_email", Postgrest.Constants.Operator.Equals, currentUserEmail)
@@ -1334,7 +1334,7 @@
 
     private async Task CheckTodayDvir()
     {
-        if (currentVehicle == null) return;
+        if (!hasVehicle || currentVehicle == null) return;
         try
         {
             var today = DateTime.UtcNow.Date;
@@ -1379,7 +1379,7 @@
 
     private async Task SubmitDvir()
     {
-        if (currentVehicle == null) return;
+        if (!hasVehicle || currentVehicle == null) return;
         isDvirSubmitting = true;
         dvirError = "";
         try
