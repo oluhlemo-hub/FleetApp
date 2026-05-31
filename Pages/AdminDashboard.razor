@@ -2037,7 +2037,7 @@
             selectedVehicle = null;
             newVehicle = new Vehicle { Status = "Available" };
         }
-        catch (Exception ex) { modalError =  Error: {ex.Message}"; }
+        catch (Exception ex) { modalError = "Error: " + ex.Message; }
     }
 
     private async Task HandleSaveDriver()
