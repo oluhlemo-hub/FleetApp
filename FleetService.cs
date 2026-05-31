@@ -14,7 +14,7 @@ namespace FleetManagement.Services
 
         public async Task SendPasswordResetAsync(string email)
         {
-            await _supabase.Auth.ResetPasswordForEmail(email, new Supabase.Gotrue.ResetPasswordForEmailOptions { RedirectTo = "https://fleetapp.up.railway.app/change-password" });
+            await _supabase.Auth.ResetPasswordForEmail(email, new Supabase.Gotrue.ResetPasswordForEmailOptions(email) { RedirectTo = "https://fleetapp.up.railway.app/change-password" });
         }
 
         public async Task<string?> LoginAsync(string email, string password)
