@@ -2165,7 +2165,7 @@
             await LoadFuelCards();
             successMessage = "Fuel card added successfully.";
         }
-        catch (Exception) { modalError = "Could not add fuel card. Please try again."; }
+        catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
         finally { isSubmittingCard = false; }
     }
 
