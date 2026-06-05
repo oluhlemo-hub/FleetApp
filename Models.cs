@@ -7,7 +7,7 @@ namespace FleetManagement.Models
     public class Vehicle : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("make")]
         public string Make { get; set; } = string.Empty;
         [Column("model")]
@@ -28,7 +28,7 @@ namespace FleetManagement.Models
     public class Driver : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("full_name")]
         public string Name { get; set; } = string.Empty;
         [Column("email")]
@@ -55,7 +55,7 @@ namespace FleetManagement.Models
     public class Fault : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
         [Column("vehicle_registration")]
@@ -76,7 +76,7 @@ namespace FleetManagement.Models
     public class ServiceHistory : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
         [Column("vehicle_registration")]
@@ -99,7 +99,7 @@ namespace FleetManagement.Models
     public class TripHistory : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
         [Column("vehicle_registration")]
@@ -122,7 +122,7 @@ namespace FleetManagement.Models
     public class VehicleRequest : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("driver_email")]
         public string DriverEmail { get; set; } = string.Empty;
         [Column("vehicle_id")]
@@ -141,7 +141,7 @@ namespace FleetManagement.Models
     public class FuelLog : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
         [Column("vehicle_registration")]
@@ -176,7 +176,7 @@ namespace FleetManagement.Models
     public class FuelCard : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("card_number")]
         public string CardNumber { get; set; } = string.Empty;
         [Column("provider")]
@@ -195,7 +195,7 @@ namespace FleetManagement.Models
     public class VehicleDocument : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("vehicle_id")]
         public string VehicleId { get; set; } = string.Empty;
         [Column("vehicle_registration")]
@@ -216,7 +216,7 @@ namespace FleetManagement.Models
     public class DvirChecklistItem : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("name")]
         public string Name { get; set; } = string.Empty;
         [Column("category")]
@@ -233,7 +233,7 @@ namespace FleetManagement.Models
     public class DvirSubmission : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("driver_email")]
         public string DriverEmail { get; set; } = string.Empty;
         [Column("vehicle_id")]
@@ -254,7 +254,7 @@ namespace FleetManagement.Models
     public class DvirSubmissionItem : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("submission_id")]
         public string SubmissionId { get; set; } = string.Empty;
         [Column("item_id")]
@@ -273,7 +273,7 @@ namespace FleetManagement.Models
     public class UserProfile : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("role")]
         public string? Role { get; set; }
     }
@@ -282,7 +282,7 @@ namespace FleetManagement.Models
     public class UserSettings : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("user_id")]
         public string UserId { get; set; } = string.Empty;
         [Column("theme")]
@@ -301,7 +301,7 @@ namespace FleetManagement.Models
     public class TenantSettings : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("company_name")]
         public string? CompanyName { get; set; }
         [Column("support_email")]
@@ -322,7 +322,7 @@ namespace FleetManagement.Models
     public class ManagerSettings : BaseModel
     {
         [PrimaryKey("id", true)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         [Column("user_id")]
         public string UserId { get; set; } = string.Empty;
         [Column("trip_approval_mode")]

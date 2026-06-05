@@ -151,10 +151,10 @@
             <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/settings")'>
                 <i class="bi bi-gear me-1"></i><span class="d-none d-sm-inline"> Settings</span>
             </button>
-            <button class="btn btn-primary" @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; }">
+            <button class="btn btn-primary" @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
                 <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline"> Add Vehicle</span>
             </button>
-            <button class="btn btn-secondary" @onclick="async () => { await LoadFuelCards(); isDriverModalVisible = true; modalError = string.Empty; }">
+            <button class="btn btn-secondary" @onclick="async () => { await LoadFuelCards(); isDriverModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
                 <i class="bi bi-person-plus me-1"></i><span class="d-none d-sm-inline"> Add Driver</span>
             </button>
             <button class="btn btn-warning" @onclick="OpenFuelCardModal">
@@ -666,7 +666,7 @@
                 <div class="modal-body">
                     @if (!string.IsNullOrEmpty(modalError))
                     {
-                        <div class="alert alert-danger py-2">@modalError</div>
+                        <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
                     }
                     <EditForm Model="@newVehicle" OnValidSubmit="HandleSaveVehicle">
                         <div class="mb-3">
@@ -725,7 +725,7 @@
                 <div class="modal-body">
                     @if (!string.IsNullOrEmpty(modalError))
                     {
-                        <div class="alert alert-danger py-2">@modalError</div>
+                        <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
                     }
                     <EditForm Model="@driverForm" OnValidSubmit="HandleSaveDriver">
                         <div class="mb-3">
@@ -1427,7 +1427,7 @@
             </div>
         </div>
         <div class="card-footer">
-            <button class="btn btn-primary" @onclick="() => { isDocModalVisible = true; modalError = string.Empty; }">
+            <button class="btn btn-primary" @onclick="() => { isDocModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
                 <i class="bi bi-plus-circle me-1"></i> Add Document
             </button>
         </div>
@@ -1546,7 +1546,7 @@
                 <div class="modal-body">
                     @if (!string.IsNullOrEmpty(modalError))
                     {
-                        <div class="alert alert-danger py-2">@modalError</div>
+                        <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
                     }
                     <!-- Add new card form -->
                     <div class="card border-0 bg-light mb-3">
@@ -1619,7 +1619,7 @@
                 <div class="modal-body">
                     @if (!string.IsNullOrEmpty(modalError))
                     {
-                        <div class="alert alert-danger py-2">@modalError</div>
+                        <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
                     }
                     <div class="mb-3">
                         <label class="form-label">Vehicle</label>
@@ -1717,7 +1717,8 @@
     private bool showNotifications = false;
     private List<(string DriverName, string DriverEmail, string VehicleReg, int Mileage)> mileageAlerts = new();
     private HashSet<string> dismissedMileageAlerts = new();
-    private string modalError = "";
+    private string modalError = ""; modalErrorDetail = "";
+    private string modalErrorDetail = "";
     private string successMessage = "";
     private string activeTab = "vehicles";
 
@@ -1800,7 +1801,7 @@
     {
         await LoadFuelCards();
         isFuelCardModalVisible = true;
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
     }
 
     // ── Vehicle History ──────────────────────────────────────
@@ -1984,7 +1985,7 @@
             ServiceDueKm = car.ServiceDueKm, Status = car.Status, LastDriver = car.LastDriver
         };
         isVehicleModalVisible = true;
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
     }
 
     private async Task SelectDriver(Driver driver)
@@ -1993,7 +1994,7 @@
         driverForm = new DriverFormModel { Name = driver.Name, Email = driver.Email, Phone = driver.Phone ?? "", Role = driver.Role, FuelCardNumber = driver.FuelCardNumber ?? "" };
         await LoadFuelCards();
         isDriverModalVisible = true;
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
     }
 
     private void CloseDriverModal()
@@ -2001,13 +2002,13 @@
         isDriverModalVisible = false;
         selectedDriver = null;
         driverForm = new DriverFormModel();
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
         tempPassword = "";
     }
 
     private async Task HandleSaveVehicle()
     {
-        modalError = "";
+        modalError = ""; modalErrorDetail = "";
         try
         {
             if (string.IsNullOrWhiteSpace(newVehicle.Make) || string.IsNullOrWhiteSpace(newVehicle.Model) || string.IsNullOrWhiteSpace(newVehicle.Registration))
@@ -2042,7 +2043,7 @@
 
     private async Task HandleSaveDriver()
     {
-        modalError = "";
+        modalError = ""; modalErrorDetail = "";
         try
         {
             if (string.IsNullOrWhiteSpace(driverForm.Name) || string.IsNullOrWhiteSpace(driverForm.Email))
@@ -2149,7 +2150,7 @@
     {
         if (string.IsNullOrWhiteSpace(newFuelCardNumber)) { modalError = "Please enter a card number."; return; }
         isSubmittingCard = true;
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
         try
         {
             var card = new FuelCard
@@ -2165,7 +2166,7 @@
             await LoadFuelCards();
             successMessage = "Fuel card added successfully.";
         }
-        catch (Exception ex) { modalError = $"Error: {ex.Message}"; }
+        catch (Exception ex) { modalError = "Could not add fuel card. Please try again."; modalErrorDetail = ex.Message; }
         finally { isSubmittingCard = false; }
     }
 
@@ -2224,7 +2225,7 @@
     private async Task OnDocFileSelected(InputFileChangeEventArgs e)
     {
         isUploadingDoc = true;
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
         try
         {
             var file = e.File;
@@ -2244,7 +2245,7 @@
     private async Task SaveDocument()
     {
         if (string.IsNullOrEmpty(docVehicleId)) { modalError = "Please select a vehicle."; return; }
-        modalError = string.Empty;
+        modalError = string.Empty; modalErrorDetail = string.Empty;
         try
         {
             var doc = new FleetManagement.Models.VehicleDocument
