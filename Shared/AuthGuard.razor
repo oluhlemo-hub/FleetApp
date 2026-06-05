@@ -19,12 +19,12 @@ else if (isChecking)
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? RequiredRole { get; set; }
+
     private bool isAuthenticated = false;
-    private bool isChecking = true;
+    private bool isChecking      = true;
 
     protected override async Task OnInitializedAsync()
     {
-        // Try immediately first
         var session = Supabase.Auth.CurrentSession;
         if (session?.User != null)
         {
@@ -32,7 +32,6 @@ else if (isChecking)
             return;
         }
 
-        // Session not ready yet — poll briefly (max 3s)
         for (int i = 0; i < 10; i++)
         {
             await Task.Delay(300);
@@ -44,7 +43,6 @@ else if (isChecking)
             }
         }
 
-        // No session found — go to login
         isChecking = false;
         StateHasChanged();
         Nav.NavigateTo("/", forceLoad: false);
@@ -52,13 +50,6 @@ else if (isChecking)
 
     private async Task ValidateAndRedirect(string email)
     {
-        if (string.IsNullOrEmpty(RequiredRole))
-        {
-            isAuthenticated = true;
-            isChecking = false;
-            StateHasChanged();
-            return;
-        }
         try
         {
             var driver = await Supabase
@@ -73,14 +64,24 @@ else if (isChecking)
                 Nav.NavigateTo("/", forceLoad: false);
                 return;
             }
+
+            if (string.IsNullOrEmpty(RequiredRole))
+            {
+                isAuthenticated = true;
+                isChecking      = false;
+                StateHasChanged();
+                return;
+            }
+
             if (driver.Role != RequiredRole)
             {
                 isChecking = false;
                 Nav.NavigateTo(driver.Role == "Admin" ? "/admin" : "/driver", forceLoad: false);
                 return;
             }
+
             isAuthenticated = true;
-            isChecking = false;
+            isChecking      = false;
             StateHasChanged();
         }
         catch

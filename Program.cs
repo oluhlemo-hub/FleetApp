@@ -17,7 +17,7 @@ var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
 var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_KEY")
                   ?? builder.Configuration["Supabase:Key"]!;
 
-builder.Services.AddSingleton<Supabase.Client>(_ =>
+builder.Services.AddScoped<Supabase.Client>(_ =>
     new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
     {
         AutoRefreshToken = true,
@@ -30,11 +30,6 @@ builder.Services.AddScoped<ThemeService>(); // Handles per-user dark/light state
 builder.Services.AddScoped<FleetManagement.Services.ThemeService>();
 builder.Services.AddScoped<FleetManagement.Services.EmailService>();
 builder.Services.AddHostedService<FleetManagement.Services.MileageReminderService>();
-builder.Services.AddScoped<FleetManagement.Services.EmailService>();
-builder.Services.AddHostedService<FleetManagement.Services.MileageReminderService>();
-builder.Services.AddScoped<FleetManagement.Services.EmailService>();
-builder.Services.AddHostedService<FleetManagement.Services.MileageReminderService>();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

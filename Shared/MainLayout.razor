@@ -50,6 +50,7 @@
             <div class="fleet-sidebar-logo">
                 <img src="images/logo.png" alt="Fleet" style="width:28px;height:28px;object-fit:contain;" />
             </div>
+
             @if (userRole == "Admin")
             {
                 <NavLink class="fleet-sidebar-item" href="admin" Match="NavLinkMatch.All">
@@ -72,8 +73,13 @@
                     <span class="sidebar-label">Settings</span>
                 </NavLink>
             }
+
             <div class="fleet-sidebar-bottom">
-                <button class="fleet-sidebar-item fleet-sidebar-logout" @onclick="Logout">
+                <button class="fleet-sidebar-item fleet-sidebar-profile" @onclick="OpenProfile" type="button">
+                    <i class="bi bi-person-circle"></i>
+                    <span class="sidebar-label">Profile</span>
+                </button>
+                <button class="fleet-sidebar-item fleet-sidebar-logout" @onclick="Logout" type="button">
                     <i class="bi bi-box-arrow-right"></i>
                     <span class="sidebar-label">Sign out</span>
                 </button>
@@ -104,7 +110,7 @@
             <i class="bi bi-gear"></i>
             <span>Settings</span>
         </NavLink>
-        <button class="fleet-mobile-item fleet-mobile-btn" @onclick="OpenProfile">
+        <button class="fleet-mobile-item fleet-mobile-btn" @onclick="OpenProfile" type="button">
             <i class="bi bi-person-circle"></i>
             <span>Profile</span>
         </button>
@@ -112,11 +118,13 @@
 
 </div>
 
+@* Backdrop to close profile dropdown *@
 @if (showProfile)
 {
     <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 999;" @onclick="ToggleProfile"></div>
 }
 
+@* Profile modal *@
 @if (showProfileModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
@@ -124,7 +132,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-person-circle me-2"></i> My Profile</h5>
-                    <button type="button" class="btn-close" @onclick="() => showProfileModal = false"></button>
+                    <button type="button" class="btn-close" @onclick="CloseProfileModal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
@@ -153,7 +161,7 @@
                     <button class="btn btn-danger w-100" @onclick="Logout">
                         <i class="bi bi-box-arrow-right me-1"></i> Logout
                     </button>
-                    <button class="btn btn-secondary w-100" @onclick="() => showProfileModal = false">Close</button>
+                    <button class="btn btn-secondary w-100" @onclick="CloseProfileModal">Close</button>
                 </div>
             </div>
         </div>
@@ -238,13 +246,13 @@
         padding: 2px 6px;
         font-weight: 500;
     }
-    .fleet-badge-admin { background: #FAEEDA; color: #854F0B; }
+    .fleet-badge-admin  { background: #FAEEDA; color: #854F0B; }
     .fleet-badge-driver { background: var(--navy-50); color: var(--navy-900); }
 
     /* ── Profile dropdown ── */
     .fleet-profile-dropdown {
         position: absolute;
-        top: calc(100%% + 8px);
+        top: calc(100% + 8px);
         right: 0;
         width: 260px;
         background: #ffffff;
@@ -252,6 +260,7 @@
         border-radius: 12px;
         z-index: 1000;
         overflow: hidden;
+        box-shadow: 0 4px 20px rgba(4,44,83,0.15);
     }
     .fleet-profile-header {
         display: flex;
@@ -274,7 +283,7 @@
         font-weight: 500;
         flex-shrink: 0;
     }
-    .fleet-profile-name { font-size: 0.9rem; font-weight: 500; color: var(--navy-900); }
+    .fleet-profile-name  { font-size: 0.9rem; font-weight: 500; color: var(--navy-900); }
     .fleet-profile-email { font-size: 0.75rem; color: #5F5E5A; }
     .fleet-profile-actions { padding: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
     .fleet-profile-action {
@@ -331,14 +340,17 @@
         cursor: pointer;
         width: 100%;
         text-align: left;
+        transition: background 0.15s, color 0.15s;
     }
-    .fleet-sidebar-item i { font-size: 1.2rem; }
+    .fleet-sidebar-item i { font-size: 1.2rem; flex-shrink: 0; }
     .sidebar-label { display: none; }
-    .fleet-sidebar-item:hover { background: var(--navy-600); color: #ffffff; }
-    .fleet-sidebar-item.active { background: var(--navy-600); color: #ffffff; font-weight: 500; }
-    .fleet-sidebar-bottom { margin-top: auto; }
-    .fleet-sidebar-logout { color: #F09595; }
-    .fleet-sidebar-logout:hover { background: #501313; color: #F7C1C1; }
+    .fleet-sidebar-item:hover        { background: var(--navy-600); color: #ffffff; }
+    .fleet-sidebar-item.active       { background: var(--navy-600); color: #ffffff; font-weight: 500; }
+    .fleet-sidebar-bottom            { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
+    .fleet-sidebar-profile           { color: var(--navy-200); }
+    .fleet-sidebar-profile:hover     { background: var(--navy-600); color: #ffffff; }
+    .fleet-sidebar-logout            { color: #F09595; }
+    .fleet-sidebar-logout:hover      { background: #501313; color: #F7C1C1; }
 
     /* ── Main content ── */
     .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--surface); }
@@ -398,12 +410,12 @@
 </style>
 
 @code {
-    private bool showProfile = false;
+    private bool showProfile      = false;
     private bool showProfileModal = false;
-    private string userEmail = "";
-    private string userName = "";
-    private string userRole = "";
-    private string userPhone = "";
+    private string userEmail  = "";
+    private string userName   = "";
+    private string userRole   = "";
+    private string userPhone  = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -416,8 +428,6 @@
         }
         else
         {
-            // No session — AuthGuard on each page will redirect to login
-            // but also navigate here proactively to avoid blank sidebar
             Nav.NavigateTo("/", forceLoad: false);
         }
     }
@@ -436,8 +446,8 @@
 
             if (result != null)
             {
-                userName = result.Name;
-                userRole = result.Role;
+                userName  = result.Name;
+                userRole  = result.Role;
                 userPhone = result.Phone ?? "";
             }
             else
@@ -457,14 +467,30 @@
         ThemeService.OnThemeChanged -= OnThemeUpdated;
     }
 
-    private void ToggleProfile() => showProfile = !showProfile;
-    private void OpenProfile() { showProfile = false; showProfileModal = true; }
+    private void ToggleProfile()
+    {
+        showProfile = !showProfile;
+        StateHasChanged();
+    }
+
+    private void OpenProfile()
+    {
+        showProfile      = false;
+        showProfileModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseProfileModal()
+    {
+        showProfileModal = false;
+        StateHasChanged();
+    }
 
     private async Task Logout()
     {
         try
         {
-            showProfile = false;
+            showProfile      = false;
             showProfileModal = false;
             StateHasChanged();
             await Supabase.Auth.SignOut();
@@ -472,9 +498,6 @@
         catch { }
         finally
         {
-            // forceLoad: true forces a full browser reload which destroys
-            // the Blazor circuit and scoped Supabase client — required
-            // because Supabase.Client is AddScoped (lives for circuit lifetime)
             Nav.NavigateTo("/", forceLoad: true);
         }
     }
