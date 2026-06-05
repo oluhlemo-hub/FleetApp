@@ -1200,13 +1200,12 @@
         try
         {
             if (!hasVehicle || currentVehicle == null) return;
-            var cutoff = DateTime.UtcNow.AddHours(-12);
-            var recentTrips = await Supabase.From<TripHistory>()
-                .Filter("driver_email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                .Get();
-            var hasRecentTrip = recentTrips.Models.Any(t => t.CreatedAt >= cutoff);
-            if (!hasRecentTrip)
-                showMileageReminder = true;
+            if (currentVehicle.MileageUpdatedAt.HasValue)
+            {
+                var hoursSinceUpdate = (DateTime.UtcNow - currentVehicle.MileageUpdatedAt.Value).TotalHours;
+                if (hoursSinceUpdate < 8) return;
+            }
+            showMileageReminder = true;
         }
         catch { }
     }
@@ -1317,6 +1316,7 @@
         try
         {
             currentVehicle.Mileage = updateMileageValue;
+            currentVehicle.MileageUpdatedAt = DateTime.UtcNow;
             await Supabase.From<Vehicle>().Update(currentVehicle);
             mileageServiceWarning = currentVehicle.Mileage >= currentVehicle.ServiceDueKm;
             showMileageReminder = false;

@@ -18,6 +18,9 @@ namespace FleetManagement.Models
         public string Status { get; set; } = "Available";
         [Column("mileage")]
         public int Mileage { get; set; }
+
+        [Column("mileage_updated_at")]
+        public DateTime? MileageUpdatedAt { get; set; }
         [Column("service_due_km")]
         public int ServiceDueKm { get; set; }
         [Column("last_driver")]
