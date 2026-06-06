@@ -10,9 +10,9 @@
         <button class="btn btn-sm btn-outline-secondary" @onclick="GoToDashboard">
             <i class="bi bi-arrow-left me-1"></i> Dashboard
         </button>
-        <h2 class="fw-bold mb-0">Settings</h2>
+        <h2 class="fw-bold mb-0" style="color:var(--text-main);">Settings</h2>
     </div>
-    <p class="text-muted mb-4">Manage your preferences and account configuration.</p>
+    <p class="mb-4" style="color:var(--text-muted);">Manage your preferences and account configuration.</p>
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
@@ -46,15 +46,15 @@
                 <h5 class="fw-bold mb-3"><i class="bi bi-palette me-2 text-primary"></i>Personal Preferences</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Application Theme</label>
-                        <select class="form-select bg-body text-body" @bind="SelectedTheme">
+                        <label class="form-label fw-bold small" style="color:var(--text-main);">Application Theme</label>
+                        <select class="form-select" style="background:var(--input-bg);color:var(--text-main);border-color:var(--input-border);" @bind="SelectedTheme">
                             <option value="Light">Light Mode</option>
                             <option value="Dark">Dark Mode</option>
                         </select>
-                        <small class="text-muted">Switch between light and dark appearance.</small>
+                        <small style="color:var(--text-muted);">Switch between light and dark appearance.</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small">Accent / Button Colour</label>
+                        <label class="form-label fw-bold small" style="color:var(--text-main);">Accent / Button Colour</label>
                         <div class="d-flex gap-2 flex-wrap mt-1">
                             @foreach (var colour in AccentOptions)
                             {
@@ -67,7 +67,7 @@
                                 </button>
                             }
                         </div>
-                        <small class="text-muted">Changes button and highlight colours across the app.</small>
+                        <small style="color:var(--text-muted);">Changes button and highlight colours across the app.</small>
                     </div>
                 </div>
 
@@ -78,19 +78,19 @@
                     <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="notifEmail" @bind="NotifyByEmail" />
-                            <label class="form-check-label" for="notifEmail">Email Notifications</label>
+                            <label class="form-check-label" style="color:var(--text-main);" for="notifEmail">Email Notifications</label>
                         </div>
                     </div>
                     <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="notifSMS" @bind="NotifyBySMS" />
-                            <label class="form-check-label" for="notifSMS">SMS Notifications</label>
+                            <label class="form-check-label" style="color:var(--text-main);" for="notifSMS">SMS Notifications</label>
                         </div>
                     </div>
                     <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="notifPush" @bind="NotifyByPush" />
-                            <label class="form-check-label" for="notifPush">In-App Alerts</label>
+                            <label class="form-check-label" style="color:var(--text-main);" for="notifPush">In-App Alerts</label>
                         </div>
                     </div>
                 </div>
@@ -118,18 +118,18 @@
                     <h5 class="fw-bold mb-3"><i class="bi bi-building me-2 text-primary"></i>Organisation Settings</h5>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">Company / Tenant Name</label>
-                            <input class="form-control" @bind="CompanyName" placeholder="e.g. Acme Fleet Co." />
+                            <label class="form-label fw-bold small" style="color:var(--text-main);">Company / Tenant Name</label>
+                            <input class="form-control" style="background:var(--input-bg);color:var(--text-main);border-color:var(--input-border);" @bind="CompanyName" placeholder="e.g. Acme Fleet Co." />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">Support Email</label>
-                            <input type="email" class="form-control" @bind="SupportEmail" placeholder="support@company.com" />
+                            <label class="form-label fw-bold small" style="color:var(--text-main);">Support Email</label>
+                            <input type="email" class="form-control" style="background:var(--input-bg);color:var(--text-main);border-color:var(--input-border);" @bind="SupportEmail" placeholder="support@company.com" />
                         </div>
                     </div>
 
                     <!-- Logo Upload -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Company Logo</label>
+                        <label class="form-label fw-bold small" style="color:var(--text-main);">Company Logo</label>
                         <div class="d-flex align-items-center gap-3">
                             @if (!string.IsNullOrEmpty(LogoUrl))
                             {
@@ -156,25 +156,25 @@
                         <div class="col-md-6 mb-2">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="adminMaintenanceAlerts" @bind="MaintenanceAlerts" />
-                                <label class="form-check-label" for="adminMaintenanceAlerts">Maintenance Due Alerts</label>
+                                <label class="form-check-label" style="color:var(--text-main);" for="adminMaintenanceAlerts">Maintenance Due Alerts</label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="adminFuelAlerts" @bind="FuelAlerts" />
-                                <label class="form-check-label" for="adminFuelAlerts">Low Fuel / Fuel Log Alerts</label>
+                                <label class="form-check-label" style="color:var(--text-main);" for="adminFuelAlerts">Low Fuel / Fuel Log Alerts</label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="adminDocExpiry" @bind="DocExpiryAlerts" />
-                                <label class="form-check-label" for="adminDocExpiry">Document Expiry Alerts</label>
+                                <label class="form-check-label" style="color:var(--text-main);" for="adminDocExpiry">Document Expiry Alerts</label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="adminTripAlerts" @bind="TripAlerts" />
-                                <label class="form-check-label" for="adminTripAlerts">Trip Start / End Alerts</label>
+                                <label class="form-check-label" style="color:var(--text-main);" for="adminTripAlerts">Trip Start / End Alerts</label>
                             </div>
                         </div>
                     </div>
@@ -201,18 +201,18 @@
             <div class="card shadow-sm border-0 mb-4" style="border-radius:15px; background-color:var(--card-bg); color:var(--text-main);">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-people me-2 text-primary"></i>Team Settings</h5>
-                    <p class="text-muted small">Configure defaults for drivers and vehicles under your management.</p>
+                    <p class="small" style="color:var(--text-muted);">Configure defaults for drivers and vehicles under your management.</p>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">Default Trip Approval</label>
-                            <select class="form-select bg-body text-body" @bind="TripApprovalMode">
+                            <label class="form-label fw-bold small" style="color:var(--text-main);">Default Trip Approval</label>
+                            <select class="form-select" style="background:var(--input-bg);color:var(--text-main);border-color:var(--input-border);" @bind="TripApprovalMode">
                                 <option value="Auto">Auto-Approve</option>
                                 <option value="Manual">Require Manual Approval</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small">Fuel Log Approval</label>
-                            <select class="form-select bg-body text-body" @bind="FuelApprovalMode">
+                            <label class="form-label fw-bold small" style="color:var(--text-main);">Fuel Log Approval</label>
+                            <select class="form-select" style="background:var(--input-bg);color:var(--text-main);border-color:var(--input-border);" @bind="FuelApprovalMode">
                                 <option value="Auto">Auto-Approve</option>
                                 <option value="Manual">Require Manual Approval</option>
                             </select>
