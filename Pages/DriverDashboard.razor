@@ -97,22 +97,22 @@
         </div>
 
         <div class="action-grid-bottom">
-            <button class="action-tile-sm" @onclick="() => showLogFuel = true">
-                <i class="bi bi-fuel-pump action-tile-sm-amber"></i>
+            <button class="action-tile-sm action-tile-sm-amber" @onclick="() => showLogFuel = true">
+                <div class="tile-icon-wrap"><i class="bi bi-fuel-pump"></i></div>
                 <span>Fuel / Expense</span>
             </button>
-            <button class="action-tile-sm" @onclick="() => showUpdateMileage = true">
-                <i class="bi bi-speedometer2 action-tile-sm-green"></i>
+            <button class="action-tile-sm action-tile-sm-green" @onclick="() => showUpdateMileage = true">
+                <div class="tile-icon-wrap"><i class="bi bi-speedometer2"></i></div>
                 <span>Mileage</span>
             </button>
-            <button class="action-tile-sm" @onclick='() => OpenDvir("morning")'>
-                <i class="bi bi-clipboard-check action-tile-sm-purple"></i>
+            <button class="action-tile-sm action-tile-sm-purple" @onclick='() => OpenDvir("morning")'>
+                <div class="tile-icon-wrap"><i class="bi bi-clipboard-check"></i></div>
                 <span>Inspection</span>
             </button>
         </div>
 
         <button class="action-tile-full" @onclick="() => showReturnVehicle = true">
-            <i class="bi bi-car-front" style="color:var(--text-muted);"></i>
+            <div class="tile-icon-wrap" style="color:var(--text-muted);"><i class="bi bi-car-front"></i></div>
             <div>
                 <div>Return Vehicle</div>
                 <div class="action-tile-full-sub">End assignment for @currentVehicle.Registration</div>
@@ -127,7 +127,7 @@
             <p style="color:var(--text-muted);font-size:0.875rem;">Request a vehicle below to get started.</p>
         </div>
         <button class="action-tile-full" style="border-color:var(--accent-success);justify-content:center;" @onclick="OpenRequestVehicle">
-            <i class="bi bi-key" style="color:var(--accent-success);font-size:1.3rem;"></i>
+            <div class="tile-icon-wrap" style="color:var(--accent-success);background:rgba(26,122,74,0.1);"><i class="bi bi-key"></i></div>
             <span style="color:var(--accent-success);font-weight:700;">Request Vehicle</span>
         </button>
     }

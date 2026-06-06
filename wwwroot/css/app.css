@@ -322,33 +322,55 @@ body {
 /* Bottom row (3 compact tiles) */
 .action-grid-bottom {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 12px;
 }
 .action-tile-sm {
-  border-radius: 14px;
-  padding: 14px 10px;
+  border-radius: 16px;
+  padding: 18px 10px 14px;
   background: var(--card-bg);
-  border: 1.5px solid var(--border-color);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.15s, box-shadow 0.15s;
-  font-size: 0.78rem;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--text-main);
   text-align: center;
+  position: relative;
+  overflow: hidden;
 }
-.action-tile-sm:hover { transform: translateY(-2px); box-shadow: var(--shadow-elevated); }
-.action-tile-sm i { font-size: 1.3rem; }
-.action-tile-sm-green  { color: var(--accent-success); }
-.action-tile-sm-amber  { color: var(--accent-warning); }
-.action-tile-sm-purple { color: #7c5cbf; }
-.theme-dark .action-tile-sm-purple { color: #a07ae0; }
+.action-tile-sm:hover { transform: translateY(-3px); box-shadow: var(--shadow-elevated); }
+.action-tile-sm .tile-icon-wrap {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  transition: transform 0.18s;
+}
+.action-tile-sm:hover .tile-icon-wrap { transform: scale(1.1); }
+.action-tile-sm-green .tile-icon-wrap  {
+  background: linear-gradient(135deg, #e8f8ee, #c8f0d8);
+  color: var(--accent-success);
+}
+.action-tile-sm-amber .tile-icon-wrap  {
+  background: linear-gradient(135deg, #fff3e0, #fde0b0);
+  color: var(--accent-warning);
+}
+.action-tile-sm-purple .tile-icon-wrap {
+  background: linear-gradient(135deg, #ede8fb, #d8c8f7);
+  color: #7c5cbf;
+}
+.theme-dark .action-tile-sm-green .tile-icon-wrap  { background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.08)); }
+.theme-dark .action-tile-sm-amber .tile-icon-wrap  { background: linear-gradient(135deg, rgba(240,160,48,0.15), rgba(240,160,48,0.08)); }
+.theme-dark .action-tile-sm-purple .tile-icon-wrap { background: linear-gradient(135deg, rgba(124,92,191,0.15), rgba(124,92,191,0.08)); color: #a07ae0; }
+.theme-light .action-tile-sm { box-shadow: 0 2px 8px rgba(4,44,83,0.08); }
+.theme-light .action-tile-sm:hover { box-shadow: 0 8px 20px rgba(4,44,83,0.14); }
 
 /* Full-width tiles */
 .action-tile-full {
@@ -369,14 +391,16 @@ body {
   text-align: left;
 }
 .action-tile-full:hover { transform: translateY(-2px); box-shadow: var(--shadow-elevated); }
-.action-tile-full i {
-  font-size: 1.2rem;
+.action-tile-full .tile-icon-wrap {
   width: 44px; height: 44px;
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   background: var(--surface-raised);
+  font-size: 1.2rem;
   flex-shrink: 0;
+  transition: transform 0.18s;
 }
+.action-tile-full:hover .tile-icon-wrap { transform: scale(1.08); }
 .action-tile-full-sub { font-size: 0.73rem; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
 
 /* No vehicle state */
