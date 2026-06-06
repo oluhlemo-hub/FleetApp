@@ -235,56 +235,58 @@
 
     @if (activeTab == "vehicles")
     {
-        <div class="fleet-table-wrap d-none d-md-block">
-            <table class="fleet-table">
-                <thead>
-                    <tr>
-                        <th>Vehicle</th>
-                        <th>Registration</th>
-                        <th>Status</th>
-                        <th>Mileage</th>
-                        <th>Service Due</th>
-                        <th>Driver</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (vehicles.Any())
-                    {
-                        @foreach (var car in vehicles)
+        <div class="card shadow-sm d-none d-md-block" style="background:var(--card-bg);border-color:var(--border-color);">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0" style="color:var(--text-main);">
+                    <thead style="background:var(--surface-navy);">
+                        <tr>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Vehicle</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Registration</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Status</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Mileage</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Service Due</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Driver</th>
+                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (vehicles.Any())
                         {
-                            <tr>
-                                <td>
-                                    <button class="vehicle-name-btn"
-                                            @onclick="() => OpenVehicleHistory(car)">
-                                        @car.Make @car.Model
-                                    </button>
-                                </td>
-                                <td><span class="reg-text">@car.Registration</span></td>
-                                <td><span class="badge @GetStatusBadge(car.Status)">@car.Status</span></td>
-                                <td style="color:var(--text-muted);">@car.Mileage.ToString("N0") km</td>
-                                <td>
-                                    @if (car.Mileage >= car.ServiceDueKm)
-                                    { <span style="color:var(--accent-danger);font-weight:700;">@car.ServiceDueKm.ToString("N0") km ⚠️</span> }
-                                    else
-                                    { <span style="color:var(--text-muted);">@car.ServiceDueKm.ToString("N0") km</span> }
-                                </td>
-                                <td style="color:var(--text-muted);">@(string.IsNullOrEmpty(car.LastDriver) ? "Unassigned" : car.LastDriver)</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => SelectVehicle(car)" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteVehicle(car)" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
+                            @foreach (var car in vehicles)
+                            {
+                                <tr style="border-bottom:1px solid var(--border-color);">
+                                    <td style="padding:13px 16px;color:var(--text-main);border:none;">
+                                        <button class="btn btn-link p-0 fw-semibold text-decoration-none"
+                                                style="color:var(--accent-primary);"
+                                                @onclick="() => OpenVehicleHistory(car)">
+                                            @car.Make @car.Model
+                                        </button>
+                                    </td>
+                                    <td style="padding:13px 16px;border:none;">
+                                        <span style="font-family:monospace;font-weight:700;font-size:0.85rem;background:var(--surface-raised);color:var(--text-main);padding:3px 8px;border-radius:6px;border:1px solid var(--border-color);">@car.Registration</span>
+                                    </td>
+                                    <td style="padding:13px 16px;border:none;"><span class="badge @GetStatusBadge(car.Status)">@car.Status</span></td>
+                                    <td style="padding:13px 16px;color:var(--text-muted);border:none;">@car.Mileage.ToString("N0") km</td>
+                                    <td style="padding:13px 16px;border:none;">
+                                        @if (car.Mileage >= car.ServiceDueKm)
+                                        { <span style="color:var(--accent-danger);font-weight:700;">@car.ServiceDueKm.ToString("N0") km ⚠️</span> }
+                                        else
+                                        { <span style="color:var(--text-muted);">@car.ServiceDueKm.ToString("N0") km</span> }
+                                    </td>
+                                    <td style="padding:13px 16px;color:var(--text-muted);border:none;">@(string.IsNullOrEmpty(car.LastDriver) ? "Unassigned" : car.LastDriver)</td>
+                                    <td style="padding:13px 16px;border:none;">
+                                        <div class="d-flex gap-1">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => SelectVehicle(car)"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteVehicle(car)"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No vehicles found.</td></tr>
-                    }
-                </tbody>
-            </table>
+                        else { <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No vehicles found.</td></tr> }
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="d-md-none">
