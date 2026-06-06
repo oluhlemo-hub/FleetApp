@@ -175,7 +175,6 @@
         --navy-400: #378ADD;
         --navy-200: #B5D4F4;
         --navy-50:  #E6F1FB;
-        --surface:  #f5f7fa;
     }
 
     .page { min-height: 100vh; background: var(--page-bg); color: var(--text-main); }
@@ -183,7 +182,7 @@
     /* ── Top bar ── */
     .fleet-topbar {
         height: 56px;
-        background: var(--surface-navy, #042C53);
+        background: var(--surface-navy);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -191,8 +190,8 @@
         position: sticky;
         top: 0;
         z-index: 100;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        transition: background 0.25s;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.25s, border-color 0.25s;
     }
     .fleet-brand {
         display: flex;
@@ -309,14 +308,14 @@
     .fleet-sidebar {
         width: 64px;
         min-width: 64px;
-        background: var(--surface-navy, #042C53);
+        background: var(--surface-navy);
         display: flex;
         flex-direction: column;
         padding: 1rem 0.75rem;
         gap: 4px;
         flex-shrink: 0;
         border-right: 1px solid var(--border-color);
-        transition: background 0.25s;
+        transition: background 0.25s, border-color 0.25s;
     }
     .fleet-sidebar-logo {
         width: 36px;
@@ -356,7 +355,7 @@
     .fleet-sidebar-logout:hover      { background: #501313; color: #F7C1C1; }
 
     /* ── Main content ── */
-    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--page-bg); transition: background 0.25s; }
+    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--page-bg); color: var(--text-main); transition: background 0.25s; }
 
     /* ── Mobile nav ── */
     .fleet-mobile-nav {
@@ -366,8 +365,8 @@
         left: 0;
         right: 0;
         height: 64px;
-        background: var(--surface-navy, #042C53);
-        border-top: 1px solid rgba(255,255,255,0.08);
+        background: var(--surface-navy);
+        border-top: 1px solid var(--border-color);
         z-index: 200;
         flex-direction: row;
         align-items: center;

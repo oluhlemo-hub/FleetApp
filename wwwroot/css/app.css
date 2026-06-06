@@ -7,9 +7,9 @@
   --page-bg:        #f0f4f8;
   --card-bg:        #ffffff;
   --card-bg-raised: #f8fafc;
-  --surface-navy:   #042C53;
-  --surface-raised: #e8f0f8;
-  --border-color:   #dde4ed;
+  --surface-navy:   #1a3a5c;
+  --surface-raised: #dce8f5;
+  --border-color:   #c8d8ea;
   --text-main:      #0d1f35;
   --text-muted:     #5a7a99;
   --text-inverse:   #ffffff;
@@ -298,10 +298,23 @@ body {
 .theme-dark .action-tile-icon-amber { background: linear-gradient(135deg, rgba(240,160,48,0.15), rgba(240,160,48,0.08)); }
 .theme-dark .action-tile-icon-green { background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.08)); }
 
+/* Light mode tile depth */
+.theme-light .action-tile { box-shadow: 0 2px 8px rgba(4,44,83,0.08), 0 0 0 0 transparent; }
+.theme-light .action-tile:hover { box-shadow: 0 8px 24px rgba(4,44,83,0.14); }
+.theme-light .action-tile-sm { box-shadow: 0 2px 8px rgba(4,44,83,0.08); }
+.theme-light .action-tile-sm:hover { box-shadow: 0 8px 20px rgba(4,44,83,0.14); }
+.theme-light .action-tile-full { box-shadow: 0 2px 8px rgba(4,44,83,0.08); }
+.theme-light .action-tile-full:hover { box-shadow: 0 8px 20px rgba(4,44,83,0.14); }
+
 .action-tile-accent-blue  { border-top: 3px solid var(--accent-primary); }
+.theme-light .action-tile-accent-blue  { box-shadow: 0 4px 14px rgba(24,95,165,0.15); }
+.theme-light .action-tile-accent-blue:hover  { background: linear-gradient(160deg, #f0f6ff, #fff); }
 .action-tile-accent-red   { border-top: 3px solid var(--accent-danger); }
+.theme-light .action-tile-accent-red:hover   { background: linear-gradient(160deg, #fff5f5, #fff); }
 .action-tile-accent-amber { border-top: 3px solid var(--accent-warning); }
+.theme-light .action-tile-accent-amber:hover { background: linear-gradient(160deg, #fff8f0, #fff); }
 .action-tile-accent-green { border-top: 3px solid var(--accent-success); }
+.theme-light .action-tile-accent-green:hover { background: linear-gradient(160deg, #f0fff5, #fff); }
 
 .action-tile-title { font-size: 0.92rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
 .action-tile-sub   { font-size: 0.73rem; color: var(--text-muted); line-height: 1.3; }
