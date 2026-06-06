@@ -9,582 +9,502 @@
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div class="alert alert-success alert-dismissible">
-            @successMessage
+        <div class="alert alert-success alert-dismissible mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i>@successMessage
             <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
         </div>
     }
 
     @if (hasVehicle && !todayDvirDone)
     {
-        <div class="alert alert-warning d-flex align-items-center gap-2 mt-2" role="alert">
-            <i class="bi bi-clipboard-check fs-4 flex-shrink-0"></i>
-            <div class="flex-grow-1">
-                <strong>Daily Inspection Required</strong>
-                <div class="small">Complete your walk-around checklist before driving today.</div>
+        <div class="dvir-banner">
+            <i class="bi bi-clipboard-check dvir-banner-icon"></i>
+            <div class="dvir-banner-text">
+                <strong>Inspection due</strong>
+                <span>Complete before driving</span>
             </div>
-            <button class="btn btn-warning btn-sm fw-semibold flex-shrink-0"
-                    @onclick='() => OpenDvir("morning")'>
-                <i class="bi bi-play-fill me-1"></i> Start
-            </button>
+            <button class="dvir-banner-btn" @onclick='() => OpenDvir("morning")'>Start</button>
         </div>
     }
     @if (hasVehicle && todayDvirDone)
     {
-        <div class="alert alert-success d-flex align-items-center gap-2 mt-2 py-2">
-            <i class="bi bi-clipboard-check-fill flex-shrink-0"></i>
-            <div class="small">Today's inspection completed ✓</div>
-            <button class="btn btn-sm btn-outline-success ms-auto"
-                    @onclick='() => OpenDvir("morning")'>Re-inspect</button>
-        </div>
-    }
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger alert-dismissible">
-            @errorMessage
-            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
-        </div>
-    }
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-body text-center py-4">
-            <div class="mb-2">
-                <i class="bi bi-truck display-4 text-primary opacity-75"></i>
+        <div class="dvir-banner dvir-banner-done">
+            <i class="bi bi-clipboard-check-fill dvir-banner-icon"></i>
+            <div class="dvir-banner-text">
+                <strong>Inspection complete ✓</strong>
+                <span>Today's walk-around done</span>
             </div>
-            <h6 class="text-muted text-uppercase small fw-semibold mb-2">Assigned Vehicle</h6>
-            @if (hasVehicle)
-            {
-                <h2 class="display-6 fw-bold mb-1">@currentVehicle.Registration</h2>
-                <p class="text-muted mb-2">@currentVehicle.Make @currentVehicle.Model</p>
-                <span class="badge bg-info fs-6 px-3 py-2">@currentVehicle.Status</span>
-                @if (currentVehicle.Mileage >= currentVehicle.ServiceDueKm)
-                {
-                    <div class="alert alert-warning mt-3 py-2 mb-0">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        Service overdue at <strong>@currentVehicle.ServiceDueKm km</strong>
-                    </div>
-                }
-            }
-            else
-            {
-                <h4 class="text-muted">No vehicle assigned</h4>
-                <p class="text-muted small">Request a vehicle below to get started.</p>
-            }
+            <button class="dvir-banner-btn" @onclick='() => OpenDvir("morning")'>Re-check</button>
         </div>
-    </div>
+    }
 
-    <div class="row g-3">
-        <div class="col-6">
+    @if (hasVehicle)
+    {
+        <div class="vehicle-card">
+            <div class="vehicle-card-label">Assigned Vehicle</div>
+            <div class="vehicle-card-reg">@currentVehicle.Registration</div>
+            <div class="vehicle-card-model">@currentVehicle.Make @currentVehicle.Model</div>
+            <div class="vehicle-badge-active">Active</div>
+            @if (currentVehicle.Mileage >= currentVehicle.ServiceDueKm)
+            {
+                <div class="alert alert-warning py-2 mb-3 small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Service overdue — due at <strong>@currentVehicle.ServiceDueKm km</strong>
+                </div>
+            }
+            <div class="vehicle-stats">
+                <div class="vehicle-stat">
+                    <div class="vehicle-stat-label">Mileage</div>
+                    <div class="vehicle-stat-value">@currentVehicle.Mileage.ToString("N0") km</div>
+                </div>
+                <div class="vehicle-stat">
+                    <div class="vehicle-stat-label">Service Due</div>
+                    <div class="vehicle-stat-value">@currentVehicle.ServiceDueKm.ToString("N0") km</div>
+                </div>
+                <div class="vehicle-stat">
+                    <div class="vehicle-stat-label">Last Driver</div>
+                    <div class="vehicle-stat-value" style="font-size:0.8rem;">@(string.IsNullOrEmpty(currentVehicle.LastDriver) ? "—" : currentVehicle.LastDriver)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-grid-top">
             @if (currentVehicle.Status == "In Service")
             {
-                <button class="btn btn-success w-100 py-3 d-flex flex-column align-items-center gap-1"
-                        @onclick="() => showCollectService = true"
-                        disabled="@(!hasVehicle)">
-                    <i class="bi bi-check-circle fs-4"></i>
-                    <span class="small">Collect from Service</span>
+                <button class="action-tile action-tile-accent-green" @onclick="() => showCollectService = true">
+                    <div class="action-tile-icon action-tile-icon-green"><i class="bi bi-check-circle"></i></div>
+                    <div class="action-tile-title">Collect Vehicle</div>
+                    <div class="action-tile-sub">Back from service</div>
                 </button>
             }
             else
             {
-                <button class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center gap-1"
-                        @onclick="() => showBookService = true"
-                        disabled="@(!hasVehicle)">
-                    <i class="bi bi-tools fs-4"></i>
-                    <span class="small">Book Service</span>
+                <button class="action-tile action-tile-accent-blue" @onclick="() => showBookService = true">
+                    <div class="action-tile-icon action-tile-icon-blue"><i class="bi bi-tools"></i></div>
+                    <div class="action-tile-title">Book Service</div>
+                    <div class="action-tile-sub">Schedule maintenance</div>
                 </button>
             }
-        </div>
-        <div class="col-6">
-            <button class="btn btn-danger w-100 py-3 d-flex flex-column align-items-center gap-1"
-                    @onclick="() => showReportFault = true"
-                    disabled="@(!hasVehicle)">
-                <i class="bi bi-exclamation-triangle fs-4"></i>
-                <span class="small">Report Fault</span>
+            <button class="action-tile action-tile-accent-red" @onclick="() => showReportFault = true">
+                <div class="action-tile-icon action-tile-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="action-tile-title">Report Fault</div>
+                <div class="action-tile-sub">Log a vehicle issue</div>
             </button>
         </div>
 
-        <!-- NEW: Fuel & Expense button -->
-        <div class="col-12">
-            <button class="btn btn-warning w-100 py-3 d-flex align-items-center justify-content-center gap-2"
-                    @onclick="() => showLogFuel = true"
-                    disabled="@(!hasVehicle)">
-                <i class="bi bi-fuel-pump fs-5"></i>
-                <span>Log Fuel / Expense</span>
+        <div class="action-grid-bottom">
+            <button class="action-tile-sm" @onclick="() => showLogFuel = true">
+                <i class="bi bi-fuel-pump action-tile-sm-amber"></i>
+                <span>Fuel / Expense</span>
+            </button>
+            <button class="action-tile-sm" @onclick="() => showUpdateMileage = true">
+                <i class="bi bi-speedometer2 action-tile-sm-green"></i>
+                <span>Mileage</span>
+            </button>
+            <button class="action-tile-sm" @onclick='() => OpenDvir("morning")'>
+                <i class="bi bi-clipboard-check action-tile-sm-purple"></i>
+                <span>Inspection</span>
             </button>
         </div>
 
-        <div class="col-12">
-            @if (hasVehicle)
-            {
-                <button class="btn btn-dark w-100 py-3 d-flex align-items-center justify-content-center gap-2"
-                        @onclick="() => showReturnVehicle = true">
-                    <i class="bi bi-car-front fs-5"></i>
-                    <span>Return Vehicle</span>
-                </button>
-            }
-            else
-            {
-                <button class="btn btn-success w-100 py-3 d-flex align-items-center justify-content-center gap-2"
-                        @onclick="OpenRequestVehicle">
-                    <i class="bi bi-key fs-5"></i>
-                    <span>Request Vehicle</span>
-                </button>
-            }
-        </div>
-    </div>
-
-    <!-- Book Service Modal -->
-    @if (showBookService)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-tools me-2"></i>Book Service</h5>
-                <div class="mb-3">
-                    <label class="form-label">Service Station</label>
-                    <input class="form-control form-control-lg" @bind="serviceStation" placeholder="e.g. AutoZone Sandton" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Current Mileage (km)</label>
-                    <input type="number" class="form-control form-control-lg" @bind="serviceMileage" placeholder="e.g. 45000" />
-                </div>
-                <div class="mb-4">
-                    <label class="form-label">Vehicle</label>
-                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitBookService" disabled="@isSubmitting">
-                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => showBookService = false">Cancel</button>
-                </div>
+        <button class="action-tile-full" @onclick="() => showReturnVehicle = true">
+            <i class="bi bi-car-front" style="color:var(--text-muted);"></i>
+            <div>
+                <div>Return Vehicle</div>
+                <div class="action-tile-full-sub">End assignment for @currentVehicle.Registration</div>
             </div>
-        </div>
+        </button>
     }
-
-    <!-- Collect from Service Modal -->
-    @if (showCollectService)
+    else
     {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-check-circle me-2 text-success"></i>Collect from Service</h5>
-                <div class="mb-3">
-                    <label class="form-label">Vehicle</label>
-                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Updated Mileage after Service (km)</label>
-                    <input type="number" class="form-control form-control-lg" @bind="collectMileage" placeholder="e.g. 45200" />
-                    <small class="text-muted">Next service will be set to this mileage + 10,000 km.</small>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Service Report</label>
-                    <InputFile OnChange="OnServiceReportSelected" accept="image/*,application/pdf" class="form-control" />
-                    @if (serviceReportName != null)
-                    {
-                        <div class="mt-2 d-flex align-items-center gap-2">
-                            <i class="bi @(serviceReportName.EndsWith(".pdf") ? "bi-file-pdf text-danger" : "bi-image text-primary") fs-5"></i>
-                            <small class="text-muted">@serviceReportName</small>
-                        </div>
-                    }
-                    <small class="text-muted d-block mt-1">Upload the service report or take a photo of it. Accepts image or PDF.</small>
-                </div>
-                @if (!string.IsNullOrEmpty(collectError))
-                {
-                    <div class="alert alert-danger py-2 mb-3">@collectError</div>
-                }
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-success btn-lg w-100" @onclick="SubmitCollectService" disabled="@isSubmitting">
-                        @if (isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>Processing...</span>
-                        }
-                        else
-                        {
-                            <i class="bi bi-check-lg me-1"></i>
-                            <span>Confirm Collection</span>
-                        }
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => { showCollectService = false; collectError = string.Empty; }">Cancel</button>
-                </div>
-            </div>
+        <div class="no-vehicle-card">
+            <div class="no-vehicle-icon"><i class="bi bi-truck"></i></div>
+            <h5 style="color:var(--text-main);font-weight:700;">No Vehicle Assigned</h5>
+            <p style="color:var(--text-muted);font-size:0.875rem;">Request a vehicle below to get started.</p>
         </div>
-    }
-
-    <!-- Report Fault Modal -->
-    @if (showReportFault)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Report Fault</h5>
-                <div class="mb-3">
-                    <label class="form-label">Fault Type</label>
-                    <select class="form-select form-select-lg" @bind="faultType">
-                        <option value="">-- Select type --</option>
-                        <option>Mechanical</option>
-                        <option>Accident</option>
-                        <option>Electrical</option>
-                        <option>Tyre</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" rows="4" @bind="faultDescription"
-                              placeholder="Describe the fault in detail..."></textarea>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label">Photo (optional)</label>
-                    <InputFile OnChange="OnFaultPhotoSelected" accept="image/*" class="form-control" />
-                    @if (faultPhotoName != null)
-                    {
-                        <small class="text-muted mt-1 d-block"><i class="bi bi-image me-1"></i>@faultPhotoName</small>
-                    }
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-danger btn-lg w-100" @onclick="SubmitFaultReport" disabled="@isSubmitting">
-                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit Report
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => showReportFault = false">Cancel</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- ══════════════════════════════════════════════════ -->
-    <!-- LOG FUEL / EXPENSE MODAL                           -->
-    <!-- ══════════════════════════════════════════════════ -->
-    @if (showLogFuel)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-1"><i class="bi bi-fuel-pump me-2 text-warning"></i>Log Fuel / Expense</h5>
-                <p class="text-muted small mb-3">@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model</p>
-
-                <!-- Expense Type Toggle -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Expense Type</label>
-                    <div class="d-flex gap-2">
-                        <button class="btn @(fuelExpenseType == "Fuel" ? "btn-warning" : "btn-outline-secondary") flex-grow-1"
-                                @onclick='() => fuelExpenseType = "Fuel"'>
-                            <i class="bi bi-fuel-pump me-1"></i> Fuel
-                        </button>
-                        <button class="btn @(fuelExpenseType == "Other" ? "btn-secondary" : "btn-outline-secondary") flex-grow-1"
-                                @onclick='() => fuelExpenseType = "Other"'>
-                            <i class="bi bi-receipt me-1"></i> Other Expense
-                        </button>
-                    </div>
-                </div>
-
-                @if (fuelExpenseType == "Fuel")
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Fuel Type</label>
-                        <select class="form-select" @bind="fuelType">
-                            <option value="">-- Select fuel type --</option>
-                            <option>Petrol 93</option>
-                            <option>Petrol 95</option>
-                            <option>Diesel</option>
-                            <option>LPG</option>
-                        </select>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="form-label">Litres</label>
-                            <div class="input-group">
-                                <input type="number" step="0.01" class="form-control" @bind="fuelLitres" placeholder="e.g. 45.5" />
-                                <span class="input-group-text">L</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Cost (R)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">R</span>
-                                <input type="number" step="0.01" class="form-control" @bind="fuelCost" placeholder="e.g. 950.00" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Mileage</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" @bind="fuelMileage" placeholder="e.g. 47500" />
-                            <span class="input-group-text">km</span>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Station Name (optional)</label>
-                        <input class="form-control" @bind="fuelStation" placeholder="e.g. Engen Sandton" />
-                    </div>
-                }
-                else
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" @bind="fuelExpenseCategory">
-                            <option value="">-- Select category --</option>
-                            <option>Toll</option>
-                            <option>Parking</option>
-                            <option>Car Wash</option>
-                            <option>Tyre</option>
-                            <option>Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Amount (R)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">R</span>
-                            <input type="number" step="0.01" class="form-control" @bind="fuelCost" placeholder="e.g. 120.00" />
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description (optional)</label>
-                        <input class="form-control" @bind="fuelExpenseDescription" placeholder="e.g. N1 toll gate northbound" />
-                    </div>
-                }
-
-                <!-- Receipt Photo (required) -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">
-                        Receipt Photo <span class="text-danger">*</span>
-                    </label>
-                    <InputFile OnChange="OnReceiptSelected" accept="image/*" class="form-control" />
-                    @if (fuelReceiptName != null)
-                    {
-                        <div class="mt-2 d-flex align-items-center gap-2">
-                            <i class="bi bi-image text-success fs-5"></i>
-                            <small class="text-muted">@fuelReceiptName</small>
-                            <button class="btn btn-sm btn-link text-danger p-0 ms-auto"
-                                    @onclick="() => { fuelReceiptFile = null; fuelReceiptName = null; }">
-                                <i class="bi bi-x-circle"></i>
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <small class="text-muted d-block mt-1">A photo of the receipt is required.</small>
-                    }
-                </div>
-
-                <!-- Fuel Card Number -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Fuel Card Number</label>
-                    <input class="form-control" @bind="fuelCardNumber" 
-                           placeholder="e.g. 4567-8901-2345"
-                           readonly="@(!string.IsNullOrEmpty(driverFuelCardNumber))"
-                           style="@(!string.IsNullOrEmpty(driverFuelCardNumber) ? "background-color:#e9ecef;cursor:not-allowed;" : "")" />
-                    @if (!string.IsNullOrEmpty(driverFuelCardNumber))
-                    {
-                        <div class="form-text text-success"><i class="bi bi-lock-fill me-1"></i>Assigned card — cannot be changed here.</div>
-                    }
-                    else
-                    {
-                        <div class="form-text text-muted">Auto-filled from your profile if a card is assigned.</div>
-                    }
-                    <small class="text-muted">Auto-filled from your profile if a card is assigned.</small>
-                </div>
-
-                @if (!string.IsNullOrEmpty(fuelError))
-                {
-                    <div class="alert alert-danger py-2 mb-3">@fuelError</div>
-                }
-
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-warning btn-lg w-100 text-dark fw-semibold" @onclick="SubmitFuelLog" disabled="@isSubmitting">
-                        @if (isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>Saving...</span>
-                        }
-                        else
-                        {
-                            <i class="bi bi-check-lg me-1"></i>
-                            <span>Save Log</span>
-                        }
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="CloseFuelModal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Return Vehicle Modal -->
-    @if (showReturnVehicle)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-car-front me-2"></i>Return Vehicle</h5>
-                <div class="mb-3">
-                    <label class="form-label">Vehicle</label>
-                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Updated Mileage (km)</label>
-                    <input type="number" class="form-control form-control-lg" @bind="returnMileage" placeholder="e.g. 46500" />
-                </div>
-                <div class="mb-4">
-                    <label class="form-label">Vehicle Condition</label>
-                    <select class="form-select form-select-lg" @bind="returnCondition">
-                        <option value="">-- Select condition --</option>
-                        <option>Clean</option>
-                        <option>Dirty</option>
-                        <option>Good</option>
-                    </select>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-dark btn-lg w-100" @onclick="SubmitReturnVehicle" disabled="@isSubmitting">
-                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Confirm Return
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => showReturnVehicle = false">Cancel</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Request Vehicle Modal -->
-    @if (showRequestVehicle)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-key me-2"></i>Request Vehicle</h5>
-                @if (!isOtpSent)
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Available Vehicles</label>
-                        @if (availableVehicles.Any())
-                        {
-                            <select class="form-select form-select-lg" @bind="requestedVehicleId">
-                                <option value="">-- Select vehicle --</option>
-                                @foreach (var v in availableVehicles)
-                                {
-                                    <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
-                                }
-                            </select>
-                        }
-                        else
-                        {
-                            <div class="alert alert-warning py-2">
-                                <i class="bi bi-info-circle me-1"></i> No vehicles currently available.
-                            </div>
-                        }
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Current Mileage (km)</label>
-                        <input type="number" class="form-control form-control-lg" @bind="requestMileage" placeholder="e.g. 45000" />
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Admin Email Address</label>
-                        <input type="email" class="form-control form-control-lg" @bind="requestApprover" placeholder="admin@yourcompany.com" />
-                    </div>
-                    <div class="d-flex flex-column gap-2">
-                        <button class="btn btn-primary btn-lg w-100" @onclick="GenerateAndRequestOtp"
-                                disabled="@(string.IsNullOrEmpty(requestedVehicleId) || requestMileage <= 0 || string.IsNullOrEmpty(requestApprover) || isSubmitting)">
-                            @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span><span>Sending Email...</span> }
-                            else { <span>Request Approval OTP</span> }
-                        </button>
-                        <button class="btn btn-outline-secondary w-100" @onclick="() => showRequestVehicle = false">Cancel</button>
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-info py-2 mb-3 text-center">
-                        <i class="bi bi-envelope-check me-1"></i> An approval code was sent to <strong>@requestApprover</strong>.
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Enter 6-Digit Admin OTP</label>
-                        <input type="text" maxlength="6" class="form-control form-control-lg text-center letter-spacing-lg fw-bold"
-                               @bind="enteredOtp" placeholder="000000" />
-                    </div>
-                    <div class="d-flex flex-column gap-2">
-                        <button class="btn btn-success btn-lg w-100" @onclick="SubmitVehicleRequest" disabled="@isSubmitting">
-                            @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Verify & Claim Vehicle
-                        </button>
-                        <button class="btn btn-link text-muted small w-100" @onclick="() => isOtpSent = false">Back to change email</button>
-                    </div>
-                }
-            </div>
-        </div>
-    }
-
-    <!-- Update Mileage Modal -->
-    @if (showUpdateMileage)
-    {
-        <div class="modal-backdrop-custom">
-            <div class="modal-card card shadow p-4">
-                <h5 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>Update Mileage</h5>
-                @if (!hasVehicle)
-                {
-                    <div class="alert alert-warning">No vehicle is currently assigned to you.</div>
-                }
-                else
-                {
-                    <div class="mb-3">
-                        <label class="form-label">Vehicle</label>
-                        <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Current Mileage (km)</label>
-                        <input type="number" class="form-control form-control-lg" @bind="updateMileageValue" placeholder="e.g. 47200" />
-                    </div>
-                    @if (mileageServiceWarning)
-                    {
-                        <div class="alert alert-warning py-2 mb-3">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Service is due at <strong>@currentVehicle.ServiceDueKm km</strong>. Please book a service.
-                        </div>
-                    }
-                }
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-primary btn-lg w-100" @onclick="SubmitUpdateMileage" disabled="@(!hasVehicle || isSubmitting)">
-                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Save Mileage
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="CloseUpdateMileage">Cancel</button>
-                </div>
-            </div>
-        </div>
+        <button class="action-tile-full" style="border-color:var(--accent-success);justify-content:center;" @onclick="OpenRequestVehicle">
+            <i class="bi bi-key" style="color:var(--accent-success);font-size:1.3rem;"></i>
+            <span style="color:var(--accent-success);font-weight:700;">Request Vehicle</span>
+        </button>
     }
 
 </div>
 
-<style>
-    .modal-backdrop-custom {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.55);
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        z-index: 1050;
-        padding: 0;
-    }
-    .modal-card {
-        width: 100%;
-        max-width: 520px;
-        border-radius: 20px 20px 0 0;
-        max-height: 92vh;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
-    }
-    .letter-spacing-lg {
-        letter-spacing: 0.5rem;
-        font-size: 1.5rem;
-    }
-    @@media (min-width: 576px) {
-        .modal-backdrop-custom {
-            align-items: center;
-            padding: 1rem;
-        }
-        .modal-card {
-            border-radius: 16px;
-            max-height: 90vh;
-        }
-    }
-</style>
+@if (showBookService)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-tools me-2" style="color:var(--accent-primary);"></i>Book Service</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Service Station</label>
+                <input class="form-control" @bind="serviceStation" placeholder="e.g. AutoZone Sandton" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Current Mileage (km)</label>
+                <input type="number" class="form-control" @bind="serviceMileage" placeholder="e.g. 45000" />
+            </div>
+            <div class="mb-4">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Vehicle</label>
+                <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-primary btn-lg w-100" @onclick="SubmitBookService" disabled="@isSubmitting">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="() => showBookService = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- DVIR CHECKLIST MODAL                               -->
-<!-- ══════════════════════════════════════════════════ -->
+@if (showCollectService)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-check-circle me-2" style="color:var(--accent-success);"></i>Collect from Service</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Vehicle</label>
+                <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Updated Mileage after Service (km)</label>
+                <input type="number" class="form-control" @bind="collectMileage" placeholder="e.g. 45200" />
+                <small style="color:var(--text-muted);">Next service set to this mileage + 10,000 km.</small>
+            </div>
+            <div class="mb-4">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Service Report</label>
+                <InputFile OnChange="OnServiceReportSelected" accept="image/*,application/pdf" class="form-control" />
+                @if (serviceReportName != null)
+                {
+                    <div class="mt-2 d-flex align-items-center gap-2">
+                        <i class="bi @(serviceReportName.EndsWith(".pdf") ? "bi-file-pdf" : "bi-image") fs-5" style="color:var(--accent-primary);"></i>
+                        <small style="color:var(--text-muted);">@serviceReportName</small>
+                    </div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(collectError))
+            {
+                <div class="alert alert-danger py-2 mb-3">@collectError</div>
+            }
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-success btn-lg w-100" @onclick="SubmitCollectService" disabled="@isSubmitting">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span><span>Processing...</span> }
+                    else { <i class="bi bi-check-lg me-1"></i><span>Confirm Collection</span> }
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="() => { showCollectService = false; collectError = string.Empty; }">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showReportFault)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-exclamation-triangle me-2" style="color:var(--accent-danger);"></i>Report Fault</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Fault Type</label>
+                <select class="form-select" @bind="faultType">
+                    <option value="">-- Select type --</option>
+                    <option>Mechanical</option><option>Accident</option>
+                    <option>Electrical</option><option>Tyre</option><option>Other</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Description</label>
+                <textarea class="form-control" rows="4" @bind="faultDescription" placeholder="Describe the fault in detail..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Photo (optional)</label>
+                <InputFile OnChange="OnFaultPhotoSelected" accept="image/*" class="form-control" />
+                @if (faultPhotoName != null)
+                {
+                    <small style="color:var(--text-muted);"><i class="bi bi-image me-1"></i>@faultPhotoName</small>
+                }
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-danger btn-lg w-100" @onclick="SubmitFaultReport" disabled="@isSubmitting">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Submit Report
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="() => showReportFault = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showLogFuel)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-1" style="color:var(--text-main);"><i class="bi bi-fuel-pump me-2" style="color:var(--accent-warning);"></i>Log Fuel / Expense</h5>
+            <p style="color:var(--text-muted);font-size:0.8rem;" class="mb-3">@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model</p>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Expense Type</label>
+                <div class="d-flex gap-2">
+                    <button class="btn @(fuelExpenseType == "Fuel" ? "btn-warning" : "btn-outline-secondary") flex-grow-1" @onclick='() => fuelExpenseType = "Fuel"'>
+                        <i class="bi bi-fuel-pump me-1"></i> Fuel
+                    </button>
+                    <button class="btn @(fuelExpenseType == "Other" ? "btn-secondary" : "btn-outline-secondary") flex-grow-1" @onclick='() => fuelExpenseType = "Other"'>
+                        <i class="bi bi-receipt me-1"></i> Other
+                    </button>
+                </div>
+            </div>
+            @if (fuelExpenseType == "Fuel")
+            {
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Fuel Type</label>
+                    <select class="form-select" @bind="fuelType">
+                        <option value="">-- Select fuel type --</option>
+                        <option>Petrol 93</option><option>Petrol 95</option>
+                        <option>Diesel</option><option>LPG</option>
+                    </select>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Litres</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" @bind="fuelLitres" placeholder="45.5" />
+                            <span class="input-group-text">L</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R</span>
+                            <input type="number" step="0.01" class="form-control" @bind="fuelCost" placeholder="950.00" />
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Mileage</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" @bind="fuelMileage" placeholder="47500" />
+                        <span class="input-group-text">km</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Station (optional)</label>
+                    <input class="form-control" @bind="fuelStation" placeholder="e.g. Engen Sandton" />
+                </div>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Category</label>
+                    <select class="form-select" @bind="fuelExpenseCategory">
+                        <option value="">-- Select category --</option>
+                        <option>Toll</option><option>Parking</option>
+                        <option>Car Wash</option><option>Tyre</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R</span>
+                        <input type="number" step="0.01" class="form-control" @bind="fuelCost" placeholder="120.00" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Description (optional)</label>
+                    <input class="form-control" @bind="fuelExpenseDescription" placeholder="e.g. N1 toll gate" />
+                </div>
+            }
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Receipt Photo <span style="color:var(--accent-danger);">*</span></label>
+                <InputFile OnChange="OnReceiptSelected" accept="image/*" class="form-control" />
+                @if (fuelReceiptName != null)
+                {
+                    <div class="mt-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-image fs-5" style="color:var(--accent-success);"></i>
+                        <small style="color:var(--text-muted);">@fuelReceiptName</small>
+                        <button class="btn btn-sm btn-link p-0 ms-auto" style="color:var(--accent-danger);"
+                                @onclick="() => { fuelReceiptFile = null; fuelReceiptName = null; }">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Fuel Card Number</label>
+                <input class="form-control" @bind="fuelCardNumber" placeholder="e.g. 4567-8901-2345"
+                       readonly="@(!string.IsNullOrEmpty(driverFuelCardNumber))" />
+                @if (!string.IsNullOrEmpty(driverFuelCardNumber))
+                {
+                    <div class="form-text" style="color:var(--accent-success);"><i class="bi bi-lock-fill me-1"></i>Assigned card — cannot be changed here.</div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(fuelError))
+            {
+                <div class="alert alert-danger py-2 mb-3">@fuelError</div>
+            }
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-warning btn-lg w-100 fw-semibold text-dark" @onclick="SubmitFuelLog" disabled="@isSubmitting">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span><span>Saving...</span> }
+                    else { <i class="bi bi-check-lg me-1"></i><span>Save Log</span> }
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="CloseFuelModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showReturnVehicle)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-car-front me-2"></i>Return Vehicle</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Vehicle</label>
+                <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Updated Mileage (km)</label>
+                <input type="number" class="form-control" @bind="returnMileage" placeholder="e.g. 46500" />
+            </div>
+            <div class="mb-4">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Vehicle Condition</label>
+                <select class="form-select" @bind="returnCondition">
+                    <option value="">-- Select condition --</option>
+                    <option>Clean</option><option>Dirty</option><option>Good</option>
+                </select>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-dark btn-lg w-100" @onclick="SubmitReturnVehicle" disabled="@isSubmitting">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Confirm Return
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="() => showReturnVehicle = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showRequestVehicle)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-key me-2" style="color:var(--accent-primary);"></i>Request Vehicle</h5>
+            @if (!isOtpSent)
+            {
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Available Vehicles</label>
+                    @if (availableVehicles.Any())
+                    {
+                        <select class="form-select" @bind="requestedVehicleId">
+                            <option value="">-- Select vehicle --</option>
+                            @foreach (var v in availableVehicles)
+                            {
+                                <option value="@v.Id">@v.Registration — @v.Make @v.Model</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning py-2 small">No vehicles currently available.</div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Current Mileage (km)</label>
+                    <input type="number" class="form-control" @bind="requestMileage" placeholder="e.g. 45000" />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Admin Email Address</label>
+                    <input type="email" class="form-control" @bind="requestApprover" placeholder="admin@yourcompany.com" />
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-primary btn-lg w-100" @onclick="GenerateAndRequestOtp"
+                            disabled="@(string.IsNullOrEmpty(requestedVehicleId) || requestMileage <= 0 || string.IsNullOrEmpty(requestApprover) || isSubmitting)">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span><span>Sending...</span> }
+                        else { <span>Request Approval OTP</span> }
+                    </button>
+                    <button class="btn btn-outline-secondary w-100" @onclick="() => showRequestVehicle = false">Cancel</button>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info py-2 mb-3 text-center small">
+                    Code sent to <strong>@requestApprover</strong>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Enter 6-Digit Admin OTP</label>
+                    <input type="text" maxlength="6" class="form-control form-control-lg text-center letter-spacing-lg fw-bold"
+                           @bind="enteredOtp" placeholder="000000" />
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-success btn-lg w-100" @onclick="SubmitVehicleRequest" disabled="@isSubmitting">
+                        @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Verify & Claim Vehicle
+                    </button>
+                    <button class="btn btn-link w-100" style="color:var(--text-muted);" @onclick="() => isOtpSent = false">Back</button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (showUpdateMileage)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-speedometer2 me-2" style="color:var(--accent-primary);"></i>Update Mileage</h5>
+            @if (!hasVehicle)
+            {
+                <div class="alert alert-warning">No vehicle is currently assigned to you.</div>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Vehicle</label>
+                    <input class="form-control" value="@currentVehicle.Registration — @currentVehicle.Make @currentVehicle.Model" disabled />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Current Mileage (km)</label>
+                    <input type="number" class="form-control form-control-lg" @bind="updateMileageValue" placeholder="e.g. 47200" />
+                </div>
+                @if (mileageServiceWarning)
+                {
+                    <div class="alert alert-warning py-2 mb-3 small">
+                        Service due at <strong>@currentVehicle.ServiceDueKm km</strong>. Please book a service.
+                    </div>
+                }
+            }
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-primary btn-lg w-100" @onclick="SubmitUpdateMileage" disabled="@(!hasVehicle || isSubmitting)">
+                    @if (isSubmitting) { <span class="spinner-border spinner-border-sm me-2"></span> } Save Mileage
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="CloseUpdateMileage">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showMileageReminder)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card" style="text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:8px;">⚠️</div>
+            <h5 style="color:var(--text-main);font-weight:700;">Mileage Update Required</h5>
+            <p style="color:var(--text-muted);font-size:0.875rem;">You haven't logged your mileage recently.</p>
+            <div class="alert alert-warning py-2 text-start small">
+                <strong>Vehicle:</strong> @currentVehicle?.Registration<br/>
+                <strong>Current:</strong> @currentVehicle?.Mileage km
+            </div>
+            <div class="d-flex flex-column gap-2 mt-3">
+                <button class="btn btn-warning btn-lg w-100 fw-bold"
+                        @onclick="() => { showMileageReminder = false; showUpdateMileage = true; }">
+                    <i class="bi bi-speedometer2 me-2"></i>Update Mileage Now
+                </button>
+                <button class="btn btn-outline-secondary w-100" @onclick="() => showMileageReminder = false">Remind Me Later</button>
+            </div>
+        </div>
+    </div>
+}
+
 @if (showDvirModal)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:1055;">
@@ -605,7 +525,7 @@
                     }
                     @if (!dvirItems.Any())
                     {
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center py-4" style="color:var(--text-muted);">
                             <div class="spinner-border spinner-border-sm me-2"></div> Loading checklist...
                         </div>
                     }
@@ -630,23 +550,16 @@
                                                 <span class="fw-semibold small">@item.Name</span>
                                                 <div class="d-flex gap-1">
                                                     <button class="btn btn-sm @(result == "pass" ? "btn-success" : "btn-outline-success")"
-                                                            @onclick='() => SetDvirResult(itemId, "pass")'>
-                                                        <i class="bi bi-check-lg"></i>
-                                                    </button>
+                                                            @onclick='() => SetDvirResult(itemId, "pass")'><i class="bi bi-check-lg"></i></button>
                                                     <button class="btn btn-sm @(result == "fail" ? "btn-danger" : "btn-outline-danger")"
-                                                            @onclick='() => SetDvirResult(itemId, "fail")'>
-                                                        <i class="bi bi-x-lg"></i>
-                                                    </button>
+                                                            @onclick='() => SetDvirResult(itemId, "fail")'><i class="bi bi-x-lg"></i></button>
                                                     <button class="btn btn-sm @(result == "na" ? "btn-secondary" : "btn-outline-secondary")"
-                                                            @onclick='() => SetDvirResult(itemId, "na")'>
-                                                        N/A
-                                                    </button>
+                                                            @onclick='() => SetDvirResult(itemId, "na")'>N/A</button>
                                                 </div>
                                             </div>
                                             @if (result == "fail")
                                             {
-                                                <input class="form-control form-control-sm mt-1"
-                                                       placeholder="Describe the issue..."
+                                                <input class="form-control form-control-sm mt-1" placeholder="Describe the issue..."
                                                        value="@dvirItemNotes.GetValueOrDefault(itemId, string.Empty)"
                                                        @oninput='e => dvirItemNotes[itemId] = e.Value?.ToString() ?? string.Empty' />
                                             }
@@ -660,26 +573,20 @@
                                 <div class="progress-bar @(failures > 0 ? "bg-danger" : "bg-success")"
                                      style="width:@(total > 0 ? (answered * 100 / total) : 0)%"></div>
                             </div>
-                            <small class="text-muted flex-shrink-0">@answered / @total</small>
+                            <small style="color:var(--text-muted);" class="flex-shrink-0">@answered / @total</small>
                         </div>
                         @if (failures > 0)
                         {
                             <div class="alert alert-warning py-2 small mt-2">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                <strong>@failures item@(failures == 1 ? "" : "s") flagged.</strong>
-                                The trip will be allowed but admin will be notified.
+                                <strong>@failures item@(failures == 1 ? "" : "s") flagged.</strong> Admin will be notified.
                             </div>
                         }
                     }
                 </div>
                 <div class="modal-footer flex-column gap-2">
-                    <button class="btn btn-warning w-100 fw-semibold"
-                            @onclick="SubmitDvir"
+                    <button class="btn btn-warning w-100 fw-semibold" @onclick="SubmitDvir"
                             disabled="@(isDvirSubmitting || dvirResults.Count < dvirItems.Count)">
-                        @if (isDvirSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-1"></span>
-                        }
+                        @if (isDvirSubmitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
                         <i class="bi bi-clipboard-check me-1"></i>
                         @(dvirResults.Count < dvirItems.Count
                             ? $"Answer all items ({dvirItems.Count - dvirResults.Count} remaining)"
@@ -694,71 +601,32 @@
 
 </AuthGuard>
 
-
-@if (showMileageReminder)
-{
-    <div class="modal-backdrop-custom" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1050;display:flex;align-items:center;justify-content:center;">
-        <div class="card shadow-lg" style="max-width:420px;width:90%;border-radius:16px;overflow:hidden;">
-            <div class="card-body p-4">
-                <div class="text-center mb-3">
-                    <span style="font-size:2.5rem;">⚠️</span>
-                    <h5 class="mt-2 fw-bold">Mileage Update Required</h5>
-                    <p class="text-muted small">You have not logged a trip or updated your mileage recently.</p>
-                </div>
-                <div class="alert alert-warning py-2 text-center">
-                    <strong>Vehicle:</strong> @currentVehicle?.Registration<br/>
-                    <strong>Current Mileage:</strong> @currentVehicle?.Mileage km
-                </div>
-                <p class="text-center small text-muted">Please update your mileage to keep fleet records accurate.</p>
-                <div class="d-flex flex-column gap-2 mt-3">
-                    <button class="btn btn-warning btn-lg w-100 fw-bold" @onclick="() => { showMileageReminder = false; showUpdateMileage = true; }">
-                        <i class="bi bi-speedometer2 me-2"></i>Update Mileage Now
-                    </button>
-                    <button class="btn btn-outline-secondary w-100" @onclick="() => showMileageReminder = false">
-                        Remind Me Later
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
     private Vehicle currentVehicle = new();
     private List<Vehicle> availableVehicles = new();
     private bool hasVehicle = false;
     private string currentUserEmail = string.Empty;
-
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
     private bool isSubmitting = false;
 
-    // Book Service
     private bool showBookService = false;
     private string serviceStation = string.Empty;
     private int serviceMileage;
-
-    // Collect from Service
     private bool showCollectService = false;
     private int collectMileage;
     private IBrowserFile? serviceReportFile;
     private string? serviceReportName;
     private string collectError = string.Empty;
     private string emailError = string.Empty;
-
-    // Report Fault
     private bool showReportFault = false;
     private string faultType = string.Empty;
     private string faultDescription = string.Empty;
     private string? faultPhotoName;
     private IBrowserFile? faultPhoto;
-
-    // Return Vehicle
     private bool showReturnVehicle = false;
     private int returnMileage;
     private string returnCondition = string.Empty;
-
-    // Request Vehicle
     private bool showRequestVehicle = false;
     private string requestedVehicleId = string.Empty;
     private int requestMileage;
@@ -766,16 +634,12 @@
     private bool isOtpSent = false;
     private string generatedOtp = string.Empty;
     private string enteredOtp = string.Empty;
-
-    // Update Mileage
     private bool showUpdateMileage = false;
     private bool showMileageReminder = false;
     private int updateMileageValue;
     private bool mileageServiceWarning = false;
-
-    // Fuel & Expense Logging
     private bool showLogFuel = false;
-    private string fuelExpenseType = "Fuel";   // "Fuel" or "Other"
+    private string fuelExpenseType = "Fuel";
     private string fuelType = string.Empty;
     private decimal fuelLitres;
     private decimal fuelCost;
@@ -788,40 +652,26 @@
     private string fuelError = string.Empty;
     private string fuelCardNumber = string.Empty;
     private string driverFuelCardNumber = string.Empty;
-
-    // ── DVIR ────────────────────────────────────────────────────────────────
+    private bool fuelSubmitAttempted = false;
     private bool showDvirModal = false;
-    private string dvirTrigger = "morning"; // morning | pre_trip | post_trip
+    private string dvirTrigger = "morning";
     private List<FleetManagement.Models.DvirChecklistItem> dvirItems = new();
-    private Dictionary<string, string> dvirResults = new();   // itemId -> pass/fail/na
-    private Dictionary<string, string> dvirItemNotes = new(); // itemId -> notes
+    private Dictionary<string, string> dvirResults = new();
+    private Dictionary<string, string> dvirItemNotes = new();
     private bool isDvirSubmitting = false;
     private string dvirError = "";
     private bool todayDvirDone = false;
     private bool dvirRequiredForTrip = false;
-    private bool fuelSubmitAttempted = false;
 
     protected override async Task OnInitializedAsync()
     {
         var session = Supabase.Auth.CurrentSession;
-        if (session?.User?.Email != null)
-        {
-            currentUserEmail = session.User.Email;
-            await LoadData();
-            await CheckMileageReminder();
-            return;
-        }
+        if (session?.User?.Email != null) { currentUserEmail = session.User.Email; await LoadData(); await CheckMileageReminder(); return; }
         for (int i = 0; i < 20; i++)
         {
             await Task.Delay(250);
             session = Supabase.Auth.CurrentSession;
-            if (session?.User?.Email != null)
-            {
-                currentUserEmail = session.User.Email;
-                await LoadData();
-                await CheckMileageReminder();
-                return;
-            }
+            if (session?.User?.Email != null) { currentUserEmail = session.User.Email; await LoadData(); await CheckMileageReminder(); return; }
         }
     }
 
@@ -831,11 +681,7 @@
         {
             var uri = new Uri(Navigation.Uri);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-            if (query["action"] == "update-mileage")
-            {
-                showUpdateMileage = true;
-                StateHasChanged();
-            }
+            if (query["action"] == "update-mileage") { showUpdateMileage = true; StateHasChanged(); }
         }
     }
 
@@ -846,46 +692,20 @@
             string driverName = currentUserEmail;
             try
             {
-                var driverRecord = await Supabase.From<Driver>()
-                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                    .Single();
-                if (driverRecord != null)
-                    driverName = driverRecord.Name;
+                var driverRecord = await Supabase.From<Driver>().Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail).Single();
+                if (driverRecord != null) driverName = driverRecord.Name;
             }
             catch { }
-
-            var assigned = await Supabase.From<Vehicle>()
-                .Filter("last_driver", Postgrest.Constants.Operator.Equals, driverName)
-                .Get();
-
-            if (assigned.Models.Any())
-            {
-                currentVehicle = assigned.Models.First();
-                hasVehicle = true;
-            }
-            else
-            {
-                currentVehicle = new();
-                hasVehicle = false;
-            }
+            var assigned = await Supabase.From<Vehicle>().Filter("last_driver", Postgrest.Constants.Operator.Equals, driverName).Get();
+            if (assigned.Models.Any()) { currentVehicle = assigned.Models.First(); hasVehicle = true; }
+            else { currentVehicle = new(); hasVehicle = false; }
         }
-
-        var available = await Supabase.From<Vehicle>()
-            .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
-            .Get();
+        var available = await Supabase.From<Vehicle>().Filter("status", Postgrest.Constants.Operator.Equals, "Available").Get();
         availableVehicles = available.Models;
-
-        // Auto-fill driver fuel card number
         try
         {
-            var driverRec = await Supabase.From<Driver>()
-                .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                .Single();
-            if (!string.IsNullOrEmpty(driverRec?.FuelCardNumber))
-            {
-                fuelCardNumber = driverRec.FuelCardNumber;
-                driverFuelCardNumber = driverRec.FuelCardNumber;
-            }
+            var driverRec = await Supabase.From<Driver>().Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail).Single();
+            if (!string.IsNullOrEmpty(driverRec?.FuelCardNumber)) { fuelCardNumber = driverRec.FuelCardNumber; driverFuelCardNumber = driverRec.FuelCardNumber; }
         }
         catch { }
         await CheckTodayDvir();
@@ -893,136 +713,80 @@
 
     private async Task OpenRequestVehicle()
     {
-        var available = await Supabase.From<Vehicle>()
-            .Filter("status", Postgrest.Constants.Operator.Equals, "Available")
-            .Get();
+        var available = await Supabase.From<Vehicle>().Filter("status", Postgrest.Constants.Operator.Equals, "Available").Get();
         availableVehicles = available.Models;
-        isOtpSent = false;
-        enteredOtp = string.Empty;
-        showRequestVehicle = true;
+        isOtpSent = false; enteredOtp = string.Empty; showRequestVehicle = true;
     }
 
-    private void OnFaultPhotoSelected(InputFileChangeEventArgs e)
-    {
-        faultPhoto = e.File;
-        faultPhotoName = e.File.Name;
-    }
-
-    private void OnServiceReportSelected(InputFileChangeEventArgs e)
-    {
-        serviceReportFile = e.File;
-        serviceReportName = e.File.Name;
-    }
-
-    private void OnReceiptSelected(InputFileChangeEventArgs e)
-    {
-        fuelReceiptFile = e.File;
-        fuelReceiptName = e.File.Name;
-    }
+    private void OnFaultPhotoSelected(InputFileChangeEventArgs e) { faultPhoto = e.File; faultPhotoName = e.File.Name; }
+    private void OnServiceReportSelected(InputFileChangeEventArgs e) { serviceReportFile = e.File; serviceReportName = e.File.Name; }
+    private void OnReceiptSelected(InputFileChangeEventArgs e) { fuelReceiptFile = e.File; fuelReceiptName = e.File.Name; }
 
     private void CloseFuelModal()
     {
-        showLogFuel = false;
-        fuelExpenseType = "Fuel";
-        fuelType = string.Empty;
-        fuelLitres = 0;
-        fuelCost = 0;
-        fuelMileage = 0;
-        fuelStation = string.Empty;
-        fuelExpenseCategory = string.Empty;
-        fuelExpenseDescription = string.Empty;
-        fuelReceiptFile = null;
-        fuelReceiptName = null;
-        fuelError = string.Empty;
-        fuelCardNumber = string.Empty;
-        fuelSubmitAttempted = false;
+        showLogFuel = false; fuelExpenseType = "Fuel"; fuelType = string.Empty;
+        fuelLitres = 0; fuelCost = 0; fuelMileage = 0; fuelStation = string.Empty;
+        fuelExpenseCategory = string.Empty; fuelExpenseDescription = string.Empty;
+        fuelReceiptFile = null; fuelReceiptName = null; fuelError = string.Empty;
+        fuelCardNumber = string.Empty; fuelSubmitAttempted = false;
     }
 
     private async Task SubmitFuelLog()
     {
-        fuelError = string.Empty;
-
-        // Validation
-        fuelSubmitAttempted = true;
+        fuelError = string.Empty; fuelSubmitAttempted = true;
         if (fuelExpenseType == "Fuel")
         {
-            if (string.IsNullOrWhiteSpace(fuelType))   { fuelError = "Please select a fuel type."; return; }
-            if (fuelLitres <= 0)                        { fuelError = "Please enter a valid number of litres."; return; }
-            if (fuelCost <= 0)                          { fuelError = "Please enter the cost."; return; }
-            if (fuelMileage <= 0)                      { fuelError = "Please enter the current mileage."; return; }
+            if (string.IsNullOrWhiteSpace(fuelType)) { fuelError = "Please select a fuel type."; return; }
+            if (fuelLitres <= 0) { fuelError = "Please enter a valid number of litres."; return; }
+            if (fuelCost <= 0) { fuelError = "Please enter the cost."; return; }
+            if (fuelMileage <= 0) { fuelError = "Please enter the current mileage."; return; }
         }
         else
         {
             if (string.IsNullOrWhiteSpace(fuelExpenseCategory)) { fuelError = "Please select an expense category."; return; }
-            if (fuelCost <= 0)                                   { fuelError = "Please enter the amount."; return; }
+            if (fuelCost <= 0) { fuelError = "Please enter the amount."; return; }
         }
         if (fuelReceiptFile == null) { fuelError = "A receipt photo is required."; return; }
-
         isSubmitting = true;
         try
         {
             string receiptUrl = string.Empty;
-
-            // Upload receipt if provided
             if (fuelReceiptFile != null)
             {
                 try
                 {
                     var ext = Path.GetExtension(fuelReceiptFile.Name);
                     var fileName = $"fuel-receipts/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{ext}";
-
                     using var stream = fuelReceiptFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
                     using var ms = new MemoryStream();
                     await stream.CopyToAsync(ms);
                     var bytes = ms.ToArray();
-
-                    await Supabase.Storage
-                        .From("vehicle-documents")
-                        .Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
-
-                    receiptUrl = Supabase.Storage
-                        .From("vehicle-documents")
-                        .GetPublicUrl(fileName);
+                    await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+                    receiptUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
                 }
-                catch
-                {
-                    // Receipt upload failed but we still save the log
-                }
+                catch { }
             }
-
             var log = new FuelLog
             {
-                Id                 = Guid.NewGuid().ToString(),
-                VehicleId          = currentVehicle.Id,
-                VehicleRegistration = currentVehicle.Registration,
-                DriverEmail        = currentUserEmail,
-                ExpenseType        = fuelExpenseType,
-                FuelType           = fuelExpenseType == "Fuel" ? fuelType : null,
-                Litres             = fuelExpenseType == "Fuel" ? fuelLitres : null,
-                Cost               = fuelCost,
-                MileageKm         = fuelExpenseType == "Fuel" ? fuelMileage : null,
-                StationName        = fuelExpenseType == "Fuel" ? fuelStation : null,
-                ExpenseCategory    = fuelExpenseType == "Other" ? fuelExpenseCategory : null,
+                Id = Guid.NewGuid().ToString(), VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration, DriverEmail = currentUserEmail,
+                ExpenseType = fuelExpenseType, FuelType = fuelExpenseType == "Fuel" ? fuelType : null,
+                Litres = fuelExpenseType == "Fuel" ? fuelLitres : null, Cost = fuelCost,
+                MileageKm = fuelExpenseType == "Fuel" ? fuelMileage : null,
+                StationName = fuelExpenseType == "Fuel" ? fuelStation : null,
+                ExpenseCategory = fuelExpenseType == "Other" ? fuelExpenseCategory : null,
                 ExpenseDescription = fuelExpenseType == "Other" ? fuelExpenseDescription : null,
-                ReceiptUrl         = receiptUrl,
-                FuelCardNumber     = fuelCardNumber,
-                LoggedAt           = DateTime.UtcNow
+                ReceiptUrl = receiptUrl, FuelCardNumber = fuelCardNumber, LoggedAt = DateTime.UtcNow
             };
-
             await Supabase.From<FuelLog>().Insert(log);
-
-            // Optionally update vehicle odometer if fuel fill-up odometer is higher
             if (fuelExpenseType == "Fuel" && fuelMileage > currentVehicle.Mileage)
             {
                 currentVehicle.Mileage = fuelMileage;
                 await Supabase.From<Vehicle>().Update(currentVehicle);
                 await LoadData();
             }
-
             CloseFuelModal();
-            successMessage = fuelExpenseType == "Fuel"
-                ? $"Fuel log saved — {fuelLitres}L for R{fuelCost:F2}."
-                : $"Expense logged — R{fuelCost:F2} ({fuelExpenseCategory}).";
+            successMessage = fuelExpenseType == "Fuel" ? $"Fuel log saved — {fuelLitres}L for R{fuelCost:F2}." : $"Expense logged — R{fuelCost:F2} ({fuelExpenseCategory}).";
         }
         catch (Exception ex) { fuelError = $"Failed to save log: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1030,22 +794,15 @@
 
     private async Task SubmitBookService()
     {
-        if (string.IsNullOrWhiteSpace(serviceStation) || serviceMileage <= 0)
-        {
-            errorMessage = "Please fill in all fields.";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(serviceStation) || serviceMileage <= 0) { errorMessage = "Please fill in all fields."; return; }
         isSubmitting = true;
         try
         {
-            currentVehicle.Status = "In Service";
-            currentVehicle.Mileage = serviceMileage;
+            currentVehicle.Status = "In Service"; currentVehicle.Mileage = serviceMileage;
             await Supabase.From<Vehicle>().Update(currentVehicle);
-            await LoadData();
-            showBookService = false;
-            successMessage = $"Service booked at {serviceStation}. Button will change to 'Collect from Service' when ready.";
-            serviceStation = string.Empty;
-            serviceMileage = 0;
+            await LoadData(); showBookService = false;
+            successMessage = $"Service booked at {serviceStation}.";
+            serviceStation = string.Empty; serviceMileage = 0;
         }
         catch (Exception ex) { errorMessage = $"Failed to book service: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1056,7 +813,6 @@
         collectError = string.Empty;
         if (collectMileage <= 0) { collectError = "Please enter the updated mileage after service."; return; }
         if (serviceReportFile == null) { collectError = "Please upload the service report or a photo of it."; return; }
-
         isSubmitting = true;
         try
         {
@@ -1066,49 +822,27 @@
                 var extension = Path.GetExtension(serviceReportFile.Name);
                 var fileName = $"service-reports/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                 using var stream = serviceReportFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-                using var ms = new MemoryStream();
-                await stream.CopyToAsync(ms);
+                using var ms = new MemoryStream(); await stream.CopyToAsync(ms);
                 var bytes = ms.ToArray();
-                await Supabase.Storage.From("vehicle-documents")
-                    .Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+                await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
                 reportUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
             }
             catch { collectError = "Warning: report upload failed, but mileage was updated."; }
-
             var serviceRecord = new ServiceHistory
             {
-                Id = Guid.NewGuid().ToString(),
-                VehicleId = currentVehicle.Id,
-                VehicleRegistration = currentVehicle.Registration,
-                DriverEmail = currentUserEmail,
-                MileageAtService = collectMileage,
-                NextServiceKm = collectMileage + 10000,
-                ReportUrl = reportUrl,
-                ServicedAt = DateTime.UtcNow
+                Id = Guid.NewGuid().ToString(), VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration, DriverEmail = currentUserEmail,
+                MileageAtService = collectMileage, NextServiceKm = collectMileage + 10000,
+                ReportUrl = reportUrl, ServicedAt = DateTime.UtcNow
             };
             await Supabase.From<ServiceHistory>().Insert(serviceRecord);
-            try
-            {
-                await EmailService.SendServiceReportAsync(
-                    currentVehicle.Registration,
-                    currentUserEmail,
-                    collectMileage,
-                    reportUrl);
-            }
+            try { await EmailService.SendServiceReportAsync(currentVehicle.Registration, currentUserEmail, collectMileage, reportUrl); }
             catch (Exception emailEx) { emailError = emailEx.Message; }
-            currentVehicle.Status = "Active";
-            currentVehicle.Mileage = collectMileage;
-            currentVehicle.ServiceDueKm = collectMileage + 10000;
+            currentVehicle.Status = "Active"; currentVehicle.Mileage = collectMileage; currentVehicle.ServiceDueKm = collectMileage + 10000;
             await Supabase.From<Vehicle>().Update(currentVehicle);
-            await LoadData();
-            showCollectService = false;
-            var finalMileage = collectMileage;
-            collectMileage = 0;
-            serviceReportFile = null;
-            serviceReportName = null;
-            successMessage = string.IsNullOrEmpty(emailError)
-                ? $"Vehicle collected from service. Mileage updated to {finalMileage} km. Next service due at {finalMileage + 10000} km."
-                : $"Vehicle collected but email failed: {emailError}";
+            await LoadData(); showCollectService = false;
+            var finalMileage = collectMileage; collectMileage = 0; serviceReportFile = null; serviceReportName = null;
+            successMessage = string.IsNullOrEmpty(emailError) ? $"Vehicle collected. Next service due at {finalMileage + 10000} km." : $"Vehicle collected but email failed: {emailError}";
         }
         catch (Exception ex) { collectError = $"Failed to collect vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1116,32 +850,19 @@
 
     private async Task SubmitFaultReport()
     {
-        if (string.IsNullOrWhiteSpace(faultType) || string.IsNullOrWhiteSpace(faultDescription))
-        {
-            errorMessage = "Please select a fault type and add a description.";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(faultType) || string.IsNullOrWhiteSpace(faultDescription)) { errorMessage = "Please select a fault type and add a description."; return; }
         isSubmitting = true;
         try
         {
             var fault = new Fault
             {
-                Id = Guid.NewGuid().ToString(),
-                VehicleId = currentVehicle.Id,
-                VehicleRegistration = currentVehicle.Registration,
-                DriverEmail = currentUserEmail,
-                FaultType = faultType,
-                Description = faultDescription,
-                Status = "Open",
-                CreatedAt = DateTime.UtcNow
+                Id = Guid.NewGuid().ToString(), VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration, DriverEmail = currentUserEmail,
+                FaultType = faultType, Description = faultDescription, Status = "Open", CreatedAt = DateTime.UtcNow
             };
             await Supabase.From<Fault>().Insert(fault);
-            showReportFault = false;
-            successMessage = "Fault report submitted successfully.";
-            faultType = string.Empty;
-            faultDescription = string.Empty;
-            faultPhoto = null;
-            faultPhotoName = null;
+            showReportFault = false; successMessage = "Fault report submitted successfully.";
+            faultType = string.Empty; faultDescription = string.Empty; faultPhoto = null; faultPhotoName = null;
         }
         catch (Exception ex) { errorMessage = $"Failed to submit fault report: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1149,47 +870,29 @@
 
     private async Task SubmitReturnVehicle()
     {
-        if (returnMileage <= 0 || string.IsNullOrWhiteSpace(returnCondition))
-        {
-            errorMessage = "Please enter mileage and condition.";
-            return;
-        }
+        if (returnMileage <= 0 || string.IsNullOrWhiteSpace(returnCondition)) { errorMessage = "Please enter mileage and condition."; return; }
         isSubmitting = true;
         try
         {
             string driverName = currentUserEmail;
             try
             {
-                var driverRecord = await Supabase.From<Driver>()
-                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                    .Single();
+                var driverRecord = await Supabase.From<Driver>().Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail).Single();
                 if (driverRecord != null) driverName = driverRecord.Name;
             }
             catch { }
-
             var trip = new TripHistory
             {
-                Id = Guid.NewGuid().ToString(),
-                VehicleId = currentVehicle.Id,
-                VehicleRegistration = currentVehicle.Registration,
-                DriverEmail = currentUserEmail,
-                DriverName = driverName,
-                StartMileage = currentVehicle.Mileage,
-                EndMileage = returnMileage,
-                ReturnCondition = returnCondition,
-                CreatedAt = DateTime.UtcNow
+                Id = Guid.NewGuid().ToString(), VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration, DriverEmail = currentUserEmail,
+                DriverName = driverName, StartMileage = currentVehicle.Mileage, EndMileage = returnMileage,
+                ReturnCondition = returnCondition, CreatedAt = DateTime.UtcNow
             };
             await Supabase.From<TripHistory>().Insert(trip);
-
-            currentVehicle.Status = "Available";
-            currentVehicle.Mileage = returnMileage;
-            currentVehicle.LastDriver = string.Empty;
+            currentVehicle.Status = "Available"; currentVehicle.Mileage = returnMileage; currentVehicle.LastDriver = string.Empty;
             await Supabase.From<Vehicle>().Update(currentVehicle);
-            await LoadData();
-            showReturnVehicle = false;
-            successMessage = "Vehicle returned successfully.";
-            returnMileage = 0;
-            returnCondition = string.Empty;
+            await LoadData(); showReturnVehicle = false; successMessage = "Vehicle returned successfully.";
+            returnMileage = 0; returnCondition = string.Empty;
         }
         catch (Exception ex) { errorMessage = $"Failed to return vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1200,11 +903,7 @@
         try
         {
             if (!hasVehicle || currentVehicle == null) return;
-            if (currentVehicle.MileageUpdatedAt.HasValue)
-            {
-                var hoursSinceUpdate = (DateTime.UtcNow - currentVehicle.MileageUpdatedAt.Value).TotalHours;
-                if (hoursSinceUpdate < 8) return;
-            }
+            if (currentVehicle.MileageUpdatedAt.HasValue && (DateTime.UtcNow - currentVehicle.MileageUpdatedAt.Value).TotalHours < 8) return;
             showMileageReminder = true;
         }
         catch { }
@@ -1213,13 +912,8 @@
     private async Task GenerateAndRequestOtp()
     {
         errorMessage = string.Empty;
-        if (string.IsNullOrWhiteSpace(requestApprover) || !requestApprover.Contains("@"))
-        {
-            errorMessage = "Please enter a valid Admin Email address.";
-            return;
-        }
-        isSubmitting = true;
-        StateHasChanged();
+        if (string.IsNullOrWhiteSpace(requestApprover) || !requestApprover.Contains("@")) { errorMessage = "Please enter a valid Admin Email address."; return; }
+        isSubmitting = true; StateHasChanged();
         try
         {
             Driver? adminRecord = null;
@@ -1227,29 +921,16 @@
             {
                 adminRecord = await Supabase.From<Driver>()
                     .Filter("email", Postgrest.Constants.Operator.Equals, requestApprover.Trim())
-                    .Filter("role", Postgrest.Constants.Operator.Equals, "Admin")
-                    .Single();
+                    .Filter("role", Postgrest.Constants.Operator.Equals, "Admin").Single();
             }
             catch { }
-
-            if (adminRecord == null)
-            {
-                errorMessage = "The email entered does not belong to an Admin. Please ask your administrator for their email address.";
-                return;
-            }
-
+            if (adminRecord == null) { errorMessage = "The email entered does not belong to an Admin."; return; }
             var random = new Random();
             generatedOtp = random.Next(100000, 999999).ToString();
-
             var requestRecord = new VehicleRequest
             {
-                Id = Guid.NewGuid().ToString(),
-                DriverEmail = currentUserEmail,
-                VehicleId = requestedVehicleId,
-                Mileage = requestMileage,
-                AdminEmail = requestApprover.Trim(),
-                OtpCode = generatedOtp,
-                Status = "Pending"
+                Id = Guid.NewGuid().ToString(), DriverEmail = currentUserEmail, VehicleId = requestedVehicleId,
+                Mileage = requestMileage, AdminEmail = requestApprover.Trim(), OtpCode = generatedOtp, Status = "Pending"
             };
             await Supabase.From<VehicleRequest>().Insert(requestRecord);
             isOtpSent = true;
@@ -1261,41 +942,24 @@
     private async Task SubmitVehicleRequest()
     {
         errorMessage = string.Empty;
-        if (enteredOtp.Trim() != generatedOtp || string.IsNullOrEmpty(enteredOtp))
-        {
-            errorMessage = "Invalid OTP. Please enter the code sent to the administrator.";
-            return;
-        }
+        if (enteredOtp.Trim() != generatedOtp || string.IsNullOrEmpty(enteredOtp)) { errorMessage = "Invalid OTP."; return; }
         isSubmitting = true;
         try
         {
-            var vehicleResponse = await Supabase.From<Vehicle>()
-                .Filter("id", Postgrest.Constants.Operator.Equals, requestedVehicleId)
-                .Single();
+            var vehicleResponse = await Supabase.From<Vehicle>().Filter("id", Postgrest.Constants.Operator.Equals, requestedVehicleId).Single();
             if (vehicleResponse == null) { errorMessage = "Vehicle not found."; return; }
-
             string driverDisplayName = currentUserEmail;
             try
             {
-                var driverRecord = await Supabase.From<Driver>()
-                    .Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                    .Single();
+                var driverRecord = await Supabase.From<Driver>().Filter("email", Postgrest.Constants.Operator.Equals, currentUserEmail).Single();
                 if (driverRecord != null) driverDisplayName = driverRecord.Name;
             }
             catch { }
-
-            vehicleResponse.Status = "Active";
-            vehicleResponse.Mileage = requestMileage;
-            vehicleResponse.LastDriver = driverDisplayName;
+            vehicleResponse.Status = "Active"; vehicleResponse.Mileage = requestMileage; vehicleResponse.LastDriver = driverDisplayName;
             await Supabase.From<Vehicle>().Update(vehicleResponse);
-            await LoadData();
-            showRequestVehicle = false;
-            successMessage = $"Vehicle assigned successfully. Verified by Admin: {requestApprover}.";
-            requestedVehicleId = string.Empty;
-            requestMileage = 0;
-            requestApprover = string.Empty;
-            isOtpSent = false;
-            enteredOtp = string.Empty;
+            await LoadData(); showRequestVehicle = false;
+            successMessage = $"Vehicle assigned. Verified by Admin: {requestApprover}.";
+            requestedVehicleId = string.Empty; requestMileage = 0; requestApprover = string.Empty; isOtpSent = false; enteredOtp = string.Empty;
         }
         catch (Exception ex) { errorMessage = $"Failed to assign vehicle: {ex.Message}"; }
         finally { isSubmitting = false; }
@@ -1303,9 +967,7 @@
 
     private void CloseUpdateMileage()
     {
-        showUpdateMileage = false;
-        mileageServiceWarning = false;
-        updateMileageValue = 0;
+        showUpdateMileage = false; mileageServiceWarning = false; updateMileageValue = 0;
         Navigation.NavigateTo("/driver", replace: true);
     }
 
@@ -1315,22 +977,15 @@
         isSubmitting = true;
         try
         {
-            currentVehicle.Mileage = updateMileageValue;
-            currentVehicle.MileageUpdatedAt = DateTime.UtcNow;
+            currentVehicle.Mileage = updateMileageValue; currentVehicle.MileageUpdatedAt = DateTime.UtcNow;
             await Supabase.From<Vehicle>().Update(currentVehicle);
             mileageServiceWarning = currentVehicle.Mileage >= currentVehicle.ServiceDueKm;
             showMileageReminder = false;
-            if (!mileageServiceWarning)
-            {
-                showUpdateMileage = false;
-                Navigation.NavigateTo("/driver", replace: true);
-                successMessage = "Mileage updated successfully.";
-            }
+            if (!mileageServiceWarning) { showUpdateMileage = false; Navigation.NavigateTo("/driver", replace: true); successMessage = "Mileage updated successfully."; }
         }
         catch (Exception ex) { errorMessage = $"Failed to update mileage: {ex.Message}"; }
         finally { isSubmitting = false; }
     }
-    // ── DVIR Methods ─────────────────────────────────────────────────────────
 
     private async Task CheckTodayDvir()
     {
@@ -1340,8 +995,7 @@
             var today = DateTime.UtcNow.Date;
             var resp = await Supabase.From<FleetManagement.Models.DvirSubmission>()
                 .Filter("driver_email", Postgrest.Constants.Operator.Equals, currentUserEmail)
-                .Filter("vehicle_id", Postgrest.Constants.Operator.Equals, currentVehicle.Id)
-                .Get();
+                .Filter("vehicle_id", Postgrest.Constants.Operator.Equals, currentVehicle.Id).Get();
             todayDvirDone = resp.Models.Any(s => s.SubmittedAt.Date == today);
         }
         catch { todayDvirDone = false; }
@@ -1349,16 +1003,11 @@
 
     private async Task OpenDvir(string trigger)
     {
-        dvirTrigger = trigger;
-        dvirResults = new();
-        dvirItemNotes = new();
-        dvirError = "";
-        showDvirModal = true;
+        dvirTrigger = trigger; dvirResults = new(); dvirItemNotes = new(); dvirError = ""; showDvirModal = true;
         try
         {
             var resp = await Supabase.From<FleetManagement.Models.DvirChecklistItem>()
-                .Filter("is_active", Postgrest.Constants.Operator.Equals, "true")
-                .Get();
+                .Filter("is_active", Postgrest.Constants.Operator.Equals, "true").Get();
             dvirItems = resp.Models.OrderBy(i => i.SortOrder).ToList();
         }
         catch { dvirError = "Could not load checklist items. Please try again."; }
@@ -1371,61 +1020,37 @@
         StateHasChanged();
     }
 
-    private void CloseDvir()
-    {
-        showDvirModal = false;
-        dvirRequiredForTrip = false;
-    }
+    private void CloseDvir() { showDvirModal = false; dvirRequiredForTrip = false; }
 
     private async Task SubmitDvir()
     {
         if (!hasVehicle || currentVehicle == null) return;
-        isDvirSubmitting = true;
-        dvirError = "";
+        isDvirSubmitting = true; dvirError = "";
         try
         {
             var hasFailures = dvirResults.Values.Any(v => v == "fail");
             var submissionId = Guid.NewGuid().ToString();
-
             var submission = new FleetManagement.Models.DvirSubmission
             {
-                Id = submissionId,
-                DriverEmail = currentUserEmail,
-                VehicleId = currentVehicle.Id,
-                VehicleRegistration = currentVehicle.Registration,
-                TriggerType = dvirTrigger,
-                HasFailures = hasFailures,
-                SubmittedAt = DateTime.UtcNow
+                Id = submissionId, DriverEmail = currentUserEmail, VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration, TriggerType = dvirTrigger,
+                HasFailures = hasFailures, SubmittedAt = DateTime.UtcNow
             };
             await Supabase.From<FleetManagement.Models.DvirSubmission>().Insert(submission);
-
             foreach (var item in dvirItems)
             {
                 var subItem = new FleetManagement.Models.DvirSubmissionItem
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    SubmissionId = submissionId,
-                    ItemId = item.Id,
-                    ItemName = item.Name,
-                    Result = dvirResults.GetValueOrDefault(item.Id, "na"),
-                    Notes = dvirItemNotes.GetValueOrDefault(item.Id),
-                    CreatedAt = DateTime.UtcNow
+                    Id = Guid.NewGuid().ToString(), SubmissionId = submissionId, ItemId = item.Id,
+                    ItemName = item.Name, Result = dvirResults.GetValueOrDefault(item.Id, "na"),
+                    Notes = dvirItemNotes.GetValueOrDefault(item.Id), CreatedAt = DateTime.UtcNow
                 };
                 await Supabase.From<FleetManagement.Models.DvirSubmissionItem>().Insert(subItem);
             }
-
-            todayDvirDone = true;
-            showDvirModal = false;
-            dvirRequiredForTrip = false;
-            successMessage = hasFailures
-                ? "⚠️ Inspection submitted with flagged items — admin has been notified."
-                : "✓ Inspection completed — all items passed.";
+            todayDvirDone = true; showDvirModal = false; dvirRequiredForTrip = false;
+            successMessage = hasFailures ? "⚠️ Inspection submitted with flagged items — admin has been notified." : "✓ Inspection completed — all items passed.";
         }
-        catch (Exception ex)
-        {
-            dvirError = $"Failed to submit inspection: {ex.Message}";
-        }
+        catch (Exception ex) { dvirError = $"Failed to submit inspection: {ex.Message}"; }
         finally { isDvirSubmitting = false; StateHasChanged(); }
     }
-
 }

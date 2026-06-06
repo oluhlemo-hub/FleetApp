@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets/apple-touch-icon.png"
     },
     {
+      "Id": "/Users/suli/fleetmanagement/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
       "Id": "/Users/suli/fleetmanagement/wwwroot/favicon-16x16.png",
       "PackagePath": "staticwebassets/favicon-16x16.png"
     },
