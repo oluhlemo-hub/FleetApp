@@ -51,3 +51,9 @@
 /Users/suli/fleetmanagement/obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.FleetManagement.props
 /Users/suli/fleetmanagement/obj/Debug/net8.0/staticwebassets.pack.json
 /Users/suli/fleetmanagement/bin/Debug/net8.0/supabase/functions/mileage-reminder/deno.json
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/web.config
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/appsettings.json
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/FleetManagement.deps.json
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/FleetManagement.runtimeconfig.json
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/global.json
+/Users/suli/fleetmanagement/bin/Debug/net8.0/publish/supabase/functions/mileage-reminder/deno.json

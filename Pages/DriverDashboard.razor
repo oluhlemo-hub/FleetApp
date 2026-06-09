@@ -47,7 +47,7 @@
 
     @if (hasVehicle)
     {
-        <div class="vehicle-card">
+        <div id="tour-vehicle-section" class="vehicle-card">
             <div class="vehicle-card-label">Assigned Vehicle</div>
             <div class="vehicle-card-reg">@currentVehicle.Registration</div>
             <div class="vehicle-card-model">@currentVehicle.Make @currentVehicle.Model</div>
@@ -89,7 +89,7 @@
                     <div class="action-tile-sub">Schedule maintenance</div>
                 </button>
             }
-            <button class="action-tile action-tile-accent-red" @onclick="() => showReportFault = true">
+            <button id="tour-fault-btn" class="action-tile action-tile-accent-red" @onclick="() => showReportFault = true">
                 <div class="action-tile-icon action-tile-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="action-tile-title">Report Fault</div>
                 <div class="action-tile-sub">Log a vehicle issue</div>
@@ -97,7 +97,7 @@
         </div>
 
         <div class="action-grid-bottom">
-            <button class="action-tile-sm action-tile-sm-amber" @onclick="() => showLogFuel = true">
+            <button id="tour-fuel-btn" class="action-tile-sm action-tile-sm-amber" @onclick="() => showLogFuel = true">
                 <div class="tile-icon-wrap"><i class="bi bi-fuel-pump"></i></div>
                 <span>Fuel / Expense</span>
             </button>
@@ -126,7 +126,7 @@
             <h5 style="color:var(--text-main);font-weight:700;">No Vehicle Assigned</h5>
             <p style="color:var(--text-muted);font-size:0.875rem;">Request a vehicle below to get started.</p>
         </div>
-        <button class="action-tile-full" style="border-color:var(--accent-success);justify-content:center;" @onclick="OpenRequestVehicle">
+        <button id="tour-request-btn" class="action-tile-full" style="border-color:var(--accent-success);justify-content:center;" @onclick="OpenRequestVehicle">
             <div class="tile-icon-wrap" style="color:var(--accent-success);background:rgba(26,122,74,0.1);"><i class="bi bi-key"></i></div>
             <span style="color:var(--accent-success);font-weight:700;">Request Vehicle</span>
         </button>

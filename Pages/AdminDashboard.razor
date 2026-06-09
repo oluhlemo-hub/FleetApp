@@ -194,17 +194,17 @@
 
     <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto">
         <li class="nav-item flex-shrink-0">
-            <button class="nav-link @(activeTab == "vehicles" ? "active" : "")" @onclick='() => activeTab = "vehicles"'>
+            <button id="tour-vehicles-tab" class="nav-link @(activeTab == "vehicles" ? "active" : "")" @onclick='() => activeTab = "vehicles"'>
                 <i class="bi bi-truck me-1"></i> Vehicles <span class="badge bg-secondary ms-1">@vehicles.Count</span>
             </button>
         </li>
         <li class="nav-item flex-shrink-0">
-            <button class="nav-link @(activeTab == "drivers" ? "active" : "")" @onclick='() => activeTab = "drivers"'>
+            <button id="tour-drivers-tab" class="nav-link @(activeTab == "drivers" ? "active" : "")" @onclick='() => activeTab = "drivers"'>
                 <i class="bi bi-people me-1"></i> Drivers <span class="badge bg-secondary ms-1">@drivers.Count</span>
             </button>
         </li>
         <li class="nav-item flex-shrink-0">
-            <button class="nav-link @(activeTab == "faults" ? "active" : "") position-relative" @onclick='() => activeTab = "faults"'>
+            <button id="tour-faults-tab" class="nav-link @(activeTab == "faults" ? "active" : "") position-relative" @onclick='() => activeTab = "faults"'>
                 <i class="bi bi-exclamation-triangle me-1"></i> Faults
                 @if (allFaults.Count(f => f.Status == "Open") > 0)
                 {
@@ -213,7 +213,7 @@
             </button>
         </li>
         <li class="nav-item flex-shrink-0">
-            <button class="nav-link @(activeTab == "fuellogs" ? "active" : "")" @onclick='() => activeTab = "fuellogs"'>
+            <button id="tour-fuellogs-tab" class="nav-link @(activeTab == "fuellogs" ? "active" : "")" @onclick='() => activeTab = "fuellogs"'>
                 <i class="bi bi-fuel-pump me-1"></i> Fuel Logs <span class="badge bg-secondary ms-1">@allFuelLogs.Count</span>
             </button>
         </li>
