@@ -574,3 +574,66 @@ body {
 
 /* Badge fixes for dark */
 .theme-dark .badge.bg-secondary { background-color: var(--surface-raised) !important; color: var(--text-main) !important; }
+
+/* ═══════════════════════════════════════════════
+   FORCE DARK MODE ON ALL BOOTSTRAP WHITES
+   ═══════════════════════════════════════════════ */
+.theme-dark .bg-white,
+.theme-dark .bg-body,
+.theme-dark [style*="background:#fff"],
+.theme-dark [style*="background: #fff"],
+.theme-dark [style*="background:white"],
+.theme-dark [style*="background-color: white"],
+.theme-dark [style*="background-color:#ffffff"] {
+  background-color: var(--card-bg) !important;
+}
+
+/* Stat cards specifically */
+.theme-dark .card.shadow-sm {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.theme-dark .card.shadow-sm .card-body { background: transparent !important; }
+.theme-dark .card.shadow-sm h2,
+.theme-dark .card.shadow-sm h3,
+.theme-dark .card.shadow-sm h4,
+.theme-dark .card.shadow-sm h5,
+.theme-dark .card.shadow-sm p,
+.theme-dark .card.shadow-sm span,
+.theme-dark .card.shadow-sm small { color: var(--text-main) !important; }
+.theme-dark .card.shadow-sm .text-muted { color: var(--text-muted) !important; }
+
+/* Fleet Overview header bar */
+.theme-dark .d-flex.align-items-center.justify-content-between.mb-4,
+.theme-dark .d-flex.align-items-center.justify-content-between {
+  background: transparent !important;
+}
+
+/* Nav tabs dark */
+.theme-dark .nav-link { color: var(--text-muted) !important; }
+.theme-dark .nav-link.active { color: var(--accent-primary) !important; background: transparent !important; border-color: var(--border-color) var(--border-color) var(--card-bg) !important; }
+.theme-dark .nav-tabs { border-color: var(--border-color) !important; }
+
+/* Row alternating subtle */
+.theme-dark table tbody tr:nth-child(odd) { background: var(--card-bg) !important; }
+.theme-dark table tbody tr:nth-child(even) { background: rgba(14,32,48,0.6) !important; }
+.theme-dark table tbody tr:hover { background: rgba(42,157,214,0.07) !important; }
+.theme-dark table td, .theme-dark table th { color: var(--text-main) !important; border-color: var(--border-color) !important; }
+
+/* ── All table headers themed ── */
+.theme-dark thead[style*="background:var(--surface-navy)"] th,
+.theme-light thead[style*="background:var(--surface-navy)"] th {
+  color: #ffffff !important;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border: none !important;
+  padding: 13px 16px;
+}
+.theme-light thead[style*="background:var(--surface-navy)"] {
+  background: #1e3a5c !important;
+}
+.theme-dark thead[style*="background:var(--surface-navy)"] {
+  background: #060e18 !important;
+}
