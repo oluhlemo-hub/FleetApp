@@ -235,58 +235,58 @@
 
     @if (activeTab == "vehicles")
     {
-        <div class="card shadow-sm d-none d-md-block" style="background:var(--card-bg);border-color:var(--border-color);">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0" style="color:var(--text-main);">
-                    <thead style="background:var(--surface-navy);">
-                        <tr>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Vehicle</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Registration</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Status</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Mileage</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Service Due</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Driver</th>
-                            <th style="color:#ffffff;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:14px 16px;border:none;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (vehicles.Any())
+        <div class="d-none d-md-block" style="border-radius:12px;overflow:hidden;border:1px solid var(--border-color);box-shadow:var(--shadow-card);">
+            <table style="width:100%;border-collapse:collapse;background:var(--card-bg);">
+                <thead>
+                    <tr style="background:var(--surface-navy);">
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Vehicle</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Registration</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Status</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Mileage</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Service Due</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Driver</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 18px;border:none;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (vehicles.Any())
+                    {
+                        @foreach (var (car, idx) in vehicles.Select((v,i) => (v,i)))
                         {
-                            @foreach (var car in vehicles)
-                            {
-                                <tr style="border-bottom:1px solid var(--border-color);">
-                                    <td style="padding:13px 16px;color:var(--text-main);border:none;">
-                                        <button class="btn btn-link p-0 fw-semibold text-decoration-none"
-                                                style="color:var(--accent-primary);"
-                                                @onclick="() => OpenVehicleHistory(car)">
-                                            @car.Make @car.Model
-                                        </button>
-                                    </td>
-                                    <td style="padding:13px 16px;border:none;">
-                                        <span style="font-family:monospace;font-weight:700;font-size:0.85rem;background:var(--surface-raised);color:var(--text-main);padding:3px 8px;border-radius:6px;border:1px solid var(--border-color);">@car.Registration</span>
-                                    </td>
-                                    <td style="padding:13px 16px;border:none;"><span class="badge @GetStatusBadge(car.Status)">@car.Status</span></td>
-                                    <td style="padding:13px 16px;color:var(--text-muted);border:none;">@car.Mileage.ToString("N0") km</td>
-                                    <td style="padding:13px 16px;border:none;">
-                                        @if (car.Mileage >= car.ServiceDueKm)
-                                        { <span style="color:var(--accent-danger);font-weight:700;">@car.ServiceDueKm.ToString("N0") km ⚠️</span> }
-                                        else
-                                        { <span style="color:var(--text-muted);">@car.ServiceDueKm.ToString("N0") km</span> }
-                                    </td>
-                                    <td style="padding:13px 16px;color:var(--text-muted);border:none;">@(string.IsNullOrEmpty(car.LastDriver) ? "Unassigned" : car.LastDriver)</td>
-                                    <td style="padding:13px 16px;border:none;">
-                                        <div class="d-flex gap-1">
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => SelectVehicle(car)"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteVehicle(car)"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                            <tr style="background:@(idx % 2 == 0 ? "var(--card-bg)" : "var(--card-bg-raised)");border-bottom:1px solid var(--border-color);transition:background 0.15s;">
+                                <td style="padding:13px 18px;border:none;">
+                                    <button style="background:none;border:none;padding:0;color:var(--text-main);font-weight:600;font-size:0.875rem;cursor:pointer;text-align:left;"
+                                            @onclick="() => OpenVehicleHistory(car)">
+                                        @car.Make @car.Model
+                                    </button>
+                                </td>
+                                <td style="padding:13px 18px;border:none;">
+                                    <span style="font-size:0.82rem;font-weight:600;color:var(--text-main);letter-spacing:0.03em;">@car.Registration</span>
+                                </td>
+                                <td style="padding:13px 18px;border:none;"><span class="badge @GetStatusBadge(car.Status)">@car.Status</span></td>
+                                <td style="padding:13px 18px;border:none;color:var(--text-main);font-size:0.875rem;">@car.Mileage.ToString("N0") km</td>
+                                <td style="padding:13px 18px;border:none;">
+                                    @if (car.Mileage >= car.ServiceDueKm)
+                                    { <span style="color:var(--accent-danger);font-weight:700;font-size:0.875rem;">@car.ServiceDueKm.ToString("N0") km ⚠️</span> }
+                                    else
+                                    { <span style="color:var(--text-main);font-size:0.875rem;">@car.ServiceDueKm.ToString("N0") km</span> }
+                                </td>
+                                <td style="padding:13px 18px;border:none;color:var(--text-main);font-size:0.875rem;">@(string.IsNullOrEmpty(car.LastDriver) ? "—" : car.LastDriver)</td>
+                                <td style="padding:13px 18px;border:none;">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => SelectVehicle(car)" title="Edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteVehicle(car)" title="Delete"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
                         }
-                        else { <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No vehicles found.</td></tr> }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr style="background:var(--card-bg);"><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2.5rem;border:none;">No vehicles found.</td></tr>
+                    }
+                </tbody>
+            </table>
         </div>
 
         <div class="d-md-none">
@@ -326,38 +326,43 @@
 
     @if (activeTab == "drivers")
     {
-        <div class="card shadow-sm d-none d-md-block">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0" style="color:var(--text-main);">
-                    <thead style="background:var(--surface-navy);">
-                        <tr>
-                            <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Rating</th><th>Status</th><th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (drivers.Any())
+        <div class="d-none d-md-block" style="border-radius:12px;overflow:hidden;border:1px solid var(--border-color);box-shadow:var(--shadow-card);">
+            <table style="width:100%;border-collapse:collapse;background:var(--card-bg);">
+                <thead>
+                    <tr style="background:var(--surface-navy);">
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Name</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Email</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Phone</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Role</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Rating</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Status</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (drivers.Any())
+                    {
+                        @foreach (var (driver, idx) in drivers.Select((d,i) => (d,i)))
                         {
-                            @foreach (var driver in drivers)
-                            {
-                                <tr class="@(!driver.IsActive ? "table-secondary text-muted" : "")">
-                                    <td>
-                                        <i class="bi bi-person-circle me-2 text-secondary"></i>
-                                        <button class="btn btn-link p-0 text-dark fw-semibold text-decoration-none history-link"
-                                                @onclick="() => OpenDriverProfile(driver)">
-                                            @driver.Name
-                                        </button>
-                                    </td>
-                                    <td>@driver.Email</td>
-                                    <td>@(string.IsNullOrEmpty(driver.Phone) ? "—" : driver.Phone)</td>
-                                    <td>
-                                        <span class="badge @(driver.Role == "Admin" ? "bg-warning text-dark" : "bg-info text-dark")">@driver.Role</span>
-                                    </td>
-                                    <td>@RenderStars(GetDriverRating(driver.Email))</td>
-                                    <td>
-                                        <span class="badge @(driver.IsActive ? "bg-success" : "bg-secondary")">
-                                            @(driver.IsActive ? "Active" : "Inactive")
-                                        </span>
-                                    </td>
+                            <tr style="background:@(idx % 2 == 0 ? "var(--card-bg)" : "var(--card-bg-raised)");border-bottom:1px solid var(--border-color);opacity:@(!driver.IsActive ? "0.6" : "1");">
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    <i class="bi bi-person-circle me-2" style="color:var(--text-muted);"></i>
+                                    <button style="background:none;border:none;padding:0;color:var(--text-main);font-weight:600;font-size:0.875rem;cursor:pointer;"
+                                            @onclick="() => OpenDriverProfile(driver)">
+                                        @driver.Name
+                                    </button>
+                                </td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@driver.Email</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@(string.IsNullOrEmpty(driver.Phone) ? "—" : driver.Phone)</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    <span class="badge @(driver.Role == "Admin" ? "bg-warning text-dark" : "bg-info text-dark")">@driver.Role</span>
+                                </td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">@RenderStars(GetDriverRating(driver.Email))</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    <span class="badge @(driver.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(driver.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
                                     <td>
                                         <div class="d-flex gap-1">
                                             <button class="btn btn-sm btn-outline-primary" @onclick="() => SelectDriver(driver)"><i class="bi bi-pencil"></i></button>
@@ -378,7 +383,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
 
         <div class="d-md-none">
             @foreach (var driver in drivers)
@@ -422,43 +426,46 @@
 
     @if (activeTab == "faults")
     {
-        <div class="card shadow-sm d-none d-md-block">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0" style="color:var(--text-main);">
-                    <thead style="background:var(--surface-navy);">
-                        <tr>
-                            <th>Date</th><th>Vehicle</th><th>Driver</th><th>Type</th>
-                            <th>Description</th><th>Status</th><th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (allFaults.Any())
+        <div class="d-none d-md-block" style="border-radius:12px;overflow:hidden;border:1px solid var(--border-color);box-shadow:var(--shadow-card);">
+            <table style="width:100%;border-collapse:collapse;background:var(--card-bg);">
+                <thead>
+                    <tr style="background:var(--surface-navy);">
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Date</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Vehicle</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Driver</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Type</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Description</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Status</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (allFaults.Any())
+                    {
+                        @foreach (var (fault, idx) in allFaults.OrderByDescending(f => f.CreatedAt).Select((f,i) => (f,i)))
                         {
-                            @foreach (var fault in allFaults.OrderByDescending(f => f.CreatedAt))
-                            {
-                                <tr>
-                                    <td>@fault.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                    <td><strong>@fault.VehicleRegistration</strong></td>
-                                    <td>@fault.DriverEmail</td>
-                                    <td><span class="badge bg-warning text-dark">@fault.FaultType</span></td>
-                                    <td class="text-truncate" style="max-width:200px">@fault.Description</td>
-                                    <td><span class="badge @(fault.Status == "Open" ? "bg-danger" : "bg-success")">@fault.Status</span></td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenFaultDetail(fault)"><i class="bi bi-eye"></i></button>
-                                            @if (fault.Status == "Open")
-                                            {
-                                                <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveFault(fault)"><i class="bi bi-check-lg"></i></button>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                            <tr style="background:@(idx % 2 == 0 ? "var(--card-bg)" : "var(--card-bg-raised)");border-bottom:1px solid var(--border-color);">
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@fault.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">@fault.VehicleRegistration</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@fault.DriverEmail</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;"><span class="badge bg-warning text-dark">@fault.FaultType</span></td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@fault.Description</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;"><span class="badge @(fault.Status == "Open" ? "bg-danger" : "bg-success")">@fault.Status</span></td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenFaultDetail(fault)"><i class="bi bi-eye"></i></button>
+                                        @if (fault.Status == "Open")
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveFault(fault)"><i class="bi bi-check-lg"></i></button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
                         }
-                        else { <tr><td colspan="7" class="text-center text-muted py-4">No fault reports found.</td></tr> }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else { <tr style="background:var(--card-bg);"><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;border:none;">No fault reports found.</td></tr> }
+                </tbody>
+            </table>
         </div>
 
         <div class="d-md-none">
@@ -495,47 +502,52 @@
 
     @if (activeTab == "fuellogs")
     {
-        <div class="card shadow-sm d-none d-md-block">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0" style="color:var(--text-main);">
-                    <thead style="background:var(--surface-navy);">
-                        <tr>
-                            <th>Date</th><th>Vehicle</th><th>Driver</th><th>Type</th>
-                            <th>Litres</th><th>Cost (R)</th><th>Mileage</th><th>Card #</th><th>Receipt</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (allFuelLogs.Any())
+        <div class="d-none d-md-block" style="border-radius:12px;overflow:hidden;border:1px solid var(--border-color);box-shadow:var(--shadow-card);">
+            <table style="width:100%;border-collapse:collapse;background:var(--card-bg);">
+                <thead>
+                    <tr style="background:var(--surface-navy);">
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Date</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Vehicle</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Driver</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Type</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Litres</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Cost (R)</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Mileage</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Card #</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (allFuelLogs.Any())
+                    {
+                        @foreach (var (log, idx) in allFuelLogs.OrderByDescending(l => l.LoggedAt).Select((l,i) => (l,i)))
                         {
-                            @foreach (var log in allFuelLogs.OrderByDescending(l => l.LoggedAt))
-                            {
-                                <tr>
-                                    <td>@log.LoggedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                                    <td><strong>@log.VehicleRegistration</strong></td>
-                                    <td>@log.DriverEmail</td>
-                                    <td>
-                                        @if (log.ExpenseType == "Fuel")
-                                        { <span class="badge bg-warning text-dark">@log.FuelType</span> }
-                                        else
-                                        { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
-                                    </td>
-                                    <td>@(log.Litres.HasValue ? $"{log.Litres:F1} L" : "—")</td>
-                                    <td>R @log.Cost.ToString("F2")</td>
-                                    <td>@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</td>
-                                    <td>@(string.IsNullOrEmpty(log.FuelCardNumber) ? "—" : log.FuelCardNumber)</td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(log.ReceiptUrl))
-                                        { <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i></a> }
-                                        else
-                                        { <span class="text-muted small">—</span> }
-                                    </td>
-                                </tr>
-                            }
+                            <tr style="background:@(idx % 2 == 0 ? "var(--card-bg)" : "var(--card-bg-raised)");border-bottom:1px solid var(--border-color);">
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@log.LoggedAt.ToLocalTime().ToString("dd MMM HH:mm")</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">@log.VehicleRegistration</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@log.DriverEmail</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    @if (log.ExpenseType == "Fuel")
+                                    { <span class="badge bg-warning text-dark">@log.FuelType</span> }
+                                    else
+                                    { <span class="badge bg-secondary">@log.ExpenseCategory</span> }
+                                </td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">@(log.Litres.HasValue ? $"{log.Litres:F1} L" : "—")</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">R @log.Cost.ToString("F2")</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@(log.MileageKm.HasValue ? $"{log.MileageKm} km" : "—")</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@(string.IsNullOrEmpty(log.FuelCardNumber) ? "—" : log.FuelCardNumber)</td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
+                                    @if (!string.IsNullOrEmpty(log.ReceiptUrl))
+                                    { <a href="@log.ReceiptUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i></a> }
+                                    else
+                                    { <span style="color:var(--text-muted);">—</span> }
+                                </td>
+                            </tr>
                         }
-                        else { <tr><td colspan="9" class="text-center text-muted py-4">No fuel logs yet.</td></tr> }
+                    }
+                    else { <tr style="background:var(--card-bg);"><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem;border:none;">No fuel logs yet.</td></tr> }
                     </tbody>
                 </table>
-            </div>
         </div>
 
         <div class="d-md-none">
@@ -1378,9 +1390,16 @@
             <strong><i class="bi bi-folder2-open me-2"></i>Vehicle Documents</strong>
         </div>
         <div class="card-body p-0">
-            <table class="table table-hover mb-0 d-none d-md-table" style="color:var(--text-main);">
-                <thead style="background:var(--surface-navy);">
-                    <tr><th>Vehicle</th><th>Document Type</th><th>Expiry Date</th><th>Status</th><th>File</th><th>Actions</th></tr>
+            <table class="d-none d-md-table" style="width:100%;border-collapse:collapse;background:var(--card-bg);color:var(--text-main);">
+                <thead>
+                    <tr style="background:var(--surface-navy);">
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Vehicle</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Document Type</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Expiry Date</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Status</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">File</th>
+                        <th style="color:rgba(255,255,255,0.85);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:13px 18px;border:none;">Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
                     @if (vehicleDocs.Any())
@@ -1390,7 +1409,7 @@
                             var days = (doc.ExpiryDate.Date - DateTime.Today).Days;
                             var badge = days <= 0 ? "bg-danger" : days <= 7 ? "bg-danger" : days <= 14 ? "bg-warning text-dark" : days <= 30 ? "bg-warning text-dark" : "bg-success";
                             var status = days <= 0 ? "Expired" : days <= 7 ? $"{days}d left" : days <= 30 ? $"{days}d left" : "Valid";
-                            <tr class="@(days <= 7 ? "table-danger" : days <= 30 ? "table-warning" : "")">
+                            <tr style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
                                 <td><strong>@doc.VehicleRegistration</strong></td>
                                 <td><span class="badge bg-secondary">@doc.DocumentType</span></td>
                                 <td>@doc.ExpiryDate.ToString("dd MMM yyyy")</td>
