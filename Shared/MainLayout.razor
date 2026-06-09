@@ -3,6 +3,8 @@
 @inject Supabase.Client Supabase
 @inject NavigationManager Nav
 @inject FleetManagement.Services.ThemeService ThemeService
+@inject FleetManagement.Services.TourService TourService
+@inject IJSRuntime JS
 
 <div class="page @ThemeService.ThemeClass">
 
@@ -14,8 +16,15 @@
             <span class="brand-text">Fleet Portal</span>
         </a>
         <div class="position-relative">
-            <button class="fleet-profile-btn" @onclick="ToggleProfile">
-                <div class="fleet-avatar">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+            <button class="fleet-profile-btn" id="tour-profile-btn" @onclick="ToggleProfile">
+                @if (!string.IsNullOrEmpty(userProfilePicture))
+                {
+                    <img src="@userProfilePicture" class="fleet-avatar" style="object-fit:cover;" alt="@userName" />
+                }
+                else
+                {
+                    <div class="fleet-avatar">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+                }
                 <span class="d-none d-sm-inline fleet-username">@userName</span>
                 @if (!string.IsNullOrEmpty(userRole))
                 {
@@ -26,7 +35,14 @@
             {
                 <div class="fleet-profile-dropdown">
                     <div class="fleet-profile-header">
-                        <div class="fleet-avatar-lg">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+                        @if (!string.IsNullOrEmpty(userProfilePicture))
+                        {
+                            <img src="@userProfilePicture" class="fleet-avatar-lg" style="object-fit:cover;" alt="@userName" />
+                        }
+                        else
+                        {
+                            <div class="fleet-avatar-lg">@(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())</div>
+                        }
                         <div>
                             <div class="fleet-profile-name">@userName</div>
                             <div class="fleet-profile-email">@userEmail</div>
@@ -35,6 +51,9 @@
                     <div class="fleet-profile-actions">
                         <button class="fleet-profile-action" @onclick="OpenProfile">
                             <i class="bi bi-person me-2"></i> View Profile
+                        </button>
+                        <button class="fleet-profile-action" @onclick="StartTour">
+                            <i class="bi bi-map me-2"></i> Take the Tour
                         </button>
                         <button class="fleet-profile-action fleet-profile-action-danger" @onclick="Logout">
                             <i class="bi bi-box-arrow-right me-2"></i> Sign out
@@ -50,14 +69,13 @@
             <div class="fleet-sidebar-logo">
                 <img src="images/logo.png" alt="Fleet" style="width:28px;height:28px;object-fit:contain;" />
             </div>
-
             @if (userRole == "Admin")
             {
                 <NavLink class="fleet-sidebar-item" href="admin" Match="NavLinkMatch.All">
                     <i class="bi bi-speedometer2"></i>
                     <span class="sidebar-label">Dashboard</span>
                 </NavLink>
-                <NavLink class="fleet-sidebar-item" href="settings">
+                <NavLink class="fleet-sidebar-item" id="tour-settings-link" href="settings">
                     <i class="bi bi-gear"></i>
                     <span class="sidebar-label">Settings</span>
                 </NavLink>
@@ -73,8 +91,11 @@
                     <span class="sidebar-label">Settings</span>
                 </NavLink>
             }
-
             <div class="fleet-sidebar-bottom">
+                <button class="fleet-sidebar-item fleet-sidebar-tour" @onclick="StartTour" type="button" title="Take the Tour">
+                    <i class="bi bi-map"></i>
+                    <span class="sidebar-label">Tour</span>
+                </button>
                 <button class="fleet-sidebar-item fleet-sidebar-profile" @onclick="OpenProfile" type="button">
                     <i class="bi bi-person-circle"></i>
                     <span class="sidebar-label">Profile</span>
@@ -118,16 +139,14 @@
 
 </div>
 
-@* Backdrop to close profile dropdown *@
 @if (showProfile)
 {
-    <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 999;" @onclick="ToggleProfile"></div>
+    <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index:999;" @onclick="ToggleProfile"></div>
 }
 
-@* Profile modal *@
 @if (showProfileModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
+    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:1055;">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content">
                 <div class="modal-header">
@@ -136,7 +155,30 @@
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
-                        <i class="bi bi-person-circle display-3 text-secondary"></i>
+                        <div class="profile-avatar-wrap" style="position:relative;display:inline-block;">
+                            @if (!string.IsNullOrEmpty(userProfilePicture))
+                            {
+                                <img src="@userProfilePicture" class="rounded-circle" style="width:80px;height:80px;object-fit:cover;border:3px solid var(--navy-400);" alt="@userName" />
+                            }
+                            else
+                            {
+                                <div style="width:80px;height:80px;border-radius:50%;background:var(--navy-600);color:#fff;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;margin:0 auto;">
+                                    @(string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0,1).ToUpper())
+                                </div>
+                            }
+                            <label for="profilePicInput" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#185FA5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:0.8rem;" title="Change picture">
+                                <i class="bi bi-plus-lg"></i>
+                            </label>
+                            <InputFile id="profilePicInput" OnChange="OnProfilePicSelected" accept="image/*" style="display:none;" />
+                        </div>
+                        @if (isUploadingProfilePic)
+                        {
+                            <div class="mt-2 small text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Uploading...</div>
+                        }
+                        @if (!string.IsNullOrEmpty(profilePicError))
+                        {
+                            <div class="mt-2 small text-danger">@profilePicError</div>
+                        }
                         <h5 class="mt-2 mb-0">@userName</h5>
                         <span class="badge @(userRole == "Admin" ? "bg-warning text-dark" : "bg-info text-dark") px-3 mt-1">
                             @(userRole == "Admin" ? "Administrator" : "Driver")
@@ -158,6 +200,9 @@
                     </div>
                 </div>
                 <div class="modal-footer flex-column gap-2">
+                    <button class="btn btn-outline-primary w-100" @onclick="StartTour">
+                        <i class="bi bi-map me-1"></i> Take the Tour
+                    </button>
                     <button class="btn btn-danger w-100" @onclick="Logout">
                         <i class="bi bi-box-arrow-right me-1"></i> Logout
                     </button>
@@ -168,268 +213,75 @@
     </div>
 }
 
+<CoachMark />
+
 <style>
-    :root {
-        --navy-900: #042C53;
-        --navy-600: #185FA5;
-        --navy-400: #378ADD;
-        --navy-200: #B5D4F4;
-        --navy-50:  #E6F1FB;
-        --surface:  #f5f7fa;
-    }
-
-    .page { min-height: 100vh; background: var(--surface); }
-
-    /* ── Top bar ── */
-    .fleet-topbar {
-        height: 56px;
-        background: var(--navy-900);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        border-bottom: 0.5px solid var(--navy-600);
-    }
-    .fleet-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-    }
-    .fleet-brand-logo {
-        width: 36px;
-        height: 36px;
-        background: var(--navy-600);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .brand-text {
-        color: var(--navy-200);
-        font-size: 1rem;
-        font-weight: 500;
-        letter-spacing: 0.01em;
-    }
-    .fleet-profile-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--navy-600);
-        border: 0.5px solid var(--navy-400);
-        border-radius: 20px;
-        padding: 4px 12px 4px 4px;
-        cursor: pointer;
-        color: var(--navy-200);
-        font-size: 0.875rem;
-    }
-    .fleet-profile-btn:hover { background: var(--navy-400); }
-    .fleet-avatar {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--navy-400);
-        color: var(--navy-900);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    .fleet-username { color: var(--navy-200); }
-    .fleet-role-badge {
-        font-size: 0.7rem;
-        border-radius: 4px;
-        padding: 2px 6px;
-        font-weight: 500;
-    }
-    .fleet-badge-admin  { background: #FAEEDA; color: #854F0B; }
-    .fleet-badge-driver { background: var(--navy-50); color: var(--navy-900); }
-
-    /* ── Profile dropdown ── */
-    .fleet-profile-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        width: 260px;
-        background: #ffffff;
-        border: 0.5px solid var(--navy-200);
-        border-radius: 12px;
-        z-index: 1000;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(4,44,83,0.15);
-    }
-    .fleet-profile-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 1rem;
-        background: var(--navy-50);
-        border-bottom: 0.5px solid var(--navy-200);
-    }
-    .fleet-avatar-lg {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--navy-600);
-        color: var(--navy-200);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        font-weight: 500;
-        flex-shrink: 0;
-    }
-    .fleet-profile-name  { font-size: 0.9rem; font-weight: 500; color: var(--navy-900); }
-    .fleet-profile-email { font-size: 0.75rem; color: #5F5E5A; }
-    .fleet-profile-actions { padding: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
-    .fleet-profile-action {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: none;
-        border-radius: 8px;
-        background: transparent;
-        color: var(--navy-900);
-        font-size: 0.875rem;
-        cursor: pointer;
-        text-align: left;
-    }
-    .fleet-profile-action:hover { background: var(--navy-50); }
-    .fleet-profile-action-danger { color: #A32D2D; }
-    .fleet-profile-action-danger:hover { background: #FCEBEB; }
-
-    /* ── Sidebar ── */
-    .layout-body { display: flex; min-height: calc(100vh - 56px); }
-    .fleet-sidebar {
-        width: 64px;
-        min-width: 64px;
-        background: var(--navy-900);
-        display: flex;
-        flex-direction: column;
-        padding: 1rem 0.75rem;
-        gap: 4px;
-        flex-shrink: 0;
-    }
-    .fleet-sidebar-logo {
-        width: 36px;
-        height: 36px;
-        background: var(--navy-600);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-    .fleet-sidebar-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 0.6rem 0.75rem;
-        border-radius: 8px;
-        color: var(--navy-200);
-        text-decoration: none;
-        font-size: 0.875rem;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        width: 100%;
-        text-align: left;
-        transition: background 0.15s, color 0.15s;
-    }
-    .fleet-sidebar-item i { font-size: 1.2rem; flex-shrink: 0; }
-    .sidebar-label { display: none; }
-    .fleet-sidebar-item:hover        { background: var(--navy-600); color: #ffffff; }
-    .fleet-sidebar-item.active       { background: var(--navy-600); color: #ffffff; font-weight: 500; }
-    .fleet-sidebar-bottom            { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
-    .fleet-sidebar-profile           { color: var(--navy-200); }
-    .fleet-sidebar-profile:hover     { background: var(--navy-600); color: #ffffff; }
-    .fleet-sidebar-logout            { color: #F09595; }
-    .fleet-sidebar-logout:hover      { background: #501313; color: #F7C1C1; }
-
-    /* ── Main content ── */
-    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--surface); }
-
-    /* ── Mobile nav ── */
-    .fleet-mobile-nav {
-        display: none;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 64px;
-        background: var(--navy-900);
-        border-top: 0.5px solid var(--navy-600);
-        z-index: 200;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-around;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    .fleet-mobile-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        padding: 6px 16px;
-        font-size: 0.65rem;
-        text-decoration: none;
-        color: var(--navy-200);
-        opacity: 0.7;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-    }
-    .fleet-mobile-item i { font-size: 1.3rem; }
-    .fleet-mobile-item.active, .fleet-mobile-item:hover { opacity: 1; color: #ffffff; }
-    .fleet-mobile-btn { color: var(--navy-200); }
-
-    /* ── Responsive ── */
-    @@media (min-width: 768px) and (max-width: 991px) {
-        .fleet-sidebar { width: 56px; min-width: 56px; padding: 1rem 0.5rem; align-items: center; }
-        .fleet-sidebar-logo { margin-bottom: 1rem; }
-        .sidebar-label { display: none; }
-        .fleet-sidebar-item { justify-content: center; padding: 0.6rem; }
-        .brand-text { display: none; }
-    }
-    @@media (max-width: 767.98px) {
-        .fleet-sidebar { display: none !important; }
-        .fleet-mobile-nav { display: flex !important; }
-        .main-content {
-            padding: 0.75rem;
-            padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
-        }
-        .brand-text { display: none; }
-        .fleet-profile-dropdown { position: fixed; top: 60px; right: 8px; left: 8px; width: auto; }
-    }
+    :root { --navy-900:#042C53;--navy-600:#185FA5;--navy-400:#378ADD;--navy-200:#B5D4F4;--navy-50:#E6F1FB; }
+    .page { min-height:100vh;background:var(--page-bg);color:var(--text-main); }
+    .fleet-topbar { height:56px;background:var(--surface-navy);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border-color);transition:background 0.25s,border-color 0.25s; }
+    .fleet-brand { display:flex;align-items:center;gap:10px;text-decoration:none; }
+    .fleet-brand-logo { width:36px;height:36px;background:var(--navy-600);border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .brand-text { color:var(--navy-200);font-size:1rem;font-weight:500;letter-spacing:0.01em; }
+    .fleet-profile-btn { display:flex;align-items:center;gap:8px;background:var(--navy-600);border:0.5px solid var(--navy-400);border-radius:20px;padding:4px 12px 4px 4px;cursor:pointer;color:var(--navy-200);font-size:0.875rem; }
+    .fleet-profile-btn:hover { background:var(--navy-400); }
+    .fleet-avatar { width:28px;height:28px;border-radius:50%;background:var(--navy-400);color:var(--navy-900);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:500; }
+    .fleet-username { color:var(--navy-200); }
+    .fleet-role-badge { font-size:0.7rem;border-radius:4px;padding:2px 6px;font-weight:500; }
+    .fleet-badge-admin { background:#FAEEDA;color:#854F0B; }
+    .fleet-badge-driver { background:var(--navy-50);color:var(--navy-900); }
+    .fleet-profile-dropdown { position:absolute;top:calc(100% + 8px);right:0;width:260px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;z-index:1000;overflow:hidden;box-shadow:0 4px 20px rgba(4,44,83,0.15); }
+    .fleet-profile-header { display:flex;align-items:center;gap:10px;padding:1rem;background:var(--surface-raised);border-bottom:1px solid var(--border-color); }
+    .fleet-avatar-lg { width:40px;height:40px;border-radius:50%;background:var(--navy-600);color:var(--navy-200);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:500;flex-shrink:0; }
+    .fleet-profile-name { font-size:0.9rem;font-weight:500;color:var(--text-main); }
+    .fleet-profile-email { font-size:0.75rem;color:#5F5E5A; }
+    .fleet-profile-actions { padding:0.5rem;display:flex;flex-direction:column;gap:4px; }
+    .fleet-profile-action { display:flex;align-items:center;width:100%;padding:0.5rem 0.75rem;border:none;border-radius:8px;background:transparent;color:var(--text-main);font-size:0.875rem;cursor:pointer;text-align:left; }
+    .fleet-profile-action:hover { background:var(--surface-raised); }
+    .fleet-profile-action-danger { color:#A32D2D; }
+    .fleet-profile-action-danger:hover { background:#FCEBEB; }
+    .layout-body { display:flex;min-height:calc(100vh - 56px); }
+    .fleet-sidebar { width:64px;min-width:64px;background:var(--surface-navy);display:flex;flex-direction:column;padding:1rem 0.75rem;gap:4px;flex-shrink:0;border-right:1px solid var(--border-color);transition:background 0.25s,border-color 0.25s; }
+    .fleet-sidebar-logo { width:36px;height:36px;background:var(--navy-600);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem; }
+    .fleet-sidebar-item { display:flex;align-items:center;justify-content:center;gap:10px;padding:0.6rem 0.75rem;border-radius:8px;color:var(--navy-200);text-decoration:none;font-size:0.875rem;border:none;background:transparent;cursor:pointer;width:100%;text-align:left;transition:background 0.15s,color 0.15s; }
+    .fleet-sidebar-item i { font-size:1.2rem;flex-shrink:0; }
+    .sidebar-label { display:none; }
+    .fleet-sidebar-item:hover,.fleet-sidebar-item.active { background:var(--navy-600);color:#ffffff; }
+    .fleet-sidebar-item.active { font-weight:500; }
+    .fleet-sidebar-bottom { margin-top:auto;display:flex;flex-direction:column;gap:4px; }
+    .fleet-sidebar-tour:hover { background:var(--navy-600);color:#ffffff; }
+    .fleet-sidebar-profile { color:var(--navy-200); }
+    .fleet-sidebar-profile:hover { background:var(--navy-600);color:#ffffff; }
+    .fleet-sidebar-logout { color:#F09595; }
+    .fleet-sidebar-logout:hover { background:#501313;color:#F7C1C1; }
+    .main-content { flex:1;padding:1rem;min-width:0;background:var(--page-bg);color:var(--text-main);transition:background 0.25s; }
+    .fleet-mobile-nav { display:none;position:fixed;bottom:0;left:0;right:0;height:64px;background:var(--surface-navy);border-top:1px solid var(--border-color);z-index:200;flex-direction:row;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom,0px); }
+    .fleet-mobile-item { display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px;font-size:0.65rem;text-decoration:none;color:var(--navy-200);opacity:0.7;border:none;background:transparent;cursor:pointer; }
+    .fleet-mobile-item i { font-size:1.3rem; }
+    .fleet-mobile-item.active,.fleet-mobile-item:hover { opacity:1;color:#ffffff; }
+    .fleet-mobile-btn { color:var(--navy-200); }
+    @@media (min-width:768px) and (max-width:991px) { .fleet-sidebar { width:56px;min-width:56px;padding:1rem 0.5rem;align-items:center; } .sidebar-label { display:none; } .fleet-sidebar-item { justify-content:center;padding:0.6rem; } .brand-text { display:none; } }
+    @@media (max-width:767.98px) { .fleet-sidebar { display:none !important; } .fleet-mobile-nav { display:flex !important; } .main-content { padding:0.75rem;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px) + 0.75rem); } .brand-text { display:none; } .fleet-profile-dropdown { position:fixed;top:60px;right:8px;left:8px;width:auto; } }
 </style>
 
 @code {
-    private bool showProfile      = false;
-    private bool showProfileModal = false;
-    private string userEmail  = "";
-    private string userName   = "";
-    private string userRole   = "";
-    private string userPhone  = "";
+    private bool showProfile          = false;
+    private bool showProfileModal     = false;
+    private string userEmail          = "";
+    private string userName           = "";
+    private string userRole           = "";
+    private string userPhone          = "";
+    private string userProfilePicture = "";
+    private bool   isUploadingProfilePic = false;
+    private string profilePicError    = "";
 
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnThemeChanged += OnThemeUpdated;
-
         var email = Supabase.Auth.CurrentSession?.User?.Email;
         if (!string.IsNullOrEmpty(email))
-        {
             await LoadUserAsync(email);
-        }
         else
-        {
             Nav.NavigateTo("/", forceLoad: false);
-        }
     }
 
     private void OnThemeUpdated() => InvokeAsync(StateHasChanged);
@@ -439,66 +291,59 @@
         userEmail = email;
         try
         {
-            var result = await Supabase
-                .From<FleetManagement.Models.Driver>()
-                .Filter("email", Postgrest.Constants.Operator.Equals, email)
-                .Single();
-
+            var result = await Supabase.From<FleetManagement.Models.Driver>()
+                .Filter("email", Postgrest.Constants.Operator.Equals, email).Single();
             if (result != null)
             {
-                userName  = result.Name;
-                userRole  = result.Role;
-                userPhone = result.Phone ?? "";
+                userName           = result.Name;
+                userRole           = result.Role;
+                userPhone          = result.Phone ?? "";
+                userProfilePicture = result.ProfilePictureUrl ?? "";
             }
-            else
-            {
-                userName = email;
-            }
+            else { userName = email; }
         }
-        catch
+        catch { userName = email; userRole = ""; }
+    }
+
+    private async Task OnProfilePicSelected(InputFileChangeEventArgs e)
+    {
+        profilePicError = ""; isUploadingProfilePic = true; StateHasChanged();
+        try
         {
-            userName = email;
-            userRole = "";
+            var file = e.File;
+            if (file.Size > 5 * 1024 * 1024) { profilePicError = "Image must be under 5 MB."; return; }
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(5 * 1024 * 1024).ReadAsync(buffer);
+            var authId = Supabase.Auth.CurrentSession?.User?.Id ?? userEmail;
+            var path   = $"{authId}/avatar.jpg";
+            await Supabase.Storage.From("profile-pictures").Upload(buffer, path, new Supabase.Storage.FileOptions { Upsert = true, ContentType = file.ContentType });
+            var url = Supabase.Storage.From("profile-pictures").GetPublicUrl(path);
+            var driver = await Supabase.From<FleetManagement.Models.Driver>()
+                .Filter("email", Postgrest.Constants.Operator.Equals, userEmail).Single();
+            if (driver != null) { driver.ProfilePictureUrl = url; await Supabase.From<FleetManagement.Models.Driver>().Update(driver); }
+            userProfilePicture = url + "?t=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         }
+        catch (Exception ex) { profilePicError = $"Upload failed: {ex.Message}"; }
+        finally { isUploadingProfilePic = false; StateHasChanged(); }
     }
 
-    public void Dispose()
-    {
-        ThemeService.OnThemeChanged -= OnThemeUpdated;
-    }
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeUpdated;
 
-    private void ToggleProfile()
-    {
-        showProfile = !showProfile;
-        StateHasChanged();
-    }
+    private void ToggleProfile() { showProfile = !showProfile; StateHasChanged(); }
+    private void OpenProfile()   { showProfile = false; showProfileModal = true; StateHasChanged(); }
+    private void CloseProfileModal() { showProfileModal = false; profilePicError = ""; StateHasChanged(); }
 
-    private void OpenProfile()
+    private void StartTour()
     {
-        showProfile      = false;
-        showProfileModal = true;
-        StateHasChanged();
-    }
-
-    private void CloseProfileModal()
-    {
-        showProfileModal = false;
-        StateHasChanged();
+        showProfile = false; showProfileModal = false; StateHasChanged();
+        if (userRole == "Admin") TourService.StartAdminTour();
+        else TourService.StartDriverTour();
     }
 
     private async Task Logout()
     {
-        try
-        {
-            showProfile      = false;
-            showProfileModal = false;
-            StateHasChanged();
-            await Supabase.Auth.SignOut();
-        }
+        try { showProfile = false; showProfileModal = false; StateHasChanged(); await Supabase.Auth.SignOut(); }
         catch { }
-        finally
-        {
-            Nav.NavigateTo("/", forceLoad: true);
-        }
+        finally { Nav.NavigateTo("/", forceLoad: true); }
     }
 }

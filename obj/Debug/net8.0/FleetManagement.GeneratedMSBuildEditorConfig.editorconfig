@@ -42,8 +42,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2V0dGluZ3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/suli/fleetmanagement/Pages/SetupWizard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2V0dXBXaXphcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/suli/fleetmanagement/Shared/AuthGuard.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0F1dGhHdWFyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/suli/fleetmanagement/Shared/CoachMark.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvYWNoTWFyay5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/suli/fleetmanagement/Shared/EmptyLayout.razor]

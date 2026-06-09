@@ -1,0 +1,60 @@
+@implements IDisposable
+@inject FleetManagement.Services.TourService TourService
+@inject IJSRuntime JS
+
+@if (TourService.IsActive && TourService.CurrentStep != null)
+{
+    var step = TourService.CurrentStep;
+    <div class="coach-overlay" @onclick="TourService.End"></div>
+    <div class="coach-highlight" id="coach-highlight"></div>
+    <div class="coach-card" id="coach-card">
+        <div class="coach-header">
+            <span class="coach-step-count">@(TourService.CurrentIndex + 1) / @TourService.TotalSteps</span>
+            <button class="coach-close" @onclick="TourService.End"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <h6 class="coach-title">@step.Title</h6>
+        <p class="coach-body">@step.Body</p>
+        <div class="coach-actions">
+            @if (TourService.CurrentIndex > 0)
+            {
+                <button class="coach-btn-back" @onclick="TourService.Previous"><i class="bi bi-arrow-left me-1"></i> Back</button>
+            }
+            else { <div></div> }
+            @if (TourService.IsLastStep)
+            {
+                <button class="coach-btn-next coach-btn-finish" @onclick="TourService.End">Done <i class="bi bi-check-lg ms-1"></i></button>
+            }
+            else
+            {
+                <button class="coach-btn-next" @onclick="TourService.Next">Next <i class="bi bi-arrow-right ms-1"></i></button>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .coach-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;cursor:pointer; }
+    .coach-highlight { position:fixed;border-radius:10px;border:2px solid #378ADD;box-shadow:0 0 0 4px rgba(55,138,221,0.25);z-index:9001;pointer-events:none;transition:all 0.3s ease;background:rgba(55,138,221,0.05); }
+    .coach-card { position:fixed;width:300px;background:var(--card-bg,#fff);border-radius:14px;padding:1.25rem;border:1px solid var(--border-color,#e2e8f0);box-shadow:0 8px 32px rgba(4,44,83,0.22);z-index:9002;transition:top 0.3s ease,left 0.3s ease; }
+    .coach-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem; }
+    .coach-step-count { font-size:0.75rem;font-weight:600;color:#378ADD;background:rgba(55,138,221,0.1);padding:2px 8px;border-radius:20px; }
+    .coach-close { background:none;border:none;cursor:pointer;color:var(--text-muted,#888);font-size:0.9rem;padding:2px; }
+    .coach-title { font-size:0.95rem;font-weight:700;color:var(--text-main,#111);margin-bottom:0.4rem; }
+    .coach-body { font-size:0.85rem;color:var(--text-muted,#555);line-height:1.5;margin-bottom:1rem; }
+    .coach-actions { display:flex;justify-content:space-between;align-items:center; }
+    .coach-btn-back { background:none;border:none;cursor:pointer;font-size:0.85rem;color:var(--text-muted,#888);padding:0.4rem 0; }
+    .coach-btn-next { background:#185FA5;color:#fff;border:none;border-radius:8px;padding:0.4rem 1rem;font-size:0.85rem;font-weight:500;cursor:pointer; }
+    .coach-btn-finish { background:#22c55e; }
+</style>
+
+@code {
+    protected override void OnInitialized() => TourService.OnChanged += OnTourChanged;
+    public void Dispose() => TourService.OnChanged -= OnTourChanged;
+    private void OnTourChanged() => InvokeAsync(async () => { StateHasChanged(); await Task.Delay(60); await Position(); });
+    protected override async Task OnAfterRenderAsync(bool firstRender) { if (TourService.IsActive && TourService.CurrentStep != null) await Position(); }
+    private async Task Position()
+    {
+        if (TourService.CurrentStep != null)
+            try { await JS.InvokeVoidAsync("positionCoachMark", TourService.CurrentStep.ElementId, TourService.CurrentStep.Position); } catch { }
+    }
+}
