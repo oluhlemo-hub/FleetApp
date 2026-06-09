@@ -22,7 +22,7 @@ while true; do
         echo "🚀 Committing and deploying..."
         git add .
         git commit -m "$COMMIT_MSG"
-        git push origin main
+        git push  main
 
         if [ $? -eq 0 ]; then
             echo ""
