@@ -166,20 +166,7 @@
         try
         {
             var role = await FleetService.LoginAsync(UserEmail, Password);
-            if (role == "Admin")
-            {
-                try
-                {
-                    var adminRecord = await Supabase.From<Driver>()
-                        .Filter("email", Postgrest.Constants.Operator.Equals, UserEmail)
-                        .Single();
-                    if (adminRecord?.HasCompletedSetup == false)
-                        Nav.NavigateTo("/setup");
-                    else
-                        Nav.NavigateTo("/admin");
-                }
-                catch { Nav.NavigateTo("/admin"); }
-            }
+            if (role == "Admin") { Nav.NavigateTo("/admin"); }
             else if (role == "Driver")
             {
                 try
@@ -189,8 +176,6 @@
                         .Single();
                     if (driverRecord?.MustChangePassword == true)
                         Nav.NavigateTo("/change-password");
-                    else if (driverRecord?.HasCompletedSetup == false)
-                        Nav.NavigateTo("/setup");
                     else
                         Nav.NavigateTo("/driver");
                 }

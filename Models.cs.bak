@@ -52,12 +52,6 @@ namespace FleetManagement.Models
         public int TotalKmDriven { get; set; }
         [Column("last_vehicle")]
         public string? LastVehicle { get; set; }
-        [Column("profile_picture_url")]
-        public string? ProfilePictureUrl { get; set; }
-        [Column("has_completed_setup")]
-        public bool HasCompletedSetup { get; set; } = false;
-        [Column("has_taken_tour")]
-        public bool HasTakenTour { get; set; } = false;
     }
 
     [Table("faults")]

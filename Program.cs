@@ -29,6 +29,7 @@ builder.Services.AddScoped<FleetService>();
 builder.Services.AddScoped<ThemeService>(); // Handles per-user dark/light state broadcasting
 builder.Services.AddScoped<FleetManagement.Services.ThemeService>();
 builder.Services.AddScoped<FleetManagement.Services.EmailService>();
+builder.Services.AddScoped<FleetManagement.Services.TourService>();
 builder.Services.AddHostedService<FleetManagement.Services.MileageReminderService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

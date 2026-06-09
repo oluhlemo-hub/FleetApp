@@ -175,14 +175,15 @@
         --navy-400: #378ADD;
         --navy-200: #B5D4F4;
         --navy-50:  #E6F1FB;
+        --surface:  #f5f7fa;
     }
 
-    .page { min-height: 100vh; background: var(--page-bg); color: var(--text-main); }
+    .page { min-height: 100vh; background: var(--surface); }
 
     /* ── Top bar ── */
     .fleet-topbar {
         height: 56px;
-        background: var(--surface-navy);
+        background: var(--navy-900);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -190,8 +191,7 @@
         position: sticky;
         top: 0;
         z-index: 100;
-        border-bottom: 1px solid var(--border-color);
-        transition: background 0.25s, border-color 0.25s;
+        border-bottom: 0.5px solid var(--navy-600);
     }
     .fleet-brand {
         display: flex;
@@ -255,8 +255,8 @@
         top: calc(100% + 8px);
         right: 0;
         width: 260px;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
+        background: #ffffff;
+        border: 0.5px solid var(--navy-200);
         border-radius: 12px;
         z-index: 1000;
         overflow: hidden;
@@ -267,8 +267,8 @@
         align-items: center;
         gap: 10px;
         padding: 1rem;
-        background: var(--surface-raised);
-        border-bottom: 1px solid var(--border-color);
+        background: var(--navy-50);
+        border-bottom: 0.5px solid var(--navy-200);
     }
     .fleet-avatar-lg {
         width: 40px;
@@ -283,7 +283,7 @@
         font-weight: 500;
         flex-shrink: 0;
     }
-    .fleet-profile-name  { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
+    .fleet-profile-name  { font-size: 0.9rem; font-weight: 500; color: var(--navy-900); }
     .fleet-profile-email { font-size: 0.75rem; color: #5F5E5A; }
     .fleet-profile-actions { padding: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
     .fleet-profile-action {
@@ -294,12 +294,12 @@
         border: none;
         border-radius: 8px;
         background: transparent;
-        color: var(--text-main);
+        color: var(--navy-900);
         font-size: 0.875rem;
         cursor: pointer;
         text-align: left;
     }
-    .fleet-profile-action:hover { background: var(--surface-raised); }
+    .fleet-profile-action:hover { background: var(--navy-50); }
     .fleet-profile-action-danger { color: #A32D2D; }
     .fleet-profile-action-danger:hover { background: #FCEBEB; }
 
@@ -308,14 +308,12 @@
     .fleet-sidebar {
         width: 64px;
         min-width: 64px;
-        background: var(--surface-navy);
+        background: var(--navy-900);
         display: flex;
         flex-direction: column;
         padding: 1rem 0.75rem;
         gap: 4px;
         flex-shrink: 0;
-        border-right: 1px solid var(--border-color);
-        transition: background 0.25s, border-color 0.25s;
     }
     .fleet-sidebar-logo {
         width: 36px;
@@ -355,7 +353,7 @@
     .fleet-sidebar-logout:hover      { background: #501313; color: #F7C1C1; }
 
     /* ── Main content ── */
-    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--page-bg); color: var(--text-main); transition: background 0.25s; }
+    .main-content { flex: 1; padding: 1rem; min-width: 0; background: var(--surface); }
 
     /* ── Mobile nav ── */
     .fleet-mobile-nav {
@@ -365,8 +363,8 @@
         left: 0;
         right: 0;
         height: 64px;
-        background: var(--surface-navy);
-        border-top: 1px solid var(--border-color);
+        background: var(--navy-900);
+        border-top: 0.5px solid var(--navy-600);
         z-index: 200;
         flex-direction: row;
         align-items: center;
