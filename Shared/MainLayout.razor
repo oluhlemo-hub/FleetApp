@@ -329,6 +329,13 @@
 
     public void Dispose() => ThemeService.OnThemeChanged -= OnThemeUpdated;
 
+    private void TriggerTour()
+    {
+        showProfile = false;
+        Nav.NavigateTo("/admin?starttour=1", forceLoad: false);
+        StateHasChanged();
+    }
+
     private void ToggleProfile() { showProfile = !showProfile; StateHasChanged(); }
     private void OpenProfile()   { showProfile = false; showProfileModal = true; StateHasChanged(); }
     private void CloseProfileModal() { showProfileModal = false; profilePicError = ""; StateHasChanged(); }
