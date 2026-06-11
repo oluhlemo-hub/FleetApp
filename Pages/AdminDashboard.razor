@@ -2,6 +2,7 @@
 @using FleetManagement.Models
 @inject Supabase.Client Supabase
 @inject IJSRuntime JS
+@using System.Text.Json
 @using Microsoft.AspNetCore.Components.Forms
 @inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
 
@@ -52,7 +53,7 @@
         <h3 class="mb-0" style="color:var(--text-main);">Fleet Overview</h3>
         <div class="header-actions">
             <div class="position-relative">
-                <button class="btn btn-outline-secondary position-relative" @onclick="ToggleNotifications">
+                <button id="tour-notifications" class="btn btn-outline-secondary position-relative" @onclick="ToggleNotifications">
                     <i class="bi bi-bell fs-5"></i>
                     @if (allFaults.Count(f => f.Status == "Open") + mileageAlerts.Count(a => !dismissedMileageAlerts.Contains(a.DriverEmail)) > 0)
                     {
@@ -148,23 +149,26 @@
                     </div>
                 }
             </div>
-            <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/settings")'>
+            <button id="tour-start" class="btn btn-outline-secondary" @onclick="StartTour" title="Start guided tour">
+                <i class="bi bi-question-circle me-1"></i><span class="d-none d-sm-inline"> Help</span>
+            </button>
+            <button id="tour-settings" class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/settings")'>
                 <i class="bi bi-gear me-1"></i><span class="d-none d-sm-inline"> Settings</span>
             </button>
-            <button class="btn btn-primary" @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
+            <button id="tour-add-vehicle" class="btn btn-primary" @onclick="() => { isVehicleModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
                 <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline"> Add Vehicle</span>
             </button>
-            <button class="btn btn-secondary" @onclick="async () => { await LoadFuelCards(); isDriverModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
+            <button id="tour-add-driver" class="btn btn-secondary" @onclick="async () => { await LoadFuelCards(); isDriverModalVisible = true; modalError = string.Empty; modalErrorDetail = string.Empty; }">
                 <i class="bi bi-person-plus me-1"></i><span class="d-none d-sm-inline"> Add Driver</span>
             </button>
-            <button class="btn btn-warning" @onclick="OpenFuelCardModal">
+            <button id="tour-fuel-cards" class="btn btn-warning" @onclick="OpenFuelCardModal">
                 <i class="bi bi-credit-card me-1"></i><span class="d-none d-sm-inline"> Fuel Cards</span>
             </button>
 
         </div>
     </div>
 
-    <div class="fleet-stat-row">
+    <div id="tour-stats" class="fleet-stat-row">
         <div class="fleet-stat-card">
             <div class="fleet-stat-accent" style="background:#378ADD"></div>
             <div class="fleet-stat-num">@vehicles.Count</div>
@@ -1716,6 +1720,62 @@
     </div>
 }
 
+
+@if (tourActive)
+{
+    <!-- Tour backdrop -->
+    <div style="position:fixed;inset:0;z-index:2000;pointer-events:none;">
+        <!-- Dark overlay with hole cut out via box-shadow -->
+        <div id="tour-spotlight" style="position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,0.65);transition:all 0.35s ease;pointer-events:none;z-index:2001;"></div>
+    </div>
+
+    <!-- Tour tooltip -->
+    <div id="tour-tooltip" style="position:fixed;z-index:2002;max-width:320px;min-width:260px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:1.25rem 1.25rem 1rem;box-shadow:0 8px 40px rgba(0,0,0,0.45);transition:all 0.3s ease;top:@tourTooltipTop;left:@tourTooltipLeft;">
+        <!-- Progress dots -->
+        <div style="display:flex;gap:5px;margin-bottom:0.75rem;">
+            @for (int i = 0; i < tourSteps.Count; i++)
+            {
+                var stepIdx = i;
+                <div style="width:@(i == tourStep ? "20px" : "7px");height:7px;border-radius:4px;background:@(i == tourStep ? "var(--accent-primary)" : "var(--border-color)");transition:all 0.3s;"></div>
+            }
+        </div>
+
+        <!-- Step icon + title -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--surface-raised);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                @((MarkupString)tourSteps[tourStep].Icon)
+            </div>
+            <div style="font-weight:700;font-size:0.95rem;color:var(--text-main);">@tourSteps[tourStep].Title</div>
+        </div>
+
+        <!-- Description -->
+        <p style="font-size:0.83rem;color:var(--text-muted);line-height:1.55;margin:0 0 1rem;">@tourSteps[tourStep].Description</p>
+
+        <!-- Navigation -->
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:0.75rem;color:var(--text-muted);">@(tourStep + 1) of @tourSteps.Count</span>
+            <div style="display:flex;gap:8px;">
+                <button style="background:none;border:1px solid var(--border-color);border-radius:8px;padding:6px 14px;font-size:0.8rem;color:var(--text-muted);cursor:pointer;" @onclick="EndTour">Skip</button>
+                @if (tourStep > 0)
+                {
+                    <button style="background:var(--surface-raised);border:none;border-radius:8px;padding:6px 14px;font-size:0.8rem;color:var(--text-main);cursor:pointer;" @onclick="PrevTourStep">Back</button>
+                }
+                @if (tourStep < tourSteps.Count - 1)
+                {
+                    <button style="background:var(--accent-primary);border:none;border-radius:8px;padding:6px 16px;font-size:0.8rem;color:#fff;font-weight:600;cursor:pointer;" @onclick="NextTourStep">Next →</button>
+                }
+                else
+                {
+                    <button style="background:var(--accent-success);border:none;border-radius:8px;padding:6px 16px;font-size:0.8rem;color:#fff;font-weight:600;cursor:pointer;" @onclick="EndTour">Done ✓</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Click anywhere to close backdrop -->
+    <div style="position:fixed;inset:0;z-index:1999;" @onclick="EndTour"></div>
+}
+
 </AuthGuard>
 
 @code {
@@ -2402,6 +2462,139 @@
             await JS.InvokeVoidAsync("downloadFile", fileName, "text/csv", base64);
         }
         catch (Exception ex) { successMessage = $"Export failed: {ex.Message}"; }
+    }
+
+
+    // ── TOUR ─────────────────────────────────────────────────────────────────
+    private bool tourActive = false;
+    private int tourStep = 0;
+    private string tourTooltipTop = "50%";
+    private string tourTooltipLeft = "50%";
+
+    private record TourStep(string TargetId, string Icon, string Title, string Description, string Position = "bottom");
+
+    private List<TourStep> tourSteps = new()
+    {
+        new("tour-stats",
+            "<i class='bi bi-bar-chart-fill' style='color:#378ADD'></i>",
+            "Fleet Overview Stats",
+            "These 5 cards give you a live snapshot of your fleet — total vehicles, how many are active, in service, open faults, and active drivers. They update automatically as your fleet changes."),
+
+        new("tour-add-vehicle",
+            "<i class='bi bi-plus-circle-fill' style='color:#378ADD'></i>",
+            "Add a Vehicle",
+            "Click 'Add Vehicle' to register a new vehicle in your fleet. Enter the make, model, registration plate, current mileage, and service due km. The vehicle immediately appears in your fleet list."),
+
+        new("tour-add-driver",
+            "<i class='bi bi-person-plus-fill' style='color:#378ADD'></i>",
+            "Register a Driver",
+            "Click 'Add Driver' to create a driver account. Fill in their name, email, phone, and role. A temporary password is set so they can log in and change it. Drivers only see their assigned vehicle — admins see everything."),
+
+        new("tour-fuel-cards",
+            "<i class='bi bi-credit-card-fill' style='color:#BA7517'></i>",
+            "Fuel Cards",
+            "Manage company fuel cards here. Assign a fuel card to a driver so it auto-fills when they log fuel expenses. This helps prevent unauthorised fuel usage and keeps receipts traceable."),
+
+        new("tour-notifications",
+            "<i class='bi bi-bell-fill' style='color:#e05555'></i>",
+            "Notifications",
+            "The bell icon shows real-time alerts — mileage reminders for drivers who haven't updated their km, and new fault reports from drivers. Red badge means there are unread items requiring your attention."),
+
+        new("tour-vehicles-tab",
+            "<i class='bi bi-truck' style='color:#378ADD'></i>",
+            "Vehicles Tab",
+            "See all your vehicles in one table. Each row shows the vehicle's status (Available, Active, In Service), current mileage, next service due, and assigned driver. Click a vehicle name to view its full history."),
+
+        new("tour-drivers-tab",
+            "<i class='bi bi-people-fill' style='color:#378ADD'></i>",
+            "Drivers Tab",
+            "View and manage all registered drivers. See their role, contact details, activity status, and rating. Click a driver name to view their full profile including trip history and performance."),
+
+        new("tour-faults-tab",
+            "<i class='bi bi-exclamation-triangle-fill' style='color:#e05555'></i>",
+            "Faults Tab",
+            "All fault reports submitted by drivers appear here. Each fault shows the vehicle, driver, fault type, description, and status. Click the eye icon to view full details or resolve a fault once it's been fixed."),
+
+        new("tour-fuellogs-tab",
+            "<i class='bi bi-fuel-pump-fill' style='color:#BA7517'></i>",
+            "Fuel Logs Tab",
+            "Every fuel fill and expense logged by drivers is recorded here with date, vehicle, driver, litres, cost, mileage, and receipt photo. Use this to track fuel spend and identify unusual patterns."),
+
+        new("tour-settings",
+            "<i class='bi bi-gear-fill' style='color:#6a9bbf'></i>",
+            "Settings",
+            "Configure your Fleet Portal preferences here — switch between light and dark mode, set your accent colour, manage notification preferences, and update organisation details like your company name and logo."),
+    };
+
+    private async Task StartTour()
+    {
+        tourStep = 0;
+        tourActive = true;
+        StateHasChanged();
+        await Task.Delay(100);
+        await PositionTooltip();
+    }
+
+    private async Task NextTourStep()
+    {
+        if (tourStep < tourSteps.Count - 1)
+        {
+            tourStep++;
+            StateHasChanged();
+            await Task.Delay(100);
+            await PositionTooltip();
+        }
+    }
+
+    private async Task PrevTourStep()
+    {
+        if (tourStep > 0)
+        {
+            tourStep--;
+            StateHasChanged();
+            await Task.Delay(100);
+            await PositionTooltip();
+        }
+    }
+
+    private void EndTour()
+    {
+        tourActive = false;
+        StateHasChanged();
+    }
+
+    private async Task PositionTooltip()
+    {
+        try
+        {
+            var step = tourSteps[tourStep];
+            var rect = await JS.InvokeAsync<JsonElement>("eval",
+                $"(function(){{ var el = document.getElementById('{step.TargetId}'); if(!el) return null; var r = el.getBoundingClientRect(); return {{top:r.top, left:r.left, width:r.width, height:r.height, bottom:r.bottom, right:r.right}}; }})()");
+
+            if (rect.ValueKind == JsonValueKind.Null) return;
+
+            double top = rect.GetProperty("top").GetDouble();
+            double left = rect.GetProperty("left").GetDouble();
+            double width = rect.GetProperty("width").GetDouble();
+            double height = rect.GetProperty("height").GetDouble();
+            double bottom = rect.GetProperty("bottom").GetDouble();
+
+            // Position spotlight
+            await JS.InvokeVoidAsync("eval",
+                $"(function(){{ var el = document.getElementById('tour-spotlight'); if(el){{ el.style.top='{top - 6}px'; el.style.left='{left - 6}px'; el.style.width='{width + 12}px'; el.style.height='{height + 12}px'; }} }})()");
+
+            // Position tooltip below element
+            double ttTop = bottom + 14;
+            double ttLeft = Math.Max(10, left + width / 2 - 160);
+
+            // If too close to bottom, show above
+            if (ttTop + 220 > 900) ttTop = top - 230;
+
+            tourTooltipTop = $"{ttTop}px";
+            tourTooltipLeft = $"{ttLeft}px";
+            StateHasChanged();
+        }
+        catch { }
     }
 
 }
