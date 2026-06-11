@@ -1184,10 +1184,36 @@
         font-size: 0.75rem;
         color: var(--text-muted);
     }
+
+    /* ── Mobile responsive ── */
     @@media (max-width: 767px) {
         .fleet-stat-row { grid-template-columns: repeat(2, 1fr); }
         .fleet-stat-row .fleet-stat-card:last-child { grid-column: span 2; }
+
+        .page-header { flex-direction: column; align-items: flex-start; padding: 0.6rem 0.75rem; margin: -0.5rem -0.5rem 0.75rem -0.5rem; }
+        .page-header h3 { font-size: 1rem; }
+        .header-actions { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+        .header-actions .btn { font-size: 0.78rem; padding: 5px 10px; white-space: nowrap; flex-shrink: 0; }
+        .header-actions .btn span { display: inline !important; }
+
+        .nav-tabs { font-size: 0.78rem; }
+        .nav-tabs .nav-link { padding: 6px 10px; }
+        .nav-tabs .nav-link i { display: none; }
+
+        .fleet-table thead { display: none; }
+        .fleet-table tbody tr { display: block; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; padding: 8px 12px; background: var(--card-bg); }
+        .fleet-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border: none; font-size: 0.82rem; }
+        .fleet-table tbody td::before { content: attr(data-label); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-right: 8px; flex-shrink: 0; }
+        .fleet-table tbody td:last-child { padding-top: 8px; border-top: 1px solid var(--border-color); margin-top: 4px; justify-content: flex-end; }
+
+        .notifications-panel { position: fixed !important; top: 56px !important; left: 8px !important; right: 8px !important; width: auto !important; z-index: 1050; }
     }
+    @@media (max-width: 480px) {
+        .fleet-stat-num { font-size: 1.25rem; }
+        .fleet-stat-lbl { font-size: 0.68rem; }
+        .fleet-stat-card { padding: 0.6rem 0.75rem; }
+    }
+
 
     /* ── Page layout ── */
     .page-header {

@@ -637,3 +637,44 @@ body {
 .theme-dark thead[style*="background:var(--surface-navy)"] {
   background: #060e18 !important;
 }
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL MOBILE RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+    /* Action grids — driver dashboard */
+    .action-grid-top { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .action-grid-bottom { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .action-tile { padding: 14px 12px; }
+    .action-tile-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+    .action-tile-title { font-size: 0.82rem; }
+    .action-tile-sub { font-size: 0.68rem; }
+    .action-tile-sm { padding: 14px 8px 10px; }
+    .action-tile-sm .tile-icon-wrap { width: 38px; height: 38px; font-size: 1.1rem; }
+    .action-tile-full { padding: 12px 14px; gap: 10px; }
+    .action-tile-full .tile-icon-wrap { width: 38px; height: 38px; }
+
+    /* Vehicle card */
+    .vehicle-card-reg { font-size: 1.9rem; }
+    .vehicle-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .vehicle-stat { padding: 10px 12px; }
+    .vehicle-stat-value { font-size: 0.85rem; }
+
+    /* Modal */
+    .modal-card { padding: 1rem !important; }
+
+    /* Tables — make scrollable */
+    .fleet-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .fleet-table { min-width: 500px; }
+
+    /* General */
+    .container-fluid { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+}
+
+@media (max-width: 480px) {
+    .action-grid-top { grid-template-columns: 1fr 1fr; }
+    .action-grid-bottom { grid-template-columns: repeat(3, 1fr); }
+    .vehicle-card-reg { font-size: 1.6rem; }
+    .dvir-banner { flex-wrap: wrap; }
+    .dvir-banner-btn { width: 100%; text-align: center; }
+}
