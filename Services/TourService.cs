@@ -17,6 +17,7 @@ namespace FleetManagement.Services
         public List<TourStep> Steps { get; private set; } = new();
 
         public event Action? OnChanged;
+        public event Action? OnAdminTourRequested;
 
         public TourStep? CurrentStep => IsActive && CurrentIndex < Steps.Count ? Steps[CurrentIndex] : null;
         public int  TotalSteps => Steps.Count;
@@ -44,6 +45,7 @@ namespace FleetManagement.Services
         };
 
         public void StartAdminTour()  { Steps = AdminSteps;  CurrentIndex = 0; IsActive = true;  OnChanged?.Invoke(); }
+        public void RequestAdminTour()   { OnAdminTourRequested?.Invoke(); }
         public void StartDriverTour() { Steps = DriverSteps; CurrentIndex = 0; IsActive = true;  OnChanged?.Invoke(); }
 
         public void Next()

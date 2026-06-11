@@ -92,9 +92,9 @@
                 </NavLink>
             }
             <div class="fleet-sidebar-bottom">
-                <button class="fleet-sidebar-item fleet-sidebar-tour" @onclick="StartTour" type="button" title="Take the Tour">
-                    <i class="bi bi-map"></i>
-                    <span class="sidebar-label">Tour</span>
+                <button class="fleet-sidebar-item fleet-sidebar-tour" @onclick="StartTour" type="button" title="Help / Take the Tour">
+                    <i class="bi bi-question-circle"></i>
+                    <span class="sidebar-label">Help</span>
                 </button>
                 <button class="fleet-sidebar-item fleet-sidebar-profile" @onclick="OpenProfile" type="button">
                     <i class="bi bi-person-circle"></i>
@@ -343,7 +343,7 @@
     private void StartTour()
     {
         showProfile = false; showProfileModal = false; StateHasChanged();
-        if (userRole == "Admin") TourService.StartAdminTour();
+        if (userRole == "Admin") TourService.RequestAdminTour();
         else TourService.StartDriverTour();
     }
 
