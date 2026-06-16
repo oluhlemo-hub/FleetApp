@@ -854,18 +854,26 @@
                 {
                     @foreach (var svc in vehicleServiceHistory.OrderByDescending(s => s.ServicedAt))
                     {
-                        <div class="card border-0 bg-light mb-2">
+                        <div class="card border-0 mb-2" style="background:var(--card-bg);border:1px solid var(--border-color) !important;">
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <div class="fw-semibold small">@(svc.ServiceStation ?? "Unknown station")</div>
+                                        <div class="fw-semibold small" style="color:var(--text-main);">@(svc.ServiceStation ?? "Unknown station")</div>
                                         <div class="text-muted x-small">By @svc.DriverEmail</div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="small fw-semibold">@svc.MileageAtService km</div>
+                                        <div class="small fw-semibold" style="color:var(--text-main);">@svc.MileageAtService km</div>
                                         <div class="text-muted x-small">@svc.ServicedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
                                     </div>
                                 </div>
+                                @if (!string.IsNullOrEmpty(svc.ReportUrl))
+                                {
+                                    <div class="mt-2">
+                                        <a href="@svc.ReportUrl" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">
+                                            <i class="bi bi-file-earmark-text me-1"></i>View Service Report
+                                        </a>
+                                    </div>
+                                }
                             </div>
                         </div>
                     }
@@ -2365,9 +2373,9 @@
             using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
             var bytes = new byte[file.Size];
             await stream.ReadAsync(bytes);
-            await Supabase.Storage.From("documents").Upload(bytes, fileName,
+            await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName,
                 new Supabase.Storage.FileOptions { ContentType = file.ContentType, Upsert = true });
-            docFileUrl = Supabase.Storage.From("documents").GetPublicUrl(fileName);
+            docFileUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
         }
         catch (Exception ex) { modalError = $"File upload failed: {ex.Message}"; }
         finally { isUploadingDoc = false; StateHasChanged(); }
