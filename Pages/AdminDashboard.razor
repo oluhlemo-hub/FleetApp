@@ -604,14 +604,13 @@
 <!-- FAULT DETAIL MODAL -->
 @if (selectedFault != null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1055;">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2 text-danger"></i> Fault Report</h5>
-                    <button type="button" class="btn-close" @onclick="() => selectedFault = null"></button>
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0" style="color:var(--text-main);"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Fault Report</h5>
+                    <button class="btn-close" @onclick="() => selectedFault = null"></button>
                 </div>
-                <div class="modal-body">
+                <div>
                     <div class="list-group list-group-flush">
                         <div class="list-group-item d-flex justify-content-between flex-wrap gap-1">
                             <span class="text-muted"><i class="bi bi-car-front me-2"></i>Vehicle</span>
@@ -639,7 +638,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer flex-column gap-2">
+                <div class="d-flex flex-column gap-2 mt-3">
                     @if (selectedFault.Status == "Open")
                     {
                         <button class="btn btn-success w-100" @onclick="() => ResolveFault(selectedFault)">
@@ -648,7 +647,6 @@
                     }
                     <button class="btn btn-secondary w-100" @onclick="() => selectedFault = null">Close</button>
                 </div>
-            </div>
         </div>
     </div>
 }
@@ -656,19 +654,17 @@
 <!-- CONFIRM MODAL -->
 @if (showConfirmModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>@confirmTitle</h5>
-                    <button type="button" class="btn-close" @onclick="() => showConfirmModal = false"></button>
+    <div class="modal-backdrop-centered">
+        <div class="modal-card-centered">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>@confirmTitle</h5>
+                    <button class="btn-close" @onclick="() => showConfirmModal = false"></button>
                 </div>
-                <div class="modal-body"><p>@confirmMessage</p></div>
-                <div class="modal-footer flex-column gap-2">
+                <p style="color:var(--text-main);">@confirmMessage</p>
+                <div class="d-flex flex-column gap-2 mt-3">
                     <button class="btn btn-danger w-100" @onclick="ExecuteConfirmAction"><i class="bi bi-check-lg me-1"></i> Confirm</button>
                     <button class="btn btn-secondary w-100" @onclick="() => showConfirmModal = false">Cancel</button>
                 </div>
-            </div>
         </div>
     </div>
 }
@@ -676,16 +672,15 @@
 <!-- ADD/EDIT VEHICLE MODAL -->
 @if (isVehicleModalVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0" style="color:var(--text-main);">
                         <i class="bi bi-plus-circle me-2"></i>@(selectedVehicle != null ? "Edit Vehicle" : "Add Vehicle")
                     </h5>
-                    <button type="button" class="btn-close" @onclick="() => { isVehicleModalVisible = false; selectedVehicle = null; }"></button>
+                    <button class="btn-close" @onclick="() => { isVehicleModalVisible = false; selectedVehicle = null; }"></button>
                 </div>
-                <div class="modal-body">
+                <div>
                     @if (!string.IsNullOrEmpty(modalError))
                     {
                         <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
@@ -727,7 +722,6 @@
                         </div>
                     </EditForm>
                 </div>
-            </div>
         </div>
     </div>
 }
@@ -735,16 +729,15 @@
 <!-- ADD/EDIT DRIVER MODAL -->
 @if (isDriverModalVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0" style="color:var(--text-main);">
                         <i class="bi bi-person-plus me-2"></i>@(selectedDriver != null ? "Edit Driver" : "Register New Driver")
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseDriverModal"></button>
+                    <button class="btn-close" @onclick="CloseDriverModal"></button>
                 </div>
-                <div class="modal-body">
+                <div>
                     @if (!string.IsNullOrEmpty(modalError))
                     {
                         <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
@@ -796,7 +789,6 @@
                         </div>
                     </EditForm>
                 </div>
-            </div>
         </div>
     </div>
 }
@@ -806,8 +798,8 @@
 <!-- ══════════════════════════════════════════════════ -->
 @if (showVehicleHistory && vehicleHistoryTarget != null)
 {
-    <div class="modal-backdrop-custom" @onclick="CloseVehicleHistory">
-        <div class="modal-card card shadow" @onclick:stopPropagation="true">
+    <div class="modal-backdrop-panel" @onclick="CloseVehicleHistory">
+        <div class="modal-card-panel" @onclick:stopPropagation="true">
             <div class="p-4 border-bottom">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -818,7 +810,7 @@
                 </div>
             </div>
 
-            <div class="p-4" style="overflow-y:auto; max-height: calc(85vh - 80px);">
+            <div class="modal-card-panel-body">
 
                 <!-- Stats -->
                 <div class="row g-3 mb-4">
@@ -997,8 +989,8 @@
 <!-- ══════════════════════════════════════════════════ -->
 @if (showDriverProfile && driverProfileTarget != null)
 {
-    <div class="modal-backdrop-custom" @onclick="CloseDriverProfile">
-        <div class="modal-card card shadow" @onclick:stopPropagation="true">
+    <div class="modal-backdrop-panel" @onclick="CloseDriverProfile">
+        <div class="modal-card-panel" @onclick:stopPropagation="true">
             <div class="p-4 border-bottom">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-3">
@@ -1016,7 +1008,7 @@
                 </div>
             </div>
 
-            <div class="p-4" style="overflow-y:auto; max-height: calc(85vh - 80px);">
+            <div class="modal-card-panel-body">
 
                 <!-- Contact Info -->
                 <h6 class="fw-bold mb-3"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Contact Info</h6>
@@ -1393,29 +1385,7 @@
     .bg-warning-subtle { background: #FAEEDA !important; }
     .text-warning-emphasis { color: #854F0B !important; }
 
-    .modal-backdrop-custom {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%%; height: 100%%;
-        background: rgba(4,44,83,0.6);
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        z-index: 1055;
-        padding: 0;
-    }
-    .modal-card {
-        width: 100%%;
-        max-width: 560px;
-        border-radius: 20px 20px 0 0;
-        max-height: 88vh;
-        overflow: hidden;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    @@media (min-width: 576px) {
-        .modal-backdrop-custom { align-items: center; padding: 1rem; }
-        .modal-card { border-radius: 16px; max-height: 88vh; }
-    }
+    /* Modal styles handled globally in app.css */
 </style>
 
 
@@ -1619,14 +1589,13 @@
 <!-- FUEL CARD MANAGEMENT MODAL -->
 @if (isFuelCardModalVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-credit-card me-2 text-warning"></i>Fuel Card Management</h5>
-                    <button type="button" class="btn-close" @onclick="() => isFuelCardModalVisible = false"></button>
+    <div class="modal-backdrop-custom">
+        <div class="modal-card" style="max-width:680px;">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0" style="color:var(--text-main);"><i class="bi bi-credit-card me-2 text-warning"></i>Fuel Card Management</h5>
+                    <button class="btn-close" @onclick="() => isFuelCardModalVisible = false"></button>
                 </div>
-                <div class="modal-body">
+                <div>
                     @if (!string.IsNullOrEmpty(modalError))
                     {
                         <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
@@ -1681,10 +1650,9 @@
                         <p class="text-center text-muted py-3">No fuel cards added yet.</p>
                     }
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="() => isFuelCardModalVisible = false">Close</button>
+                <div class="mt-3">
+                    <button class="btn btn-secondary w-100" @onclick="() => isFuelCardModalVisible = false">Close</button>
                 </div>
-            </div>
         </div>
     </div>
 }
@@ -1692,14 +1660,13 @@
 <!-- ADD DOCUMENT MODAL -->
 @if (isDocModalVisible)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);z-index:1050;">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-file-earmark-plus me-2"></i>Add Vehicle Document</h5>
-                    <button type="button" class="btn-close" @onclick="() => isDocModalVisible = false"></button>
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0" style="color:var(--text-main);"><i class="bi bi-file-earmark-plus me-2"></i>Add Vehicle Document</h5>
+                    <button class="btn-close" @onclick="() => isDocModalVisible = false"></button>
                 </div>
-                <div class="modal-body">
+                <div>
                     @if (!string.IsNullOrEmpty(modalError))
                     {
                         <div class="alert alert-danger py-2 d-flex align-items-center gap-2">@modalError @if (!string.IsNullOrEmpty(modalErrorDetail)) { <span title="@modalErrorDetail" style="cursor:help;font-size:1rem;">ℹ️</span> }</div>
@@ -1747,7 +1714,6 @@
                     </button>
                     <button class="btn btn-secondary w-100" @onclick="() => isDocModalVisible = false">Cancel</button>
                 </div>
-            </div>
         </div>
     </div>
 }
