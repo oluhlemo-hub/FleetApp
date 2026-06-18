@@ -79,6 +79,49 @@ namespace FleetManagement.Models
         public string Status { get; set; } = "Open";
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Column("attachment_url")]
+        public string? AttachmentUrl { get; set; }
+        [Column("acknowledged_at")]
+        public DateTime? AcknowledgedAt { get; set; }
+        [Column("assigned_to")]
+        public string? AssignedTo { get; set; }
+        [Column("expected_resolution_date")]
+        public DateTime? ExpectedResolutionDate { get; set; }
+        [Column("repair_booking_id")]
+        public string? RepairBookingId { get; set; }
+    }
+
+    [Table("repair_bookings")]
+    public class RepairBooking : BaseModel
+    {
+        [PrimaryKey("id", true)]
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        [Column("fault_id")]
+        public string FaultId { get; set; } = string.Empty;
+        [Column("vehicle_id")]
+        public string VehicleId { get; set; } = string.Empty;
+        [Column("vehicle_registration")]
+        public string VehicleRegistration { get; set; } = string.Empty;
+        [Column("driver_email")]
+        public string DriverEmail { get; set; } = string.Empty;
+        [Column("garage_name")]
+        public string GarageName { get; set; } = string.Empty;
+        [Column("garage_contact")]
+        public string? GarageContact { get; set; }
+        [Column("booking_date")]
+        public DateTime BookingDate { get; set; }
+        [Column("expected_completion_date")]
+        public DateTime? ExpectedCompletionDate { get; set; }
+        [Column("description")]
+        public string? Description { get; set; }
+        [Column("quote_url")]
+        public string? QuoteUrl { get; set; }
+        [Column("collected_at")]
+        public DateTime? CollectedAt { get; set; }
+        [Column("collection_notes")]
+        public string? CollectionNotes { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
     [Table("service_history")]

@@ -452,13 +452,17 @@
                                 <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;">@fault.DriverEmail</td>
                                 <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;"><span class="badge bg-warning text-dark">@fault.FaultType</span></td>
                                 <td style="padding:12px 18px;border:none;color:var(--text-muted);font-size:0.875rem;vertical-align:middle;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@fault.Description</td>
-                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;"><span class="badge @(fault.Status == "Open" ? "bg-danger" : "bg-success")">@fault.Status</span></td>
+                                <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;"><span class="badge @(fault.Status == "Open" ? "bg-danger" : fault.Status == "Pending" ? "bg-warning text-dark" : "bg-success")">@fault.Status</span></td>
                                 <td style="padding:12px 18px;border:none;color:var(--text-main);font-size:0.875rem;vertical-align:middle;">
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenFaultDetail(fault)"><i class="bi bi-eye"></i></button>
-                                        @if (fault.Status == "Open")
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <button class="btn btn-sm btn-outline-primary" title="View" @onclick="() => OpenFaultDetail(fault)"><i class="bi bi-eye"></i></button>
+                                        @if (fault.AcknowledgedAt == null && fault.Status != "Resolved")
                                         {
-                                            <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveFault(fault)"><i class="bi bi-check-lg"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary" title="Acknowledge" @onclick="() => AcknowledgeFault(fault)"><i class="bi bi-eye-fill"></i></button>
+                                        }
+                                        @if (fault.AcknowledgedAt != null && fault.Status != "Resolved")
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" title="Resolve" @onclick="() => ResolveFault(fault)"><i class="bi bi-check-lg"></i></button>
                                         }
                                     </div>
                                 </td>
@@ -487,9 +491,13 @@
                             &nbsp;·&nbsp;<i class="bi bi-person me-1"></i>@fault.DriverEmail
                         </div>
                         <p class="small mb-3 text-truncate">@fault.Description</p>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 flex-wrap">
                             <button class="btn btn-sm btn-outline-primary flex-grow-1" @onclick="() => OpenFaultDetail(fault)"><i class="bi bi-eye me-1"></i> View</button>
-                            @if (fault.Status == "Open")
+                            @if (fault.AcknowledgedAt == null && fault.Status != "Resolved")
+                            {
+                                <button class="btn btn-sm btn-outline-secondary flex-grow-1" @onclick="() => AcknowledgeFault(fault)"><i class="bi bi-eye-fill me-1"></i> Acknowledge</button>
+                            }
+                            @if (fault.AcknowledgedAt != null && fault.Status != "Resolved")
                             {
                                 <button class="btn btn-sm btn-outline-success flex-grow-1" @onclick="() => ResolveFault(fault)"><i class="bi bi-check-lg me-1"></i> Resolve</button>
                             }
@@ -608,7 +616,7 @@
         <div class="modal-card">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h5 class="mb-0" style="color:var(--text-main);"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Fault Report</h5>
-                    <button class="btn-close" @onclick="() => selectedFault = null"></button>
+                    <button class="btn-close" @onclick="() => { selectedFault = null; faultAssignTo = string.Empty; }"></button>
                 </div>
                 <div>
                     <div class="list-group list-group-flush">
@@ -630,22 +638,74 @@
                         </div>
                         <div class="list-group-item d-flex justify-content-between flex-wrap gap-1">
                             <span class="text-muted"><i class="bi bi-flag me-2"></i>Status</span>
-                            <span class="badge @(selectedFault.Status == "Open" ? "bg-danger" : "bg-success")">@selectedFault.Status</span>
+                            <span class="badge @(selectedFault.Status == "Open" ? "bg-danger" : selectedFault.Status == "Pending" ? "bg-warning text-dark" : "bg-success")">@selectedFault.Status</span>
                         </div>
+                        @if (selectedFault.AssignedTo != null)
+                        {
+                            <div class="list-group-item d-flex justify-content-between flex-wrap gap-1">
+                                <span class="text-muted"><i class="bi bi-person-check me-2"></i>Assigned To</span>
+                                <span class="fw-semibold text-break">@selectedFault.AssignedTo</span>
+                            </div>
+                        }
+                        @if (selectedFault.ExpectedResolutionDate.HasValue)
+                        {
+                            <div class="list-group-item d-flex justify-content-between flex-wrap gap-1">
+                                <span class="text-muted"><i class="bi bi-clock me-2"></i>Expected Resolution</span>
+                                <span class="fw-semibold">@selectedFault.ExpectedResolutionDate.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                            </div>
+                        }
                         <div class="list-group-item">
                             <span class="text-muted d-block mb-1"><i class="bi bi-chat-text me-2"></i>Description</span>
                             <p class="mb-0">@selectedFault.Description</p>
                         </div>
+                        @if (!string.IsNullOrEmpty(selectedFault.AttachmentUrl))
+                        {
+                            <div class="list-group-item">
+                                <span class="text-muted d-block mb-2"><i class="bi bi-image me-2"></i>Attachment</span>
+                                <a href="@selectedFault.AttachmentUrl" target="_blank">
+                                    <img src="@selectedFault.AttachmentUrl" alt="Fault photo"
+                                         style="max-width:100%;max-height:220px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);" />
+                                </a>
+                            </div>
+                        }
                     </div>
                 </div>
                 <div class="d-flex flex-column gap-2 mt-3">
-                    @if (selectedFault.Status == "Open")
+                    @if (selectedFault.Status == "Open" && selectedFault.AcknowledgedAt == null)
                     {
+                        <button class="btn btn-outline-primary w-100" @onclick="() => AcknowledgeFault(selectedFault)">
+                            <i class="bi bi-eye-fill me-1"></i> Acknowledge Fault
+                        </button>
+                    }
+                    @if (selectedFault.AcknowledgedAt != null && selectedFault.Status != "Resolved")
+                    {
+                        <div class="mb-1">
+                            <label class="form-label small text-muted mb-1">Assign to Driver</label>
+                            <select class="form-select form-select-sm" @bind="faultAssignTo">
+                                <option value="">-- Select Driver --</option>
+                                @{ var faultVehicle = vehicles.FirstOrDefault(v => v.Registration == selectedFault.VehicleRegistration); }
+                                @if (faultVehicle != null && !string.IsNullOrEmpty(faultVehicle.LastDriver))
+                                {
+                                    var currentDriver = drivers.FirstOrDefault(d => d.Name == faultVehicle.LastDriver);
+                                    if (currentDriver != null)
+                                    {
+                                        <option value="@currentDriver.Email">⭐ @currentDriver.Name (Current Driver)</option>
+                                    }
+                                }
+                                @foreach (var d in drivers.Where(d => d.IsActive && (faultVehicle == null || d.Name != faultVehicle.LastDriver)))
+                                {
+                                    <option value="@d.Email">@d.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <button class="btn btn-outline-warning w-100" @onclick="() => AssignFault(selectedFault)" disabled="@string.IsNullOrEmpty(faultAssignTo)">
+                            <i class="bi bi-person-check me-1"></i> Assign to Driver
+                        </button>
                         <button class="btn btn-success w-100" @onclick="() => ResolveFault(selectedFault)">
                             <i class="bi bi-check-lg me-1"></i> Mark as Resolved
                         </button>
                     }
-                    <button class="btn btn-secondary w-100" @onclick="() => selectedFault = null">Close</button>
+                    <button class="btn btn-secondary w-100" @onclick="() => { selectedFault = null; faultAssignTo = string.Empty; }">Close</button>
                 </div>
         </div>
     </div>
@@ -873,6 +933,47 @@
                 else
                 {
                     <p class="text-muted small mb-4">No service records yet.</p>
+                }
+
+                <!-- Fault History -->
+                <h6 class="fw-bold mb-3 mt-4"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Fault History</h6>
+                @if (vehicleFaultHistory.Any())
+                {
+                    @foreach (var flt in vehicleFaultHistory.OrderByDescending(f => f.CreatedAt))
+                    {
+                        <div class="card border-0 mb-2" style="background:var(--card-bg);border:1px solid var(--border-color) !important;">
+                            <div class="card-body py-2 px-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge bg-warning text-dark me-1">@flt.FaultType</span>
+                                        <span class="badge @(flt.Status == "Open" ? "bg-danger" : flt.Status == "Pending" ? "bg-warning text-dark" : "bg-success")">@flt.Status</span>
+                                        <div class="text-muted x-small mt-1">By @flt.DriverEmail</div>
+                                        @if (!string.IsNullOrEmpty(flt.AssignedTo))
+                                        {
+                                            <div class="text-muted x-small"><i class="bi bi-person-check me-1"></i>Assigned: @flt.AssignedTo</div>
+                                        }
+                                        <div class="small mt-1" style="color:var(--text-main);">@flt.Description</div>
+                                    </div>
+                                    <div class="text-end flex-shrink-0">
+                                        <div class="text-muted x-small">@flt.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(flt.AttachmentUrl))
+                                {
+                                    <div class="mt-2">
+                                        <a href="@flt.AttachmentUrl" target="_blank">
+                                            <img src="@flt.AttachmentUrl" alt="Fault photo"
+                                                 style="max-width:100%;max-height:160px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);" />
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted small mb-4">No fault records yet.</p>
                 }
 
                 <!-- Trip / Driver History -->
@@ -1809,6 +1910,7 @@
     private Vehicle? selectedVehicle = null;
     private Driver? selectedDriver = null;
     private Fault? selectedFault = null;
+    private string faultAssignTo = string.Empty;
 
     private bool showConfirmModal = false;
     private string confirmTitle = "";
@@ -2062,7 +2164,35 @@
     private void OpenFaultDetail(Fault fault)
     {
         selectedFault = fault;
+        faultAssignTo = string.Empty;
         showNotifications = false;
+    }
+    private async Task AcknowledgeFault(Fault fault)
+    {
+        try
+        {
+            fault.AcknowledgedAt = DateTime.UtcNow;
+            fault.Status = "Open";
+            await Supabase.From<Fault>().Update(fault);
+            await LoadData();
+            selectedFault = allFaults.FirstOrDefault(f => f.Id == fault.Id);
+            successMessage = $"Fault for {fault.VehicleRegistration} acknowledged.";
+        }
+        catch (Exception ex) { successMessage = $"Error: {ex.Message}"; }
+    }
+    private async Task AssignFault(Fault fault)
+    {
+        if (string.IsNullOrEmpty(faultAssignTo)) return;
+        try
+        {
+            fault.AssignedTo = faultAssignTo;
+            await Supabase.From<Fault>().Update(fault);
+            await LoadData();
+            selectedFault = allFaults.FirstOrDefault(f => f.Id == fault.Id);
+            successMessage = $"Fault assigned to {faultAssignTo}.";
+            faultAssignTo = string.Empty;
+        }
+        catch (Exception ex) { successMessage = $"Error: {ex.Message}"; }
     }
 
     private void DismissFaultAlert(Fault fault) => openFaults.Remove(fault);

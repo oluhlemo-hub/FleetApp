@@ -94,6 +94,25 @@
                 <div class="action-tile-title">Report Fault</div>
                 <div class="action-tile-sub">Log a vehicle issue</div>
             </button>
+            @if (assignedFault != null)
+            {
+                @if (activeRepairBooking == null)
+                {
+                    <button class="action-tile action-tile-accent-amber" @onclick="() => showBookRepairs = true">
+                        <div class="action-tile-icon action-tile-icon-amber"><i class="bi bi-wrench-adjustable"></i></div>
+                        <div class="action-tile-title">Book Repairs</div>
+                        <div class="action-tile-sub">Schedule fault repair</div>
+                    </button>
+                }
+                else if (activeRepairBooking.CollectedAt == null)
+                {
+                    <button class="action-tile action-tile-accent-green" @onclick="() => showCollectRepairs = true">
+                        <div class="action-tile-icon action-tile-icon-green"><i class="bi bi-check2-circle"></i></div>
+                        <div class="action-tile-title">Collect from Repairs</div>
+                        <div class="action-tile-sub">Mark repair complete</div>
+                    </button>
+                }
+            }
         </div>
 
         <div class="action-grid-bottom">
@@ -133,6 +152,96 @@
     }
 
 </div>
+
+
+@if (assignedFault != null)
+{
+    <div class="alert alert-warning d-flex align-items-start gap-2 mt-3" style="border-radius:12px;">
+        <i class="bi bi-wrench-adjustable-circle fs-5 mt-1"></i>
+        <div>
+            <strong>Fault Assigned to You:</strong> @assignedFault.FaultType on <strong>@assignedFault.VehicleRegistration</strong><br/>
+            <small class="text-muted">@assignedFault.Description</small>
+            @if (assignedFault.ExpectedResolutionDate.HasValue)
+            {
+                <div class="mt-1"><small><i class="bi bi-calendar me-1"></i>Expected resolution: @assignedFault.ExpectedResolutionDate.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</small></div>
+            }
+        </div>
+    </div>
+}
+
+@if (showBookRepairs)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-wrench-adjustable me-2" style="color:var(--accent-warning);"></i>Book for Repairs</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Garage / Workshop Name</label>
+                <input class="form-control" @bind="repairGarageName" placeholder="e.g. Midas Sandton" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Garage Contact Number</label>
+                <input class="form-control" @bind="repairGarageContact" placeholder="e.g. 011 234 5678" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Booking Date & Time</label>
+                <input type="datetime-local" class="form-control" @bind="repairBookingDate" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Expected Completion Date</label>
+                <input type="datetime-local" class="form-control" @bind="repairExpectedCompletion" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Description of Repairs Needed</label>
+                <textarea class="form-control" rows="3" @bind="repairDescription" placeholder="Describe what needs to be repaired..."></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Upload Quote (optional)</label>
+                <InputFile OnChange="OnRepairQuoteSelected" accept="image/*,.pdf" class="form-control" />
+                @if (repairQuoteFileName != null)
+                {
+                    <small style="color:var(--text-muted);"><i class="bi bi-file-earmark me-1"></i>@repairQuoteFileName</small>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(repairError))
+            {
+                <div class="alert alert-danger py-2 mb-3">@repairError</div>
+            }
+            <button class="btn btn-warning btn-lg w-100 mb-2" @onclick="SubmitBookRepairs" disabled="@isSubmitting">
+                <i class="bi bi-calendar-check me-1"></i>@(isSubmitting ? "Submitting..." : "Confirm Booking")
+            </button>
+            <button class="btn btn-outline-secondary w-100" @onclick="() => { showBookRepairs = false; repairError = string.Empty; }">Cancel</button>
+        </div>
+    </div>
+}
+
+@if (showCollectRepairs)
+{
+    <div class="modal-backdrop-custom">
+        <div class="modal-card">
+            <h5 class="mb-3" style="color:var(--text-main);"><i class="bi bi-check2-circle me-2" style="color:var(--accent-success);"></i>Collect from Repairs</h5>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Upload Job Card / Invoice</label>
+                <InputFile OnChange="OnRepairJobCardSelected" accept="image/*,.pdf" class="form-control" />
+                @if (repairJobCardFileName != null)
+                {
+                    <small style="color:var(--text-muted);"><i class="bi bi-file-earmark me-1"></i>@repairJobCardFileName</small>
+                }
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase;">Collection Notes (optional)</label>
+                <textarea class="form-control" rows="3" @bind="collectRepairsNotes" placeholder="Any notes about the repair outcome..."></textarea>
+            </div>
+            @if (!string.IsNullOrEmpty(collectRepairsError))
+            {
+                <div class="alert alert-danger py-2 mb-3">@collectRepairsError</div>
+            }
+            <button class="btn btn-success btn-lg w-100 mb-2" @onclick="SubmitCollectRepairs" disabled="@isSubmitting">
+                <i class="bi bi-check-circle me-1"></i>@(isSubmitting ? "Submitting..." : "Confirm Collection")
+            </button>
+            <button class="btn btn-outline-secondary w-100" @onclick="() => { showCollectRepairs = false; collectRepairsError = string.Empty; }">Cancel</button>
+        </div>
+    </div>
+}
 
 @if (showBookService)
 {
@@ -626,6 +735,24 @@
     private string faultDescription = string.Empty;
     private string? faultPhotoName;
     private IBrowserFile? faultPhoto;
+
+    // Repair booking
+    private bool showBookRepairs = false;
+    private bool showCollectRepairs = false;
+    private string repairGarageName = string.Empty;
+    private string repairGarageContact = string.Empty;
+    private DateTime repairBookingDate = DateTime.Today;
+    private DateTime repairExpectedCompletion = DateTime.Today.AddDays(3);
+    private string repairDescription = string.Empty;
+    private IBrowserFile? repairQuoteFile;
+    private string? repairQuoteFileName;
+    private string repairError = string.Empty;
+    private string collectRepairsNotes = string.Empty;
+    private string collectRepairsError = string.Empty;
+    private IBrowserFile? repairJobCardFile;
+    private string? repairJobCardFileName;
+    private Fault? assignedFault;
+    private RepairBooking? activeRepairBooking;
     private bool showReturnVehicle = false;
     private int returnMileage;
     private string returnCondition = string.Empty;
@@ -711,6 +838,27 @@
         }
         catch { }
         await CheckTodayDvir();
+
+        // Load assigned fault and active repair booking
+        try
+        {
+            var faultResult = await Supabase.From<Fault>()
+                .Filter("assigned_to", Postgrest.Constants.Operator.Equals, currentUserEmail)
+                .Filter("status", Postgrest.Constants.Operator.NotEqual, "Resolved")
+                .Order("created_at", Postgrest.Constants.Ordering.Descending)
+                .Get();
+            assignedFault = faultResult.Models.FirstOrDefault();
+
+            if (assignedFault?.RepairBookingId != null)
+            {
+                var bookingResult = await Supabase.From<RepairBooking>()
+                    .Filter("id", Postgrest.Constants.Operator.Equals, assignedFault.RepairBookingId)
+                    .Single();
+                activeRepairBooking = bookingResult;
+            }
+            else { activeRepairBooking = null; }
+        }
+        catch { assignedFault = null; activeRepairBooking = null; }
     }
 
     private async Task OpenRequestVehicle()
@@ -721,6 +869,103 @@
     }
 
     private void OnFaultPhotoSelected(InputFileChangeEventArgs e) { faultPhoto = e.File; faultPhotoName = e.File.Name; }
+
+    private void OnRepairQuoteSelected(InputFileChangeEventArgs e) { repairQuoteFile = e.File; repairQuoteFileName = e.File.Name; }
+    private void OnRepairJobCardSelected(InputFileChangeEventArgs e) { repairJobCardFile = e.File; repairJobCardFileName = e.File.Name; }
+
+    private async Task SubmitBookRepairs()
+    {
+        repairError = string.Empty;
+        if (string.IsNullOrWhiteSpace(repairGarageName)) { repairError = "Please enter the garage name."; return; }
+        if (repairBookingDate == default) { repairError = "Please select a booking date."; return; }
+        isSubmitting = true;
+        try
+        {
+            string? quoteUrl = null;
+            if (repairQuoteFile != null)
+            {
+                try
+                {
+                    var extension = Path.GetExtension(repairQuoteFile.Name);
+                    var fileName = $"repair-quotes/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+                    using var stream = repairQuoteFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                    using var ms = new MemoryStream(); await stream.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+                    await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+                    quoteUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
+                }
+                catch { /* quote upload failed, continue */ }
+            }
+            var booking = new RepairBooking
+            {
+                Id = Guid.NewGuid().ToString(),
+                FaultId = assignedFault!.Id,
+                VehicleId = currentVehicle.Id,
+                VehicleRegistration = currentVehicle.Registration,
+                DriverEmail = currentUserEmail,
+                GarageName = repairGarageName,
+                GarageContact = repairGarageContact,
+                BookingDate = repairBookingDate.ToUniversalTime(),
+                ExpectedCompletionDate = repairExpectedCompletion.ToUniversalTime(),
+                Description = repairDescription,
+                QuoteUrl = quoteUrl,
+                CreatedAt = DateTime.UtcNow
+            };
+            var inserted = await Supabase.From<RepairBooking>().Insert(booking);
+            var bookingId = inserted.Models.FirstOrDefault()?.Id ?? booking.Id;
+
+            // Update fault status to Pending and set expected resolution date
+            assignedFault.Status = "Pending";
+            assignedFault.RepairBookingId = bookingId;
+            assignedFault.ExpectedResolutionDate = repairExpectedCompletion.ToUniversalTime();
+            await Supabase.From<Fault>().Update(assignedFault);
+
+            showBookRepairs = false;
+            repairGarageName = string.Empty; repairGarageContact = string.Empty;
+            repairDescription = string.Empty; repairQuoteFile = null; repairQuoteFileName = null;
+            successMessage = $"Repairs booked at {booking.GarageName}.";
+            await LoadData();
+        }
+        catch (Exception ex) { repairError = $"Failed to book repairs: {ex.Message}"; }
+        finally { isSubmitting = false; }
+    }
+
+    private async Task SubmitCollectRepairs()
+    {
+        collectRepairsError = string.Empty;
+        isSubmitting = true;
+        try
+        {
+            string? jobCardUrl = null;
+            if (repairJobCardFile != null)
+            {
+                try
+                {
+                    var extension = Path.GetExtension(repairJobCardFile.Name);
+                    var fileName = $"repair-jobcards/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+                    using var stream = repairJobCardFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                    using var ms = new MemoryStream(); await stream.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+                    await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+                    jobCardUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
+                }
+                catch { /* job card upload failed, continue */ }
+            }
+            if (activeRepairBooking != null)
+            {
+                activeRepairBooking.CollectedAt = DateTime.UtcNow;
+                activeRepairBooking.CollectionNotes = collectRepairsNotes;
+                if (!string.IsNullOrEmpty(jobCardUrl)) activeRepairBooking.QuoteUrl = jobCardUrl;
+                await Supabase.From<RepairBooking>().Update(activeRepairBooking);
+            }
+            showCollectRepairs = false;
+            collectRepairsNotes = string.Empty; repairJobCardFile = null; repairJobCardFileName = null;
+            successMessage = "Vehicle collected from repairs successfully.";
+            await LoadData();
+        }
+        catch (Exception ex) { collectRepairsError = $"Failed to collect from repairs: {ex.Message}"; }
+        finally { isSubmitting = false; }
+    }
     private void OnServiceReportSelected(InputFileChangeEventArgs e) { serviceReportFile = e.File; serviceReportName = e.File.Name; }
     private void OnReceiptSelected(InputFileChangeEventArgs e) { fuelReceiptFile = e.File; fuelReceiptName = e.File.Name; }
 
@@ -857,11 +1102,27 @@
         isSubmitting = true;
         try
         {
+            string? attachmentUrl = null;
+            if (faultPhoto != null)
+            {
+                try
+                {
+                    var extension = Path.GetExtension(faultPhoto.Name);
+                    var fileName = $"fault-photos/{currentVehicle.Registration}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+                    using var stream = faultPhoto.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                    using var ms = new MemoryStream(); await stream.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+                    await Supabase.Storage.From("vehicle-documents").Upload(bytes, fileName, new Supabase.Storage.FileOptions { Upsert = true });
+                    attachmentUrl = Supabase.Storage.From("vehicle-documents").GetPublicUrl(fileName);
+                }
+                catch { /* photo upload failed, continue without it */ }
+            }
             var fault = new Fault
             {
                 Id = Guid.NewGuid().ToString(), VehicleId = currentVehicle.Id,
                 VehicleRegistration = currentVehicle.Registration, DriverEmail = currentUserEmail,
-                FaultType = faultType, Description = faultDescription, Status = "Open", CreatedAt = DateTime.UtcNow
+                FaultType = faultType, Description = faultDescription, Status = "Open",
+                AttachmentUrl = attachmentUrl, CreatedAt = DateTime.UtcNow
             };
             await Supabase.From<Fault>().Insert(fault);
             showReportFault = false; successMessage = "Fault report submitted successfully.";
